@@ -1,0 +1,31 @@
+# System directories that shouldn't be deployed
+.Xauthority
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.browser_data_dir/
+.cache/
+.cargo/
+.config/
+.docker/
+.gitconfig
+.local/
+.npm/
+.nvm/
+.pki/
+.pyenv/
+.rustup/
+.ssh/
+.sudo_as_admin_successful
+.tmux.conf
+.viminfo
+.vnc/
+pr_description.md
+
+# Standard ignores
+node_modules/
+.git/
+.next/
+.env*
+*.log
