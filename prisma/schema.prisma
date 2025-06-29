@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PerfilUsuario {
+  id      String @id @default(cuid())
+  userId  String @unique @map("user_id")
+  role    String @default("editor")
+  nome    String?
+  email   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("perfis_usuarios")
+}
+
+model CategoriaInsumo {
+  id        String   @id @default(cuid())
+  nome      String
+  descricao String?
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  insumos Insumo[]
+
+  @@map("categorias_insumos")
+}
+
+model CategoriaReceita {
+  id        String   @id @default(cuid())
+  nome      String
+  descricao String?
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  fichasTecnicas FichaTecnica[]
+
+  @@map("categorias_receitas")
+}
+
+model UnidadeMedida {
+  id        String   @id @default(cuid())
+  nome      String
+  simbolo   String
+  tipo      String   // "peso", "volume", "unidade"
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  insumos Insumo[]
+
+  @@map("unidades_medida")
+}
+
+model Insumo {
+  id                String   @id @default(cuid())
+  nome              String
+  marca             String?
+  fornecedor        String?
+  categoriaId       String   @map("categoria_id")
+  unidadeCompraId   String   @map("unidade_compra_id")
+  pesoLiquidoGramas Float    @map("peso_liquido_gramas")
+  precoUnidade      Float    @map("preco_unidade")
+  userId            String   @map("user_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  categoria     CategoriaInsumo @relation(fields: [categoriaId], references: [id])
+  unidadeCompra UnidadeMedida   @relation(fields: [unidadeCompraId], references: [id])
+
+  ingredientes      Ingrediente[]
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@map("insumos")
+}
+
+model FichaTecnica {
+  id               String   @id @default(cuid())
+  nome             String
+  categoriaId      String   @map("categoria_id")
+  pesoFinalGramas  Float    @map("peso_final_gramas")
+  numeroPorcoes    Int      @map("numero_porcoes")
+  tempoPreparo     Int?     @map("tempo_preparo")
+  temperaturaForno Int?     @map("temperatura_forno")
+  modoPreparo      String   @map("modo_preparo")
+  nivelDificuldade String   @map("nivel_dificuldade") // "basico", "intermediario", "avancado"
+  userId           String   @map("user_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  categoria    CategoriaReceita @relation(fields: [categoriaId], references: [id])
+  ingredientes Ingrediente[]
+  producoes    Producao[]
+  produtos     Produto[]
+
+  @@map("fichas_tecnicas")
+}
+
+model Ingrediente {
+  id             String @id @default(cuid())
+  fichaTecnicaId String @map("ficha_tecnica_id")
+  insumoId       String @map("insumo_id")
+  quantidadeGramas Float @map("quantidade_gramas")
+
+  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id], onDelete: Cascade)
+  insumo       Insumo       @relation(fields: [insumoId], references: [id])
+
+  @@map("ingredientes")
+}
+
+model Producao {
+  id             String   @id @default(cuid())
+  fichaTecnicaId String   @map("ficha_tecnica_id")
+  dataProducao   DateTime @map("data_producao")
+  dataValidade   DateTime @map("data_validade")
+  quantidadeProduzida Float @map("quantidade_produzida")
+  lote           String
+  userId         String   @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+
+  @@map("producoes")
+}
+
+model MovimentacaoEstoque {
+  id          String   @id @default(cuid())
+  insumoId    String   @map("insumo_id")
+  tipo        String   // "entrada", "saida"
+  quantidade  Float
+  motivo      String
+  lote        String?
+  dataValidade DateTime? @map("data_validade")
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  insumo Insumo @relation(fields: [insumoId], references: [id])
+
+  @@map("movimentacoes_estoque")
+}
+
+model Produto {
+  id             String @id @default(cuid())
+  nome           String
+  fichaTecnicaId String @map("ficha_tecnica_id")
+  precoVenda     Float  @map("preco_venda")
+  margemLucro    Float  @map("margem_lucro")
+  userId         String @map("user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  fichaTecnica FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+
+  @@map("produtos")
+}
