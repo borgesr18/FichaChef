@@ -49,7 +49,7 @@ export default function CalculoPrecoPage() {
                           Nenhuma receita cadastrada
                         </div>
                       ) : (
-                        receitas.map((receita: any) => (
+                        receitas.map((receita: { id: string; nome: string }) => (
                           <button
                             key={receita.id}
                             onClick={() => {

@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export default function Header() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const router = useRouter()
 
   useEffect(() => {

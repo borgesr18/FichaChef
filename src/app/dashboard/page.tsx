@@ -1,6 +1,6 @@
 import React from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { BarChart3, Package, FileText, Factory, Warehouse, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react'
+import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
 
 export default function DashboardPage() {
   return (

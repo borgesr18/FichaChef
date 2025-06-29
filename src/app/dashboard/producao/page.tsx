@@ -94,7 +94,7 @@ export default function ProducaoPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    Nenhuma produção registrada. Clique em "Nova Produção" para começar.
+                    Nenhuma produção registrada. Clique em &quot;Nova Produção&quot; para começar.
                   </td>
                 </tr>
               </tbody>

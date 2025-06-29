@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Package, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { Package, Plus, Search } from 'lucide-react'
 
 export default function InsumosPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -65,7 +65,7 @@ export default function InsumosPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    Nenhum insumo cadastrado. Clique em "Novo Insumo" para começar.
+                    Nenhum insumo cadastrado. Clique em &quot;Novo Insumo&quot; para começar.
                   </td>
                 </tr>
               </tbody>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { FileBarChart, Download, Calendar, Filter } from 'lucide-react'
+import { FileBarChart, Download, Filter } from 'lucide-react'
 
 export default function RelatoriosPage() {
   const [dateFrom, setDateFrom] = useState('')
@@ -99,7 +99,7 @@ export default function RelatoriosPage() {
             
             <div className="text-center py-12 text-gray-500">
               <FileBarChart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>Selecione um período e clique em "Filtrar" para gerar o relatório</p>
+              <p>Selecione um período e clique em &quot;Filtrar&quot; para gerar o relatório</p>
             </div>
           </div>
         </div>

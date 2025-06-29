@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { FileText, Plus, Search, Edit, Trash2, Eye } from 'lucide-react'
+import { FileText, Plus, Search } from 'lucide-react'
 
 export default function FichasTecnicasPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -65,7 +65,7 @@ export default function FichasTecnicasPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    Nenhuma ficha técnica cadastrada. Clique em "Nova Ficha Técnica" para começar.
+                    Nenhuma ficha técnica cadastrada. Clique em &quot;Nova Ficha Técnica&quot; para começar.
                   </td>
                 </tr>
               </tbody>

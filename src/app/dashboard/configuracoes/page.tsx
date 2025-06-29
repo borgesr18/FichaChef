@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Settings, Plus, Edit, Trash2 } from 'lucide-react'
+import { Settings, Plus } from 'lucide-react'
 
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('categorias-insumos')
