@@ -61,7 +61,9 @@ export default function ConfiguracoesPage() {
 
   const fetchCategoriasInsumos = async () => {
     try {
-      const response = await fetch('/api/categorias-insumos')
+      const response = await fetch('/api/categorias-insumos', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setCategoriasInsumos(data)
@@ -73,7 +75,9 @@ export default function ConfiguracoesPage() {
 
   const fetchCategoriasReceitas = async () => {
     try {
-      const response = await fetch('/api/categorias-receitas')
+      const response = await fetch('/api/categorias-receitas', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setCategoriasReceitas(data)
@@ -85,7 +89,9 @@ export default function ConfiguracoesPage() {
 
   const fetchUnidadesMedida = async () => {
     try {
-      const response = await fetch('/api/unidades-medida')
+      const response = await fetch('/api/unidades-medida', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setUnidadesMedida(data)
@@ -149,6 +155,7 @@ export default function ConfiguracoesPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(body)
       })
 
@@ -185,7 +192,10 @@ export default function ConfiguracoesPage() {
         url = `/api/unidades-medida/${id}`
       }
 
-      const response = await fetch(url, { method: 'DELETE' })
+      const response = await fetch(url, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
 
       if (response.ok) {
         if (activeTab === 'categorias-insumos') {
