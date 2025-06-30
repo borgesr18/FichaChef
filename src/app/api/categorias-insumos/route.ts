@@ -4,11 +4,8 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('GET /api/categorias-insumos - Request cookies:', request.cookies.getAll())
     const supabase = await createServerSupabaseClient(request)
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    console.log('Supabase auth result:', { user: user?.id, error })
+    const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -28,11 +25,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('POST /api/categorias-insumos - Request cookies:', request.cookies.getAll())
     const supabase = await createServerSupabaseClient(request)
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    console.log('Supabase auth result:', { user: user?.id, error })
+    const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
