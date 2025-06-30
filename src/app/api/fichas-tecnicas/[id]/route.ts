@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -30,12 +31,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     await prisma.ingrediente.deleteMany({
-      where: { fichaTecnicaId: params.id }
+      where: { fichaTecnicaId: id }
     })
 
     const ficha = await prisma.fichaTecnica.update({
       where: { 
-        id: params.id,
+        id,
         userId: user.id
       },
       data: {
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         modoPreparo,
         nivelDificuldade,
         ingredientes: {
-          create: ingredientes?.map((ing: any) => ({
+          create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
             insumoId: ing.insumoId,
             quantidadeGramas: parseFloat(ing.quantidadeGramas)
           })) || []
@@ -71,7 +72,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -81,7 +83,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     await prisma.fichaTecnica.delete({
       where: { 
-        id: params.id,
+        id,
         userId: user.id
       }
     })

@@ -200,7 +200,7 @@ export default function FichasTecnicasPage() {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar ficha técnica')
       }
-    } catch (error) {
+    } catch {
       setError('Erro ao salvar ficha técnica')
     } finally {
       setLoading(false)

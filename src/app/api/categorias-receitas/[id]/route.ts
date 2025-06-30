@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { supabase } from '@/lib/supabase'
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -21,7 +22,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const categoria = await prisma.categoriaReceita.update({
       where: { 
-        id: params.id,
+        id,
         userId: user.id
       },
       data: {
@@ -37,7 +38,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -47,7 +49,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     await prisma.categoriaReceita.delete({
       where: { 
-        id: params.id,
+        id,
         userId: user.id
       }
     })

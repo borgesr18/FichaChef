@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         nivelDificuldade,
         userId: user.id,
         ingredientes: {
-          create: ingredientes?.map((ing: any) => ({
+          create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
             insumoId: ing.insumoId,
             quantidadeGramas: parseFloat(ing.quantidadeGramas)
           })) || []

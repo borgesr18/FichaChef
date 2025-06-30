@@ -146,7 +146,7 @@ export default function InsumosPage() {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar insumo')
       }
-    } catch (error) {
+    } catch {
       setError('Erro ao salvar insumo')
     } finally {
       setLoading(false)

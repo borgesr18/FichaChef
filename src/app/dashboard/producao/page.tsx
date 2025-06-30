@@ -119,7 +119,7 @@ export default function ProducaoPage() {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar produção')
       }
-    } catch (error) {
+    } catch {
       setError('Erro ao salvar produção')
     } finally {
       setLoading(false)

@@ -27,7 +27,7 @@ interface UnidadeMedida {
 export default function ConfiguracoesPage() {
   const [activeTab, setActiveTab] = useState('categorias-insumos')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<any>(null)
+  const [editingItem, setEditingItem] = useState<CategoriaInsumo | CategoriaReceita | UnidadeMedida | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
@@ -95,14 +95,14 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  const handleOpenModal = (item?: any) => {
-    setEditingItem(item)
+  const handleOpenModal = (item?: CategoriaInsumo | CategoriaReceita | UnidadeMedida) => {
+    setEditingItem(item || null)
     if (item) {
       setFormData({
         nome: item.nome || '',
-        descricao: item.descricao || '',
-        simbolo: item.simbolo || '',
-        tipo: item.tipo || 'peso'
+        descricao: 'descricao' in item ? item.descricao || '' : '',
+        simbolo: 'simbolo' in item ? item.simbolo || '' : '',
+        tipo: 'tipo' in item ? item.tipo || 'peso' : 'peso'
       })
     } else {
       setFormData({
@@ -130,7 +130,7 @@ export default function ConfiguracoesPage() {
     try {
       let url = ''
       let method = 'POST'
-      let body: any = {}
+      let body: Record<string, string> = {}
 
       if (activeTab === 'categorias-insumos') {
         url = editingItem ? `/api/categorias-insumos/${editingItem.id}` : '/api/categorias-insumos'
@@ -165,7 +165,7 @@ export default function ConfiguracoesPage() {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar')
       }
-    } catch (error) {
+    } catch {
       setError('Erro ao salvar')
     } finally {
       setLoading(false)
@@ -201,7 +201,7 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  const renderTable = (data: any[], type: string) => {
+  const renderTable = (data: (CategoriaInsumo | CategoriaReceita | UnidadeMedida)[], type: string) => {
     if (data.length === 0) {
       return (
         <div className="bg-gray-50 rounded-lg p-4">
@@ -246,16 +246,16 @@ export default function ConfiguracoesPage() {
                 </td>
                 {type !== 'unidades-medida' && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.descricao || '-'}
+                    {'descricao' in item ? item.descricao || '-' : '-'}
                   </td>
                 )}
                 {type === 'unidades-medida' && (
                   <>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.simbolo}
+                      {'simbolo' in item ? item.simbolo : ''}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.tipo}
+                      {'tipo' in item ? item.tipo : ''}
                     </td>
                   </>
                 )}
