@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { nome, descricao } = body
+
+    if (!nome) {
+      return NextResponse.json({ 
+        error: 'Nome é obrigatório' 
+      }, { status: 400 })
+    }
+
+    const categoria = await prisma.categoriaInsumo.update({
+      where: { 
+        id,
+        userId: user.id
+      },
+      data: {
+        nome,
+        descricao
+      }
+    })
+
+    return NextResponse.json(categoria)
+  } catch (error) {
+    console.error('Error updating categoria insumo:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    await prisma.categoriaInsumo.delete({
+      where: { 
+        id,
+        userId: user.id
+      }
+    })
+
+    return NextResponse.json({ message: 'Categoria deletada com sucesso' })
+  } catch (error) {
+    console.error('Error deleting categoria insumo:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

@@ -11,18 +11,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const insumos = await prisma.insumo.findMany({
+    const producoes = await prisma.producao.findMany({
       where: { userId: user.id },
       include: {
-        categoria: true,
-        unidadeCompra: true
+        fichaTecnica: true
       },
-      orderBy: { nome: 'asc' }
+      orderBy: { dataProducao: 'desc' }
     })
 
-    return NextResponse.json(insumos)
+    return NextResponse.json(producoes)
   } catch (error) {
-    console.error('Error fetching insumos:', error)
+    console.error('Error fetching producoes:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -38,41 +37,36 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { 
-      nome, 
-      marca, 
-      fornecedor, 
-      categoriaId, 
-      unidadeCompraId, 
-      pesoLiquidoGramas, 
-      precoUnidade 
+      fichaTecnicaId, 
+      dataProducao, 
+      dataValidade, 
+      quantidadeProduzida, 
+      lote 
     } = body
 
-    if (!nome || !categoriaId || !unidadeCompraId || !pesoLiquidoGramas || !precoUnidade) {
+    if (!fichaTecnicaId || !dataProducao || !dataValidade || !quantidadeProduzida || !lote) {
       return NextResponse.json({ 
-        error: 'Campos obrigatórios: nome, categoria, unidade, peso líquido e preço' 
+        error: 'Todos os campos são obrigatórios' 
       }, { status: 400 })
     }
 
-    const insumo = await prisma.insumo.create({
+    const producao = await prisma.producao.create({
       data: {
-        nome,
-        marca,
-        fornecedor,
-        categoriaId,
-        unidadeCompraId,
-        pesoLiquidoGramas: parseFloat(pesoLiquidoGramas),
-        precoUnidade: parseFloat(precoUnidade),
+        fichaTecnicaId,
+        dataProducao: new Date(dataProducao),
+        dataValidade: new Date(dataValidade),
+        quantidadeProduzida: parseFloat(quantidadeProduzida),
+        lote,
         userId: user.id
       },
       include: {
-        categoria: true,
-        unidadeCompra: true
+        fichaTecnica: true
       }
     })
 
-    return NextResponse.json(insumo, { status: 201 })
+    return NextResponse.json(producao, { status: 201 })
   } catch (error) {
-    console.error('Error creating insumo:', error)
+    console.error('Error creating producao:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

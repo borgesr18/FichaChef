@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { ShoppingCart, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { ShoppingCart, Plus, Search } from 'lucide-react'
 
 export default function ProdutosPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -62,7 +62,7 @@ export default function ProdutosPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    Nenhum produto cadastrado. Clique em "Novo Produto" para começar.
+                    Nenhum produto cadastrado. Clique em &quot;Novo Produto&quot; para começar.
                   </td>
                 </tr>
               </tbody>

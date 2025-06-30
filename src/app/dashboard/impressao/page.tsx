@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Printer, ChevronDown, FileText } from 'lucide-react'
+import { Printer, ChevronDown } from 'lucide-react'
 
 export default function ImpressaoPage() {
   const [selectedReceita, setSelectedReceita] = useState('')
@@ -46,7 +46,7 @@ export default function ImpressaoPage() {
                         Nenhuma ficha técnica cadastrada
                       </div>
                     ) : (
-                      receitas.map((receita: any) => (
+                      receitas.map((receita: { id: string; nome: string }) => (
                         <button
                           key={receita.id}
                           onClick={() => {

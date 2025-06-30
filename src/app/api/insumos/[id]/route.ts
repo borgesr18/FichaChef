@@ -2,32 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-export async function GET() {
-  try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const insumos = await prisma.insumo.findMany({
-      where: { userId: user.id },
-      include: {
-        categoria: true,
-        unidadeCompra: true
-      },
-      orderBy: { nome: 'asc' }
-    })
-
-    return NextResponse.json(insumos)
-  } catch (error) {
-    console.error('Error fetching insumos:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function POST(request: NextRequest) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -53,7 +29,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const insumo = await prisma.insumo.create({
+    const insumo = await prisma.insumo.update({
+      where: { 
+        id,
+        userId: user.id
+      },
       data: {
         nome,
         marca,
@@ -61,8 +41,7 @@ export async function POST(request: NextRequest) {
         categoriaId,
         unidadeCompraId,
         pesoLiquidoGramas: parseFloat(pesoLiquidoGramas),
-        precoUnidade: parseFloat(precoUnidade),
-        userId: user.id
+        precoUnidade: parseFloat(precoUnidade)
       },
       include: {
         categoria: true,
@@ -70,9 +49,33 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(insumo, { status: 201 })
+    return NextResponse.json(insumo)
   } catch (error) {
-    console.error('Error creating insumo:', error)
+    console.error('Error updating insumo:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    await prisma.insumo.delete({
+      where: { 
+        id,
+        userId: user.id
+      }
+    })
+
+    return NextResponse.json({ message: 'Insumo deletado com sucesso' })
+  } catch (error) {
+    console.error('Error deleting insumo:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
