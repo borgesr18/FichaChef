@@ -8,15 +8,26 @@ export interface AuthenticatedUser {
 
 export async function authenticateUser(): Promise<AuthenticatedUser | null> {
   try {
-    // Em desenvolvimento, permitir acesso sem autenticação se Supabase não estiver configurado
+    // Em desenvolvimento, verificar se deve usar dados de desenvolvimento
     if (process.env.NODE_ENV === 'development') {
+      // Verificar flag explícita
+      if (process.env.DEV_MODE === 'true') {
+        console.log('🔓 Modo desenvolvimento: DEV_MODE=true, permitindo acesso sem autenticação')
+        return {
+          id: 'dev-user-id',
+          email: 'dev@fichachef.com'
+        }
+      }
+      
+      // Verificar se Supabase está configurado
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       
       if (!supabaseUrl || !supabaseKey || 
-          supabaseUrl === 'https://placeholder.supabase.co' || 
-          supabaseKey === 'placeholder-key') {
-        console.warn('🔓 Modo desenvolvimento: Supabase não configurado, permitindo acesso sem autenticação')
+          supabaseUrl === '' || supabaseKey === '' ||
+          supabaseUrl.includes('placeholder') || 
+          supabaseKey.includes('placeholder')) {
+        console.log('🔓 Modo desenvolvimento: Supabase não configurado, permitindo acesso sem autenticação')
         return {
           id: 'dev-user-id',
           email: 'dev@fichachef.com'

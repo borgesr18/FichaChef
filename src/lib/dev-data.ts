@@ -97,13 +97,21 @@ export const devProdutos = [
 export const devCategorias = [
   { id: '1', nome: 'Bolos', userId: 'dev-user-id' },
   { id: '2', nome: 'Pães', userId: 'dev-user-id' },
-  { id: '3', nome: 'Doces', userId: 'dev-user-id' }
+  { id: '3', nome: 'Farinhas', userId: 'dev-user-id' },
+  { id: '4', nome: 'Açúcares', userId: 'dev-user-id' },
+  { id: '5', nome: 'Proteínas', userId: 'dev-user-id' }
+]
+
+export const devCategoriasReceitas = [
+  { id: '1', nome: 'Bolos', descricao: 'Receitas de bolos diversos', userId: 'dev-user-id' },
+  { id: '2', nome: 'Pães', descricao: 'Receitas de pães e massas', userId: 'dev-user-id' },
+  { id: '3', nome: 'Doces', descricao: 'Sobremesas e doces', userId: 'dev-user-id' }
 ]
 
 export const devUnidadesMedida = [
-  { id: '1', nome: 'Pacote', abreviacao: 'pct', userId: 'dev-user-id' },
-  { id: '2', nome: 'Dúzia', abreviacao: 'dz', userId: 'dev-user-id' },
-  { id: '3', nome: 'Quilograma', abreviacao: 'kg', userId: 'dev-user-id' }
+  { id: '1', nome: 'Grama', simbolo: 'g', tipo: 'peso', userId: 'dev-user-id' },
+  { id: '2', nome: 'Dúzia', simbolo: 'dz', tipo: 'unidade', userId: 'dev-user-id' },
+  { id: '3', nome: 'Quilograma', simbolo: 'kg', tipo: 'peso', userId: 'dev-user-id' }
 ]
 
 // Função para verificar se deve usar dados de desenvolvimento

@@ -1,14 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/auth'
+import { devUnidadesMedida, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Usando dados de desenvolvimento para unidades de medida')
+      await simulateApiDelay()
+      return createSuccessResponse(devUnidadesMedida)
     }
 
     const unidades = await prisma.unidadeMedida.findMany({
@@ -16,43 +29,63 @@ export async function GET() {
       orderBy: { nome: 'asc' }
     })
 
-    return NextResponse.json(unidades)
+    return createSuccessResponse(unidades)
   } catch (error) {
     console.error('Error fetching unidades medida:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+    // Em desenvolvimento, retornar dados fake se houver erro no banco
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
+      await simulateApiDelay()
+      return createSuccessResponse(devUnidadesMedida)
+    }
+    
+    return createServerErrorResponse()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
     const { nome, simbolo, tipo } = body
 
-    if (!nome || !simbolo || !tipo) {
-      return NextResponse.json({ 
-        error: 'Nome, símbolo e tipo são obrigatórios' 
-      }, { status: 400 })
+    if (!nome || !simbolo) {
+      return createValidationErrorResponse('Nome e símbolo são obrigatórios')
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Simulando criação de unidade de medida em desenvolvimento')
+      await simulateApiDelay()
+      const novaUnidade = {
+        id: Date.now().toString(),
+        nome,
+        simbolo,
+        tipo: tipo || 'peso',
+        userId: user.id
+      }
+      return createSuccessResponse(novaUnidade, 201)
     }
 
     const unidade = await prisma.unidadeMedida.create({
       data: {
         nome,
         simbolo,
-        tipo,
+        tipo: tipo || 'peso',
         userId: user.id
       }
     })
 
-    return NextResponse.json(unidade, { status: 201 })
+    return createSuccessResponse(unidade, 201)
   } catch (error) {
     console.error('Error creating unidade medida:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }
+

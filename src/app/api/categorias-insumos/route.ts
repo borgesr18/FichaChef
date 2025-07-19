@@ -1,14 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/auth'
+import { devCategorias, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Usando dados de desenvolvimento para categorias de insumos')
+      await simulateApiDelay()
+      return createSuccessResponse(devCategorias)
     }
 
     const categorias = await prisma.categoriaInsumo.findMany({
@@ -16,27 +29,47 @@ export async function GET() {
       orderBy: { nome: 'asc' }
     })
 
-    return NextResponse.json(categorias)
+    return createSuccessResponse(categorias)
   } catch (error) {
     console.error('Error fetching categorias:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+    // Em desenvolvimento, retornar dados fake se houver erro no banco
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
+      await simulateApiDelay()
+      return createSuccessResponse(devCategorias)
+    }
+    
+    return createServerErrorResponse()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
     const { nome, descricao } = body
 
     if (!nome) {
-      return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 })
+      return createValidationErrorResponse('Nome é obrigatório')
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Simulando criação de categoria em desenvolvimento')
+      await simulateApiDelay()
+      const novaCategoria = {
+        id: Date.now().toString(),
+        nome,
+        descricao: descricao || '',
+        userId: user.id
+      }
+      return createSuccessResponse(novaCategoria, 201)
     }
 
     const categoria = await prisma.categoriaInsumo.create({
@@ -47,9 +80,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(categoria, { status: 201 })
+    return createSuccessResponse(categoria, 201)
   } catch (error) {
     console.error('Error creating categoria:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }
