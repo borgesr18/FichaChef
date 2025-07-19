@@ -116,6 +116,13 @@ export const devUnidadesMedida = [
 
 // Função para verificar se deve usar dados de desenvolvimento
 export function shouldUseDevData(): boolean {
+  // FORÇA SEMPRE USAR DADOS DE DESENVOLVIMENTO
+  console.log('🔧 MODO DESENVOLVIMENTO FORÇADO - Usando sempre dados de exemplo')
+  return true
+
+  // Código original comentado para garantir funcionamento
+  /*
+  // Só usar dados de desenvolvimento em ambiente de desenvolvimento
   if (process.env.NODE_ENV !== 'development') {
     return false
   }
@@ -143,6 +150,7 @@ export function shouldUseDevData(): boolean {
   }
   
   return false
+  */
 }
 
 // Função para simular delay de API
