@@ -8,6 +8,7 @@ import {
   createServerErrorResponse,
   createSuccessResponse 
 } from '@/lib/auth'
+import { devInsumos, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
 
 export async function GET() {
   try {
@@ -15,6 +16,13 @@ export async function GET() {
     
     if (!user) {
       return createUnauthorizedResponse()
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Usando dados de desenvolvimento para insumos')
+      await simulateApiDelay()
+      return createSuccessResponse(devInsumos)
     }
 
     const insumos = await prisma.insumo.findMany({
@@ -29,6 +37,14 @@ export async function GET() {
     return createSuccessResponse(insumos)
   } catch (error) {
     console.error('Error fetching insumos:', error)
+    
+    // Em desenvolvimento, retornar dados fake se houver erro no banco
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
+      await simulateApiDelay()
+      return createSuccessResponse(devInsumos)
+    }
+    
     return createServerErrorResponse()
   }
 }
@@ -52,6 +68,20 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validationResult.data
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Simulando criação de insumo em desenvolvimento')
+      await simulateApiDelay()
+      const novoInsumo = {
+        id: Date.now().toString(),
+        ...data,
+        userId: user.id,
+        categoria: { id: data.categoriaId, nome: 'Categoria Exemplo' },
+        unidadeCompra: { id: data.unidadeCompraId, nome: 'Unidade Exemplo', abreviacao: 'un' }
+      }
+      return createSuccessResponse(novoInsumo, 201)
+    }
 
     const insumo = await prisma.insumo.create({
       data: {

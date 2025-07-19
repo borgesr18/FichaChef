@@ -8,6 +8,22 @@ export interface AuthenticatedUser {
 
 export async function authenticateUser(): Promise<AuthenticatedUser | null> {
   try {
+    // Em desenvolvimento, permitir acesso sem autenticação se Supabase não estiver configurado
+    if (process.env.NODE_ENV === 'development') {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      
+      if (!supabaseUrl || !supabaseKey || 
+          supabaseUrl === 'https://placeholder.supabase.co' || 
+          supabaseKey === 'placeholder-key') {
+        console.warn('🔓 Modo desenvolvimento: Supabase não configurado, permitindo acesso sem autenticação')
+        return {
+          id: 'dev-user-id',
+          email: 'dev@fichachef.com'
+        }
+      }
+    }
+
     const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
     
@@ -21,6 +37,16 @@ export async function authenticateUser(): Promise<AuthenticatedUser | null> {
     }
   } catch (error) {
     console.error('Authentication error:', error)
+    
+    // Em desenvolvimento, retornar usuário fake se houver erro
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔓 Modo desenvolvimento: Erro na autenticação, usando usuário fake')
+      return {
+        id: 'dev-user-id',
+        email: 'dev@fichachef.com'
+      }
+    }
+    
     return null
   }
 }

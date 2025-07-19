@@ -1,14 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/auth'
+import { devFichasTecnicas, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Usando dados de desenvolvimento para fichas técnicas')
+      await simulateApiDelay()
+      return createSuccessResponse(devFichasTecnicas)
     }
 
     const fichas = await prisma.fichaTecnica.findMany({
@@ -24,20 +37,27 @@ export async function GET() {
       orderBy: { nome: 'asc' }
     })
 
-    return NextResponse.json(fichas)
+    return createSuccessResponse(fichas)
   } catch (error) {
-    console.error('Error fetching fichas tecnicas:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error fetching fichas técnicas:', error)
+    
+    // Em desenvolvimento, retornar dados fake se houver erro no banco
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
+      await simulateApiDelay()
+      return createSuccessResponse(devFichasTecnicas)
+    }
+    
+    return createServerErrorResponse()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
@@ -54,9 +74,28 @@ export async function POST(request: NextRequest) {
     } = body
 
     if (!nome || !categoriaId || !pesoFinalGramas || !numeroPorcoes || !modoPreparo || !nivelDificuldade) {
-      return NextResponse.json({ 
-        error: 'Campos obrigatórios: nome, categoria, peso final, porções, modo de preparo e nível de dificuldade' 
-      }, { status: 400 })
+      return createValidationErrorResponse('Campos obrigatórios: nome, categoria, peso final, porções, modo de preparo e nível de dificuldade')
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Simulando criação de ficha técnica em desenvolvimento')
+      await simulateApiDelay()
+      const novaFicha = {
+        id: Date.now().toString(),
+        nome,
+        categoriaId,
+        pesoFinalGramas: parseFloat(pesoFinalGramas),
+        numeroPorcoes: parseInt(numeroPorcoes),
+        tempoPreparo: tempoPreparo ? parseInt(tempoPreparo) : null,
+        temperaturaForno: temperaturaForno ? parseInt(temperaturaForno) : null,
+        modoPreparo,
+        nivelDificuldade,
+        userId: user.id,
+        categoria: { nome: 'Categoria Exemplo' },
+        ingredientes: []
+      }
+      return createSuccessResponse(novaFicha, 201)
     }
 
     const ficha = await prisma.fichaTecnica.create({
@@ -87,9 +126,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(ficha, { status: 201 })
+    return createSuccessResponse(ficha, 201)
   } catch (error) {
-    console.error('Error creating ficha tecnica:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error creating ficha técnica:', error)
+    return createServerErrorResponse()
   }
 }
+

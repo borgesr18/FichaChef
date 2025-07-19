@@ -1,14 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/auth'
+import { devProducoes, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Usando dados de desenvolvimento para produção')
+      await simulateApiDelay()
+      return createSuccessResponse(devProducoes)
     }
 
     const producoes = await prisma.producao.findMany({
@@ -19,44 +32,60 @@ export async function GET() {
       orderBy: { dataProducao: 'desc' }
     })
 
-    return NextResponse.json(producoes)
+    return createSuccessResponse(producoes)
   } catch (error) {
-    console.error('Error fetching producoes:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error fetching produções:', error)
+    
+    // Em desenvolvimento, retornar dados fake se houver erro no banco
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
+      await simulateApiDelay()
+      return createSuccessResponse(devProducoes)
+    }
+    
+    return createServerErrorResponse()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
-    const { 
-      fichaTecnicaId, 
-      dataProducao, 
-      dataValidade, 
-      quantidadeProduzida, 
-      lote 
-    } = body
+    const { fichaTecnicaId, dataProducao, dataValidade, quantidadeProduzida, lote } = body
 
-    if (!fichaTecnicaId || !dataProducao || !dataValidade || !quantidadeProduzida || !lote) {
-      return NextResponse.json({ 
-        error: 'Todos os campos são obrigatórios' 
-      }, { status: 400 })
+    if (!fichaTecnicaId || !dataProducao || !quantidadeProduzida) {
+      return createValidationErrorResponse('Campos obrigatórios: ficha técnica, data de produção e quantidade')
+    }
+
+    // Usar dados de desenvolvimento se necessário
+    if (shouldUseDevData()) {
+      console.log('🔧 Simulando criação de produção em desenvolvimento')
+      await simulateApiDelay()
+      const novaProducao = {
+        id: Date.now().toString(),
+        fichaTecnicaId,
+        dataProducao,
+        dataValidade: dataValidade || null,
+        quantidadeProduzida: parseInt(quantidadeProduzida),
+        lote: lote || `LOTE-${Date.now()}`,
+        userId: user.id,
+        fichaTecnica: { nome: 'Ficha Exemplo' }
+      }
+      return createSuccessResponse(novaProducao, 201)
     }
 
     const producao = await prisma.producao.create({
       data: {
         fichaTecnicaId,
         dataProducao: new Date(dataProducao),
-        dataValidade: new Date(dataValidade),
-        quantidadeProduzida: parseFloat(quantidadeProduzida),
-        lote,
+        dataValidade: dataValidade ? new Date(dataValidade) : null,
+        quantidadeProduzida: parseInt(quantidadeProduzida),
+        lote: lote || `LOTE-${Date.now()}`,
         userId: user.id
       },
       include: {
@@ -64,9 +93,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(producao, { status: 201 })
+    return createSuccessResponse(producao, 201)
   } catch (error) {
-    console.error('Error creating producao:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error creating produção:', error)
+    return createServerErrorResponse()
   }
 }
+
