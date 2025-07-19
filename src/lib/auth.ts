@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from './supabase-server'
+import { NextResponse } from 'next/server'
+import { createClient } from './supabase-server'
 
 export interface AuthenticatedUser {
   id: string
   email?: string
 }
 
-export async function authenticateUser(request?: NextRequest): Promise<AuthenticatedUser | null> {
+export async function authenticateUser(): Promise<AuthenticatedUser | null> {
   try {
-    const supabase = await createServerSupabaseClient(request)
+    const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error || !user) {
