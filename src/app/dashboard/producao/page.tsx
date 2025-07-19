@@ -29,7 +29,13 @@ export default function ProducaoPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    fichaTecnicaId: string
+    dataProducao: string
+    dataValidade: string
+    quantidadeProduzida: string
+    lote: string
+  }>({
     fichaTecnicaId: '',
     dataProducao: '',
     dataValidade: '',
@@ -71,14 +77,14 @@ export default function ProducaoPage() {
     if (producao) {
       setFormData({
         fichaTecnicaId: producao.fichaTecnicaId,
-        dataProducao: producao.dataProducao.split('T')[0],
-        dataValidade: producao.dataValidade.split('T')[0],
+        dataProducao: producao.dataProducao?.split('T')[0] || '',
+        dataValidade: producao.dataValidade?.split('T')[0] || '',
         quantidadeProduzida: producao.quantidadeProduzida.toString(),
         lote: producao.lote
       })
     } else {
-      const today = new Date().toISOString().split('T')[0]
-      const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const today = new Date().toISOString().split('T')[0] || ''
+      const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || ''
       setFormData({
         fichaTecnicaId: '',
         dataProducao: today,

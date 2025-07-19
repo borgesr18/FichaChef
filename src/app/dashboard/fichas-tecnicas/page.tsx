@@ -41,8 +41,8 @@ interface Insumo {
 }
 
 interface Ingrediente {
-  insumoId: string
-  quantidadeGramas: number
+  insumoId?: string
+  quantidadeGramas?: number
 }
 
 export default function FichasTecnicasPage() {
@@ -167,7 +167,7 @@ export default function FichasTecnicasPage() {
   const calculateCustoTotal = () => {
     return ingredientes.reduce((total, ing) => {
       const insumo = insumos.find(i => i.id === ing.insumoId)
-      if (insumo) {
+      if (insumo && ing.quantidadeGramas) {
         const custoPorGrama = insumo.precoUnidade / insumo.pesoLiquidoGramas
         return total + (custoPorGrama * ing.quantidadeGramas)
       }
@@ -189,7 +189,7 @@ export default function FichasTecnicasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          ingredientes: ingredientes.filter(ing => ing.insumoId && ing.quantidadeGramas > 0)
+          ingredientes: ingredientes.filter(ing => ing.insumoId && ing.quantidadeGramas && ing.quantidadeGramas > 0)
         })
       })
 

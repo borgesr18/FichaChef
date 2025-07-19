@@ -1,14 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { insumoSchema } from '@/lib/validations'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse 
+} from '@/lib/auth'
 
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const insumos = await prisma.insumo.findMany({
@@ -20,48 +26,36 @@ export async function GET() {
       orderBy: { nome: 'asc' }
     })
 
-    return NextResponse.json(insumos)
+    return createSuccessResponse(insumos)
   } catch (error) {
     console.error('Error fetching insumos:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
-    const { 
-      nome, 
-      marca, 
-      fornecedor, 
-      categoriaId, 
-      unidadeCompraId, 
-      pesoLiquidoGramas, 
-      precoUnidade 
-    } = body
-
-    if (!nome || !categoriaId || !unidadeCompraId || !pesoLiquidoGramas || !precoUnidade) {
-      return NextResponse.json({ 
-        error: 'Campos obrigatórios: nome, categoria, unidade, peso líquido e preço' 
-      }, { status: 400 })
+    
+    // Validação com Zod
+    const validationResult = insumoSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => err.message).join(', ')
+      return createValidationErrorResponse(errors)
     }
+
+    const data = validationResult.data
 
     const insumo = await prisma.insumo.create({
       data: {
-        nome,
-        marca,
-        fornecedor,
-        categoriaId,
-        unidadeCompraId,
-        pesoLiquidoGramas: parseFloat(pesoLiquidoGramas),
-        precoUnidade: parseFloat(precoUnidade),
+        ...data,
         userId: user.id
       },
       include: {
@@ -70,9 +64,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(insumo, { status: 201 })
+    return createSuccessResponse(insumo, 201)
   } catch (error) {
     console.error('Error creating insumo:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }

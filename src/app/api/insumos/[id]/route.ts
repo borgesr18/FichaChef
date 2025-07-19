@@ -1,81 +1,86 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { insumoSchema } from '@/lib/validations'
+import { 
+  authenticateUser, 
+  createUnauthorizedResponse, 
+  createValidationErrorResponse, 
+  createServerErrorResponse,
+  createSuccessResponse,
+  createNotFoundResponse
+} from '@/lib/auth'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
     }
 
     const body = await request.json()
-    const { 
-      nome, 
-      marca, 
-      fornecedor, 
-      categoriaId, 
-      unidadeCompraId, 
-      pesoLiquidoGramas, 
-      precoUnidade 
-    } = body
+    
+    // Validação com Zod
+    const validationResult = insumoSchema.safeParse(body)
+    
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => err.message).join(', ')
+      return createValidationErrorResponse(errors)
+    }
 
-    if (!nome || !categoriaId || !unidadeCompraId || !pesoLiquidoGramas || !precoUnidade) {
-      return NextResponse.json({ 
-        error: 'Campos obrigatórios: nome, categoria, unidade, peso líquido e preço' 
-      }, { status: 400 })
+    const data = validationResult.data
+
+    // Verificar se o insumo existe e pertence ao usuário
+    const existingInsumo = await prisma.insumo.findFirst({
+      where: { id, userId: user.id }
+    })
+
+    if (!existingInsumo) {
+      return createNotFoundResponse('Insumo')
     }
 
     const insumo = await prisma.insumo.update({
-      where: { 
-        id,
-        userId: user.id
-      },
-      data: {
-        nome,
-        marca,
-        fornecedor,
-        categoriaId,
-        unidadeCompraId,
-        pesoLiquidoGramas: parseFloat(pesoLiquidoGramas),
-        precoUnidade: parseFloat(precoUnidade)
-      },
+      where: { id },
+      data,
       include: {
         categoria: true,
         unidadeCompra: true
       }
     })
 
-    return NextResponse.json(insumo)
+    return createSuccessResponse(insumo)
   } catch (error) {
     console.error('Error updating insumo:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await authenticateUser()
     
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return createUnauthorizedResponse()
+    }
+
+    // Verificar se o insumo existe e pertence ao usuário
+    const existingInsumo = await prisma.insumo.findFirst({
+      where: { id, userId: user.id }
+    })
+
+    if (!existingInsumo) {
+      return createNotFoundResponse('Insumo')
     }
 
     await prisma.insumo.delete({
-      where: { 
-        id,
-        userId: user.id
-      }
+      where: { id }
     })
 
-    return NextResponse.json({ message: 'Insumo deletado com sucesso' })
+    return createSuccessResponse({ message: 'Insumo deletado com sucesso' })
   } catch (error) {
     console.error('Error deleting insumo:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return createServerErrorResponse()
   }
 }
