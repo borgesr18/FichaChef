@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { nome, descricao, precoVenda, fichaTecnicaId } = body
+    const { nome, precoVenda, fichaTecnicaId, margemLucro } = body
 
     if (!nome || !precoVenda) {
       return createValidationErrorResponse('Campos obrigatórios: nome e preço de venda')
@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
       const novoProduto = {
         id: Date.now().toString(),
         nome,
-        descricao: descricao || '',
         precoVenda: parseFloat(precoVenda),
+        margemLucro: margemLucro ? parseFloat(margemLucro) : 0.3, // 30% padrão
         fichaTecnicaId: fichaTecnicaId || null,
         userId: user.id
       }
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
     const produto = await prisma.produto.create({
       data: {
         nome,
-        descricao: descricao || '',
         precoVenda: parseFloat(precoVenda),
+        margemLucro: margemLucro ? parseFloat(margemLucro) : 0.3, // 30% padrão
         fichaTecnicaId: fichaTecnicaId || null,
         userId: user.id
       }

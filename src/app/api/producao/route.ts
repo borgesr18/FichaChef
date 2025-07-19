@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         id: Date.now().toString(),
         fichaTecnicaId,
         dataProducao,
-        dataValidade: dataValidade || null,
+        dataValidade: dataValidade || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         quantidadeProduzida: parseInt(quantidadeProduzida),
         lote: lote || `LOTE-${Date.now()}`,
         userId: user.id,
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       data: {
         fichaTecnicaId,
         dataProducao: new Date(dataProducao),
-        dataValidade: dataValidade ? new Date(dataValidade) : null,
+        dataValidade: new Date(dataValidade || Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 dias se não especificado
         quantidadeProduzida: parseInt(quantidadeProduzida),
         lote: lote || `LOTE-${Date.now()}`,
         userId: user.id

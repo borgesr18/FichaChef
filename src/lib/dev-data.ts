@@ -87,8 +87,8 @@ export const devProdutos = [
   {
     id: '1',
     nome: 'Bolo de Chocolate Fatia',
-    descricao: 'Fatia individual do bolo de chocolate',
     precoVenda: 8.50,
+    margemLucro: 0.4, // 40%
     fichaTecnicaId: '1',
     userId: 'dev-user-id'
   }
