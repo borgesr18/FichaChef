@@ -46,7 +46,6 @@ export default function ConfiguracoesPage() {
     { id: 'categorias-insumos', label: 'Categorias de Insumos' },
     { id: 'categorias-receitas', label: 'Categorias de Receitas' },
     { id: 'unidades-medida', label: 'Unidades de Medida' },
-    { id: 'usuarios', label: 'Usuários' },
   ]
 
   useEffect(() => {
@@ -364,21 +363,6 @@ export default function ConfiguracoesPage() {
                   </button>
                 </div>
                 {renderTable(unidadesMedida, 'unidades-medida')}
-              </div>
-            )}
-
-            {activeTab === 'usuarios' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">Controle de Usuários</h3>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Usuário
-                  </button>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-500 text-center">Funcionalidade em desenvolvimento</p>
-                </div>
               </div>
             )}
           </div>

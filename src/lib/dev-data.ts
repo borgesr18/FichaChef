@@ -114,43 +114,31 @@ export const devUnidadesMedida = [
   { id: '3', nome: 'Quilograma', simbolo: 'kg', tipo: 'peso', userId: 'dev-user-id' }
 ]
 
-// Função para verificar se deve usar dados de desenvolvimento
+// Função para verificar se deve usar dados de desenvolvimento (apenas fallback)
 export function shouldUseDevData(): boolean {
-  // FORÇA SEMPRE USAR DADOS DE DESENVOLVIMENTO
-  console.log('🔧 MODO DESENVOLVIMENTO FORÇADO - Usando sempre dados de exemplo')
-  return true
-
-  // Código original comentado para garantir funcionamento
-  /*
-  // Só usar dados de desenvolvimento em ambiente de desenvolvimento
-  if (process.env.NODE_ENV !== 'development') {
+  // Verificar flag explícita para forçar dados fake
+  if (process.env.FORCE_DEV_DATA === 'true') {
+    console.log('🔧 FORCE_DEV_DATA=true - Usando dados de exemplo')
+    return true
+  }
+  
+  // Em produção, nunca usar dados fake
+  if (process.env.NODE_ENV === 'production') {
     return false
   }
   
-  // Verificar flag explícita
-  if (process.env.DEV_MODE === 'true') {
-    return true
-  }
-  
-  // Verificar se banco está configurado
+  // Em desenvolvimento, verificar se banco está configurado
   const dbUrl = process.env.DATABASE_URL
+  
+  // Se não há DATABASE_URL ou é placeholder, usar dados fake
   if (!dbUrl || dbUrl.includes('placeholder') || dbUrl === '') {
+    console.log('🔧 DATABASE_URL não configurado - Usando dados de exemplo')
     return true
   }
   
-  // Verificar se Supabase está configurado
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  
-  if (!supabaseUrl || !supabaseKey || 
-      supabaseUrl.includes('placeholder') || 
-      supabaseKey.includes('placeholder') ||
-      supabaseUrl === '' || supabaseKey === '') {
-    return true
-  }
-  
+  // Se DATABASE_URL está configurado, tentar usar banco real
+  console.log('🗄️ DATABASE_URL configurado - Tentando usar banco real')
   return false
-  */
 }
 
 // Função para simular delay de API
