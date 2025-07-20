@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { Package, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface Insumo {
   id: string
@@ -133,10 +134,12 @@ export default function InsumosPage() {
       const url = editingInsumo ? `/api/insumos/${editingInsumo.id}` : '/api/insumos'
       const method = editingInsumo ? 'PUT' : 'POST'
 
+      const convertedData = convertFormDataToNumbers(formData, ['pesoLiquidoGramas', 'precoUnidade'])
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(convertedData)
       })
 
       if (response.ok) {

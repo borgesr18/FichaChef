@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { Factory, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface Producao {
   id: string
@@ -112,10 +113,12 @@ export default function ProducaoPage() {
       const url = editingProducao ? `/api/producao/${editingProducao.id}` : '/api/producao'
       const method = editingProducao ? 'PUT' : 'POST'
 
+      const convertedData = convertFormDataToNumbers(formData, ['quantidadeProduzida'])
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(convertedData)
       })
 
       if (response.ok) {

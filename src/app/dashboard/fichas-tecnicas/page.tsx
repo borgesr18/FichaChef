@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { FileText, Plus, Search, Edit, Trash2, X } from 'lucide-react'
+import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface FichaTecnica {
   id: string
@@ -184,13 +185,22 @@ export default function FichasTecnicasPage() {
       const url = editingFicha ? `/api/fichas-tecnicas/${editingFicha.id}` : '/api/fichas-tecnicas'
       const method = editingFicha ? 'PUT' : 'POST'
 
+      const convertedFormData = convertFormDataToNumbers(formData, ['pesoFinalGramas', 'numeroPorcoes', 'tempoPreparo', 'temperaturaForno'])
+
+      const dataToSend = {
+        ...convertedFormData,
+        ingredientes: ingredientes
+          .filter(ing => ing.insumoId && ing.quantidadeGramas && ing.quantidadeGramas > 0)
+          .map(ing => ({
+            insumoId: ing.insumoId,
+            quantidadeGramas: typeof ing.quantidadeGramas === 'string' ? parseFloat(ing.quantidadeGramas) || 0 : ing.quantidadeGramas
+          }))
+      }
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          ingredientes: ingredientes.filter(ing => ing.insumoId && ing.quantidadeGramas && ing.quantidadeGramas > 0)
-        })
+        body: JSON.stringify(dataToSend)
       })
 
       if (response.ok) {
