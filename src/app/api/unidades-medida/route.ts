@@ -1,91 +1,50 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
-  createValidationErrorResponse, 
-  createServerErrorResponse,
-  createSuccessResponse 
+import {
+  authenticateUser,
+  createUnauthorizedResponse,
+  createValidationErrorResponse,
+  createSuccessResponse,
 } from '@/lib/auth'
-import { devUnidadesMedida, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
+import { withErrorHandler } from '@/lib/api-helpers'
+import { unidadeMedidaSchema } from '@/lib/validations'
 
-export async function GET() {
-  try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
-
-    // Usar dados de desenvolvimento se necessário
-    if (shouldUseDevData()) {
-      console.log('🔧 Usando dados de desenvolvimento para unidades de medida')
-      await simulateApiDelay()
-      return createSuccessResponse(devUnidadesMedida)
-    }
-
-    const unidades = await prisma.unidadeMedida.findMany({
-      where: { userId: user.id },
-      orderBy: { nome: 'asc' }
-    })
-
-    return createSuccessResponse(unidades)
-  } catch (error) {
-    console.error('Error fetching unidades medida:', error)
-    
-    // Em desenvolvimento, retornar dados fake se houver erro no banco
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
-      await simulateApiDelay()
-      return createSuccessResponse(devUnidadesMedida)
-    }
-    
-    return createServerErrorResponse()
+export const GET = withErrorHandler(async function GET() {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+  const unidades = await prisma.unidadeMedida.findMany({
+    where: { userId: user.id },
+    orderBy: { nome: 'asc' },
+  })
 
-    const body = await request.json()
-    const { nome, simbolo, tipo } = body
+  return createSuccessResponse(unidades)
+})
 
-    if (!nome || !simbolo) {
-      return createValidationErrorResponse('Nome e símbolo são obrigatórios')
-    }
-
-    // Usar dados de desenvolvimento se necessário
-    if (shouldUseDevData()) {
-      console.log('🔧 Simulando criação de unidade de medida em desenvolvimento')
-      await simulateApiDelay()
-      const novaUnidade = {
-        id: Date.now().toString(),
-        nome,
-        simbolo,
-        tipo: tipo || 'peso',
-        userId: user.id
-      }
-      return createSuccessResponse(novaUnidade, 201)
-    }
-
-    const unidade = await prisma.unidadeMedida.create({
-      data: {
-        nome,
-        simbolo,
-        tipo: tipo || 'peso',
-        userId: user.id
-      }
-    })
-
-    return createSuccessResponse(unidade, 201)
-  } catch (error) {
-    console.error('Error creating unidade medida:', error)
-    return createServerErrorResponse()
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
+
+  const body = await request.json()
+  const parsedBody = unidadeMedidaSchema.safeParse(body)
+
+  if (!parsedBody.success) {
+    return createValidationErrorResponse(parsedBody.error.message)
+  }
+
+  const data = parsedBody.data
+
+  const unidade = await prisma.unidadeMedida.create({
+    data: {
+      ...data,
+      userId: user.id,
+    },
+  })
+
+  return createSuccessResponse(unidade, 201)
+})
 
