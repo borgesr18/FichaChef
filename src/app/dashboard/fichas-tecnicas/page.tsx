@@ -64,7 +64,7 @@ export default function FichasTecnicasPage() {
     tempoPreparo: '',
     temperaturaForno: '',
     modoPreparo: '',
-    nivelDificuldade: 'basico'
+    nivelDificuldade: 'Fácil'
   })
 
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>([])
@@ -137,7 +137,7 @@ export default function FichasTecnicasPage() {
         tempoPreparo: '',
         temperaturaForno: '',
         modoPreparo: '',
-        nivelDificuldade: 'basico'
+        nivelDificuldade: 'Fácil'
       })
       setIngredientes([])
     }
@@ -452,9 +452,9 @@ export default function FichasTecnicasPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               >
-                <option value="basico">Básico</option>
-                <option value="intermediario">Intermediário</option>
-                <option value="avancado">Avançado</option>
+                <option value="Fácil">Fácil</option>
+                <option value="Médio">Médio</option>
+                <option value="Difícil">Difícil</option>
               </select>
             </div>
           </div>
