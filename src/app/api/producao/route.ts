@@ -33,7 +33,14 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const parsedBody = producaoSchema.safeParse(body)
+  
+  const bodyWithDates = {
+    ...body,
+    dataProducao: body.dataProducao ? new Date(body.dataProducao) : undefined,
+    dataValidade: body.dataValidade ? new Date(body.dataValidade) : undefined,
+  }
+  
+  const parsedBody = producaoSchema.safeParse(bodyWithDates)
 
   if (!parsedBody.success) {
     return createValidationErrorResponse(parsedBody.error.message)
