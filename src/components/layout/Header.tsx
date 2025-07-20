@@ -1,25 +1,16 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import React from 'react'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 import { LogOut, User } from 'lucide-react'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export default function Header() {
-  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const { user, signOut } = useSupabase()
   const router = useRouter()
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [])
-
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await signOut()
     router.push('/login')
   }
 
