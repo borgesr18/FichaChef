@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
-import { Factory, Plus, Search, Edit, Trash2 } from 'lucide-react'
+import { Factory, Plus, Search, Edit, Trash2, FileText, Package } from 'lucide-react'
 import { convertFormDataToNumbers, convertFormDataToDates } from '@/lib/form-utils'
 
-interface Producao {
+interface ProducaoFicha {
   id: string
   fichaTecnicaId: string
   dataProducao: string
@@ -16,28 +16,46 @@ interface Producao {
   fichaTecnica: { nome: string }
 }
 
+interface ProducaoProduto {
+  id: string
+  produtoId: string
+  dataProducao: string
+  dataValidade: string
+  quantidadeProduzida: number
+  lote: string
+  produto: { nome: string }
+}
+
 interface FichaTecnica {
   id: string
   nome: string
 }
 
+interface Produto {
+  id: string
+  nome: string
+}
+
 export default function ProducaoPage() {
+  const [activeSection, setActiveSection] = useState<'fichas' | 'produtos'>('fichas')
   const [searchTerm, setSearchTerm] = useState('')
-  const [producoes, setProducoes] = useState<Producao[]>([])
+  const [producoesFichas, setProducoesFichas] = useState<ProducaoFicha[]>([])
+  const [producoesProdutos, setProducoesProdutos] = useState<ProducaoProduto[]>([])
   const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnica[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingProducao, setEditingProducao] = useState<Producao | null>(null)
+  const [editingProducao, setEditingProducao] = useState<ProducaoFicha | ProducaoProduto | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const [formData, setFormData] = useState<{
-    fichaTecnicaId: string
+    itemId: string
     dataProducao: string
     dataValidade: string
     quantidadeProduzida: string
     lote: string
   }>({
-    fichaTecnicaId: '',
+    itemId: '',
     dataProducao: '',
     dataValidade: '',
     quantidadeProduzida: '',
@@ -45,19 +63,33 @@ export default function ProducaoPage() {
   })
 
   useEffect(() => {
-    fetchProducoes()
+    fetchProducoesFichas()
+    fetchProducoesProdutos()
     fetchFichasTecnicas()
+    fetchProdutos()
   }, [])
 
-  const fetchProducoes = async () => {
+  const fetchProducoesFichas = async () => {
     try {
       const response = await fetch('/api/producao')
       if (response.ok) {
         const data = await response.json()
-        setProducoes(data)
+        setProducoesFichas(data)
       }
     } catch (error) {
-      console.error('Error fetching producoes:', error)
+      console.error('Error fetching producoes fichas:', error)
+    }
+  }
+
+  const fetchProducoesProdutos = async () => {
+    try {
+      const response = await fetch('/api/producoes-produto')
+      if (response.ok) {
+        const data = await response.json()
+        setProducoesProdutos(data)
+      }
+    } catch (error) {
+      console.error('Error fetching producoes produtos:', error)
     }
   }
 
@@ -73,11 +105,23 @@ export default function ProducaoPage() {
     }
   }
 
-  const handleOpenModal = (producao?: Producao) => {
+  const fetchProdutos = async () => {
+    try {
+      const response = await fetch('/api/produtos')
+      if (response.ok) {
+        const data = await response.json()
+        setProdutos(data)
+      }
+    } catch (error) {
+      console.error('Error fetching produtos:', error)
+    }
+  }
+
+  const handleOpenModal = (producao?: ProducaoFicha | ProducaoProduto) => {
     setEditingProducao(producao || null)
     if (producao) {
       setFormData({
-        fichaTecnicaId: producao.fichaTecnicaId,
+        itemId: activeSection === 'fichas' ? (producao as ProducaoFicha).fichaTecnicaId : (producao as ProducaoProduto).produtoId,
         dataProducao: producao.dataProducao?.split('T')[0] || '',
         dataValidade: producao.dataValidade?.split('T')[0] || '',
         quantidadeProduzida: producao.quantidadeProduzida.toString(),
@@ -87,7 +131,7 @@ export default function ProducaoPage() {
       const today = new Date().toISOString().split('T')[0] || ''
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || ''
       setFormData({
-        fichaTecnicaId: '',
+        itemId: '',
         dataProducao: today,
         dataValidade: nextWeek,
         quantidadeProduzida: '',
@@ -110,21 +154,34 @@ export default function ProducaoPage() {
     setError('')
 
     try {
-      const url = editingProducao ? `/api/producao/${editingProducao.id}` : '/api/producao'
+      const apiPath = activeSection === 'fichas' ? 'producao' : 'producoes-produto'
+      const itemKey = activeSection === 'fichas' ? 'fichaTecnicaId' : 'produtoId'
+      
+      const url = editingProducao ? `/api/${apiPath}/${editingProducao.id}` : `/api/${apiPath}`
       const method = editingProducao ? 'PUT' : 'POST'
 
       const convertedData = convertFormDataToNumbers(formData, ['quantidadeProduzida'])
       const finalData = convertFormDataToDates(convertedData, ['dataProducao', 'dataValidade'])
+      
+      const requestData = {
+        ...finalData,
+        [itemKey]: finalData.itemId
+      }
+      delete requestData.itemId
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalData)
+        body: JSON.stringify(requestData)
       })
 
       if (response.ok) {
         handleCloseModal()
-        fetchProducoes()
+        if (activeSection === 'fichas') {
+          fetchProducoesFichas()
+        } else {
+          fetchProducoesProdutos()
+        }
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar produção')
@@ -140,19 +197,30 @@ export default function ProducaoPage() {
     if (!confirm('Tem certeza que deseja excluir esta produção?')) return
 
     try {
-      const response = await fetch(`/api/producao/${id}`, { method: 'DELETE' })
+      const apiPath = activeSection === 'fichas' ? 'producao' : 'producoes-produto'
+      const response = await fetch(`/api/${apiPath}/${id}`, { method: 'DELETE' })
       if (response.ok) {
-        fetchProducoes()
+        if (activeSection === 'fichas') {
+          fetchProducoesFichas()
+        } else {
+          fetchProducoesProdutos()
+        }
       }
     } catch (error) {
       console.error('Error deleting producao:', error)
     }
   }
 
-  const filteredProducoes = producoes.filter(producao =>
-    producao.fichaTecnica.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    producao.lote.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const currentProducoes = activeSection === 'fichas' ? producoesFichas : producoesProdutos
+  const currentItems = activeSection === 'fichas' ? fichasTecnicas : produtos
+
+  const filteredProducoes = currentProducoes.filter(producao => {
+    const itemName = activeSection === 'fichas' 
+      ? (producao as ProducaoFicha).fichaTecnica.nome 
+      : (producao as ProducaoProduto).produto.nome
+    return itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           producao.lote.toLowerCase().includes(searchTerm.toLowerCase())
+  })
 
   return (
     <DashboardLayout>
@@ -171,13 +239,40 @@ export default function ProducaoPage() {
           </button>
         </div>
 
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveSection('fichas')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeSection === 'fichas'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="h-4 w-4 inline mr-2" />
+              Fichas Técnicas
+            </button>
+            <button
+              onClick={() => setActiveSection('produtos')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeSection === 'produtos'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Package className="h-4 w-4 inline mr-2" />
+              Produtos
+            </button>
+          </nav>
+        </div>
+
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
-                placeholder="Buscar produções..."
+                placeholder={`Buscar produções de ${activeSection === 'fichas' ? 'fichas técnicas' : 'produtos'}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -193,7 +288,7 @@ export default function ProducaoPage() {
                     Lote
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ficha Técnica
+                    {activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Data Produção
@@ -213,7 +308,10 @@ export default function ProducaoPage() {
                 {filteredProducoes.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      {searchTerm ? 'Nenhuma produção encontrada.' : 'Nenhuma produção registrada. Clique em "Nova Produção" para começar.'}
+                      {searchTerm 
+                        ? 'Nenhuma produção encontrada.' 
+                        : `Nenhuma produção de ${activeSection === 'fichas' ? 'fichas técnicas' : 'produtos'} registrada. Clique em "Nova Produção" para começar.`
+                      }
                     </td>
                   </tr>
                 ) : (
@@ -223,7 +321,10 @@ export default function ProducaoPage() {
                         {producao.lote}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {producao.fichaTecnica.nome}
+                        {activeSection === 'fichas' 
+                          ? (producao as ProducaoFicha).fichaTecnica.nome 
+                          : (producao as ProducaoProduto).produto.nome
+                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(producao.dataProducao).toLocaleDateString('pt-BR')}
@@ -272,18 +373,18 @@ export default function ProducaoPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ficha Técnica *
+              {activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'} *
             </label>
             <select
-              value={formData.fichaTecnicaId}
-              onChange={(e) => setFormData({ ...formData, fichaTecnicaId: e.target.value })}
+              value={formData.itemId}
+              onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Selecione uma ficha técnica</option>
-              {fichasTecnicas.map((ficha) => (
-                <option key={ficha.id} value={ficha.id}>
-                  {ficha.nome}
+              <option value="">{`Selecione ${activeSection === 'fichas' ? 'uma ficha técnica' : 'um produto'}`}</option>
+              {currentItems.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nome}
                 </option>
               ))}
             </select>
