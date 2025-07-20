@@ -84,3 +84,26 @@ export const produtoSchema = z.object({
 
 export type ProdutoInput = z.infer<typeof produtoSchema>
 
+// Schema para Movimentação de Produto
+export const movimentacaoProdutoSchema = z.object({
+  produtoId: z.string().min(1, 'Produto é obrigatório'),
+  tipo: z.enum(['entrada', 'saida']),
+  quantidade: z.number().positive('Quantidade deve ser positiva'),
+  motivo: z.string().min(1, 'Motivo é obrigatório').max(100, 'Motivo muito longo'),
+  lote: z.string().optional(),
+  dataValidade: z.date().optional(),
+})
+
+export type MovimentacaoProdutoInput = z.infer<typeof movimentacaoProdutoSchema>
+
+// Schema para Produção de Produto
+export const producaoProdutoSchema = z.object({
+  produtoId: z.string().min(1, 'Produto é obrigatório'),
+  dataProducao: z.date(),
+  dataValidade: z.date(),
+  quantidadeProduzida: z.number().positive('Quantidade deve ser positiva'),
+  lote: z.string().min(1, 'Lote é obrigatório').max(20, 'Lote muito longo'),
+})
+
+export type ProducaoProdutoInput = z.infer<typeof producaoProdutoSchema>
+

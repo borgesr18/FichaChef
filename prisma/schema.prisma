@@ -147,6 +147,8 @@ model Produto {
   createdAt   DateTime              @default(now()) @map("created_at")
   updatedAt   DateTime              @updatedAt @map("updated_at")
   produtoFichas ProdutoFichaTecnica[]
+  movimentacoesProduto MovimentacaoProduto[]
+  producoesProduto ProducaoProduto[]
 
   @@map("produtos")
 }
@@ -160,4 +162,34 @@ model ProdutoFichaTecnica {
   fichaTecnica     FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
 
   @@map("produto_ficha_tecnica")
+}
+
+model MovimentacaoProduto {
+  id           String    @id @default(cuid())
+  produtoId    String    @map("produto_id")
+  tipo         String
+  quantidade   Float
+  motivo       String
+  lote         String?
+  dataValidade DateTime? @map("data_validade")
+  userId       String    @map("user_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  produto      Produto   @relation(fields: [produtoId], references: [id])
+
+  @@map("movimentacoes_produto")
+}
+
+model ProducaoProduto {
+  id                  String    @id @default(cuid())
+  produtoId           String    @map("produto_id")
+  dataProducao        DateTime  @map("data_producao")
+  dataValidade        DateTime  @map("data_validade")
+  quantidadeProduzida Float     @map("quantidade_produzida")
+  lote                String
+  userId              String    @map("user_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  produto             Produto   @relation(fields: [produtoId], references: [id])
+
+  @@map("producoes_produto")
 }
