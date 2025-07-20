@@ -17,6 +17,21 @@ export const GET = withErrorHandler(async function GET() {
 
   const produtos = await prisma.produto.findMany({
     where: { userId: user.id },
+    include: {
+      produtoFichas: {
+        include: {
+          fichaTecnica: {
+            include: {
+              ingredientes: {
+                include: {
+                  insumo: true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     orderBy: { nome: 'asc' },
   })
 
@@ -40,9 +55,32 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const produto = await prisma.produto.create({
     data: {
-      ...data,
+      nome: data.nome,
+      precoVenda: data.precoVenda,
+      margemLucro: data.margemLucro,
       userId: user.id,
+      produtoFichas: {
+        create: data.fichas.map(ficha => ({
+          fichaTecnicaId: ficha.fichaTecnicaId,
+          quantidadeGramas: ficha.quantidadeGramas
+        }))
+      }
     },
+    include: {
+      produtoFichas: {
+        include: {
+          fichaTecnica: {
+            include: {
+              ingredientes: {
+                include: {
+                  insumo: true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   })
 
   return createSuccessResponse(produto, 201)

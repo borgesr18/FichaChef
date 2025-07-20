@@ -92,7 +92,7 @@ model FichaTecnica {
   categoria        CategoriaReceita @relation(fields: [categoriaId], references: [id])
   ingredientes     Ingrediente[]
   producoes        Producao[]
-  produtos         Produto[]
+  produtoFichas    ProdutoFichaTecnica[]
 
   @@map("fichas_tecnicas")
 }
@@ -139,15 +139,25 @@ model MovimentacaoEstoque {
 }
 
 model Produto {
-  id             String       @id @default(cuid())
-  nome           String
-  fichaTecnicaId String       @map("ficha_tecnica_id")
-  precoVenda     Float        @map("preco_venda")
-  margemLucro    Float        @map("margem_lucro")
-  userId         String       @map("user_id")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  fichaTecnica   FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+  id          String                @id @default(cuid())
+  nome        String
+  precoVenda  Float                 @map("preco_venda")
+  margemLucro Float                 @map("margem_lucro")
+  userId      String                @map("user_id")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+  produtoFichas ProdutoFichaTecnica[]
 
   @@map("produtos")
+}
+
+model ProdutoFichaTecnica {
+  id               String       @id @default(cuid())
+  produtoId        String       @map("produto_id")
+  fichaTecnicaId   String       @map("ficha_tecnica_id")
+  quantidadeGramas Float        @map("quantidade_gramas")
+  produto          Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  fichaTecnica     FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+
+  @@map("produto_ficha_tecnica")
 }

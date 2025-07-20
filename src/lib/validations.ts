@@ -74,9 +74,12 @@ export type MovimentacaoEstoqueInput = z.infer<typeof movimentacaoEstoqueSchema>
 // Schema para Produto
 export const produtoSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
-  fichaTecnicaId: z.string().min(1, 'Ficha técnica é obrigatória'),
   precoVenda: z.number().positive('Preço de venda deve ser positivo'),
   margemLucro: z.number().min(0, 'Margem de lucro deve ser positiva'),
+  fichas: z.array(z.object({
+    fichaTecnicaId: z.string().min(1, 'Ficha técnica é obrigatória'),
+    quantidadeGramas: z.number().positive('Quantidade deve ser positiva'),
+  })).min(1, 'Pelo menos uma ficha técnica é obrigatória'),
 })
 
 export type ProdutoInput = z.infer<typeof produtoSchema>
