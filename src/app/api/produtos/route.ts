@@ -1,93 +1,50 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
-  createValidationErrorResponse, 
-  createServerErrorResponse,
-  createSuccessResponse 
+import {
+  authenticateUser,
+  createUnauthorizedResponse,
+  createValidationErrorResponse,
+  createSuccessResponse,
 } from '@/lib/auth'
-import { devProdutos, shouldUseDevData, simulateApiDelay } from '@/lib/dev-data'
+import { withErrorHandler } from '@/lib/api-helpers'
+import { produtoSchema } from '@/lib/validations'
 
-export async function GET() {
-  try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
-
-    // Usar dados de desenvolvimento se necessário
-    if (shouldUseDevData()) {
-      console.log('🔧 Usando dados de desenvolvimento para produtos')
-      await simulateApiDelay()
-      return createSuccessResponse(devProdutos)
-    }
-
-    const produtos = await prisma.produto.findMany({
-      where: { userId: user.id },
-      orderBy: { nome: 'asc' }
-    })
-
-    return createSuccessResponse(produtos)
-  } catch (error) {
-    console.error('Error fetching produtos:', error)
-    
-    // Em desenvolvimento, retornar dados fake se houver erro no banco
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('🔧 Erro no banco, usando dados de desenvolvimento')
-      await simulateApiDelay()
-      return createSuccessResponse(devProdutos)
-    }
-    
-    return createServerErrorResponse()
+export const GET = withErrorHandler(async function GET() {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+  const produtos = await prisma.produto.findMany({
+    where: { userId: user.id },
+    orderBy: { nome: 'asc' },
+  })
 
-    const body = await request.json()
-    const { nome, precoVenda, fichaTecnicaId, margemLucro } = body
+  return createSuccessResponse(produtos)
+})
 
-    if (!nome || !precoVenda) {
-      return createValidationErrorResponse('Campos obrigatórios: nome e preço de venda')
-    }
-
-    // Usar dados de desenvolvimento se necessário
-    if (shouldUseDevData()) {
-      console.log('🔧 Simulando criação de produto em desenvolvimento')
-      await simulateApiDelay()
-      const novoProduto = {
-        id: Date.now().toString(),
-        nome,
-        precoVenda: parseFloat(precoVenda),
-        margemLucro: margemLucro ? parseFloat(margemLucro) : 0.3, // 30% padrão
-        fichaTecnicaId: fichaTecnicaId || null,
-        userId: user.id
-      }
-      return createSuccessResponse(novoProduto, 201)
-    }
-
-    const produto = await prisma.produto.create({
-      data: {
-        nome,
-        precoVenda: parseFloat(precoVenda),
-        margemLucro: margemLucro ? parseFloat(margemLucro) : 0.3, // 30% padrão
-        fichaTecnicaId: fichaTecnicaId || null,
-        userId: user.id
-      }
-    })
-
-    return createSuccessResponse(produto, 201)
-  } catch (error) {
-    console.error('Error creating produto:', error)
-    return createServerErrorResponse()
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
+
+  const body = await request.json()
+  const parsedBody = produtoSchema.safeParse(body)
+
+  if (!parsedBody.success) {
+    return createValidationErrorResponse(parsedBody.error.message)
+  }
+
+  const data = parsedBody.data
+
+  const produto = await prisma.produto.create({
+    data: {
+      ...data,
+      userId: user.id,
+    },
+  })
+
+  return createSuccessResponse(produto, 201)
+})
 

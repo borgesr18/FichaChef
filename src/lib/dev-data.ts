@@ -116,29 +116,22 @@ export const devUnidadesMedida = [
 
 // Função para verificar se deve usar dados de desenvolvimento (apenas fallback)
 export function shouldUseDevData(): boolean {
-  // Verificar flag explícita para forçar dados fake
-  if (process.env.FORCE_DEV_DATA === 'true') {
-    console.log('🔧 FORCE_DEV_DATA=true - Usando dados de exemplo')
-    return true
-  }
-  
   // Em produção, nunca usar dados fake
   if (process.env.NODE_ENV === 'production') {
-    return false
+    return false;
   }
   
-  // Em desenvolvimento, verificar se banco está configurado
-  const dbUrl = process.env.DATABASE_URL
+  // Em desenvolvimento, verificar se o banco de dados está configurado
+  const dbUrl = process.env.DATABASE_URL;
   
-  // Se não há DATABASE_URL ou é placeholder, usar dados fake
+  // Se não há DATABASE_URL ou é um placeholder, usar dados fake
   if (!dbUrl || dbUrl.includes('placeholder') || dbUrl === '') {
-    console.log('🔧 DATABASE_URL não configurado - Usando dados de exemplo')
-    return true
+    console.log('🔧 DATABASE_URL não configurado - Usando dados de exemplo como fallback.');
+    return true;
   }
   
-  // Se DATABASE_URL está configurado, tentar usar banco real
-  console.log('🗄️ DATABASE_URL configurado - Tentando usar banco real')
-  return false
+  // Se DATABASE_URL está configurado, não usar dados fake
+  return false;
 }
 
 // Função para simular delay de API

@@ -1,74 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createClient } from '@/lib/supabase-server'
+import {
+  authenticateUser,
+  createUnauthorizedResponse,
+  createValidationErrorResponse,
+  createSuccessResponse,
+} from '@/lib/auth'
+import { withErrorHandler } from '@/lib/api-helpers'
+import { movimentacaoEstoqueSchema } from '@/lib/validations'
 
-export async function GET() {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const movimentacoes = await prisma.movimentacaoEstoque.findMany({
-      where: { userId: user.id },
-      include: {
-        insumo: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
-
-    return NextResponse.json(movimentacoes)
-  } catch (error) {
-    console.error('Error fetching movimentacoes estoque:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export const GET = withErrorHandler(async function GET() {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const movimentacoes = await prisma.movimentacaoEstoque.findMany({
+    where: { userId: user.id },
+    include: {
+      insumo: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  })
 
-    const body = await request.json()
-    const { 
-      insumoId, 
-      tipo, 
-      quantidade, 
-      motivo, 
-      lote, 
-      dataValidade 
-    } = body
+  return createSuccessResponse(movimentacoes)
+})
 
-    if (!insumoId || !tipo || !quantidade || !motivo) {
-      return NextResponse.json({ 
-        error: 'Insumo, tipo, quantidade e motivo são obrigatórios' 
-      }, { status: 400 })
-    }
-
-    const movimentacao = await prisma.movimentacaoEstoque.create({
-      data: {
-        insumoId,
-        tipo,
-        quantidade: parseFloat(quantidade),
-        motivo,
-        lote,
-        dataValidade: dataValidade ? new Date(dataValidade) : null,
-        userId: user.id
-      },
-      include: {
-        insumo: true
-      }
-    })
-
-    return NextResponse.json(movimentacao, { status: 201 })
-  } catch (error) {
-    console.error('Error creating movimentacao estoque:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const user = await authenticateUser()
+  if (!user) {
+    return createUnauthorizedResponse()
   }
-}
+
+  const body = await request.json()
+  const parsedBody = movimentacaoEstoqueSchema.safeParse(body)
+
+  if (!parsedBody.success) {
+    return createValidationErrorResponse(parsedBody.error.message)
+  }
+
+  const data = parsedBody.data
+
+  const movimentacao = await prisma.movimentacaoEstoque.create({
+    data: {
+      ...data,
+      userId: user.id,
+    },
+    include: {
+      insumo: true,
+    },
+  })
+
+  return createSuccessResponse(movimentacao, 201)
+})
