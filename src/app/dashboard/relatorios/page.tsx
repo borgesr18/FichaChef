@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { FileBarChart, Download, Filter, Package } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { generatePDF, generateExcel, downloadFile, getDefaultTemplate } from '@/lib/export-utils'
 
 interface ReportData {
   type: string
@@ -19,7 +20,7 @@ export default function RelatoriosPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     if (!reportType) return
     
     setLoading(true)
@@ -46,18 +47,37 @@ export default function RelatoriosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [reportType, dateFrom, dateTo])
 
   useEffect(() => {
     fetchReport()
-  }, [reportType])
+  }, [reportType, fetchReport])
 
-  const handleExportPDF = () => {
-    console.log('Exporting PDF...', reportData)
+  const handleExportPDF = async () => {
+    if (!reportData) return
+    
+    try {
+      const template = getDefaultTemplate()
+      const pdfBlob = generatePDF(reportData, template)
+      const filename = `relatorio-${reportData.type}-${new Date().toISOString().split('T')[0]}.pdf`
+      downloadFile(pdfBlob, filename)
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      setError('Erro ao gerar PDF')
+    }
   }
 
-  const handleExportExcel = () => {
-    console.log('Exporting Excel...', reportData)
+  const handleExportExcel = async () => {
+    if (!reportData) return
+    
+    try {
+      const excelBlob = generateExcel(reportData)
+      const filename = `relatorio-${reportData.type}-${new Date().toISOString().split('T')[0]}.xlsx`
+      downloadFile(excelBlob, filename)
+    } catch (error) {
+      console.error('Error generating Excel:', error)
+      setError('Erro ao gerar Excel')
+    }
   }
 
   const renderReportContent = () => {
