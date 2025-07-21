@@ -19,7 +19,9 @@ import {
   Truck,
   Bell,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Palette,
+  Clock
 } from 'lucide-react'
 
 const menuItems = [
@@ -37,6 +39,8 @@ const menuItems = [
   { href: '/dashboard/analise-temporal', icon: TrendingUp, label: 'Análise Temporal' },
   { href: '/dashboard/impressao', icon: Printer, label: 'Impressão' },
   { href: '/dashboard/relatorios', icon: FileBarChart, label: 'Relatórios' },
+  { href: '/dashboard/relatorios/templates', icon: Palette, label: 'Templates de Relatórios' },
+  { href: '/dashboard/relatorios/agendamentos', icon: Clock, label: 'Agendamentos de Relatórios' },
 ]
 
 interface SidebarProps {

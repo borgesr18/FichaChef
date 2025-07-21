@@ -315,3 +315,54 @@ model MenuPeriodo {
 
   @@map("menu_periodos")
 }
+
+model RelatorioTemplate {
+  id           String   @id @default(cuid())
+  nome         String
+  tipo         String   // 'custos', 'producao', 'estoque', etc.
+  configuracao Json     // Layout, colors, fonts, etc.
+  padrao       Boolean  @default(false)
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  agendamentos RelatorioAgendamento[]
+
+  @@map("relatorio_templates")
+}
+
+model RelatorioAgendamento {
+  id              String   @id @default(cuid())
+  nome            String
+  tipo            String   // 'custos', 'producao', 'estoque', etc.
+  templateId      String?  @map("template_id")
+  formato         String   // 'pdf', 'excel'
+  frequencia      String   // 'diario', 'semanal', 'mensal'
+  diasSemana      String?  @map("dias_semana") // JSON array for weekly
+  diaMes          Int?     @map("dia_mes") // For monthly
+  horario         String   // HH:MM format
+  ativo           Boolean  @default(true)
+  proximaExecucao DateTime @map("proxima_execucao")
+  ultimaExecucao  DateTime? @map("ultima_execucao")
+  email           String?  // Optional email delivery
+  userId          String   @map("user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  template        RelatorioTemplate? @relation(fields: [templateId], references: [id])
+  execucoes       RelatorioExecucao[]
+
+  @@map("relatorio_agendamentos")
+}
+
+model RelatorioExecucao {
+  id            String   @id @default(cuid())
+  agendamentoId String   @map("agendamento_id")
+  dataExecucao  DateTime @map("data_execucao")
+  status        String   // 'sucesso', 'erro', 'processando'
+  arquivo       String?  // File path or URL
+  erro          String?
+  userId        String   @map("user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  agendamento   RelatorioAgendamento @relation(fields: [agendamentoId], references: [id])
+
+  @@map("relatorio_execucoes")
+}
