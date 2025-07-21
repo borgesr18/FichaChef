@@ -11,12 +11,14 @@ interface Insumo {
   nome: string
   marca?: string
   fornecedor?: string
+  fornecedorId?: string
   categoriaId: string
   unidadeCompraId: string
   pesoLiquidoGramas: number
   precoUnidade: number
   categoria: { nome: string }
   unidadeCompra: { nome: string; simbolo: string }
+  fornecedorRel?: { nome: string }
 }
 
 interface Categoria {
@@ -30,11 +32,18 @@ interface UnidadeMedida {
   simbolo: string
 }
 
+interface Fornecedor {
+  id: string
+  nome: string
+  ativo: boolean
+}
+
 export default function InsumosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [insumos, setInsumos] = useState<Insumo[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null)
   const [loading, setLoading] = useState(false)
@@ -44,6 +53,7 @@ export default function InsumosPage() {
     nome: '',
     marca: '',
     fornecedor: '',
+    fornecedorId: '',
     categoriaId: '',
     unidadeCompraId: '',
     pesoLiquidoGramas: '',
@@ -54,6 +64,7 @@ export default function InsumosPage() {
     fetchInsumos()
     fetchCategorias()
     fetchUnidades()
+    fetchFornecedores()
   }, [])
 
   const fetchInsumos = async () => {
@@ -92,6 +103,18 @@ export default function InsumosPage() {
     }
   }
 
+  const fetchFornecedores = async () => {
+    try {
+      const response = await fetch('/api/fornecedores')
+      if (response.ok) {
+        const data = await response.json()
+        setFornecedores(data.filter((f: Fornecedor) => f.ativo))
+      }
+    } catch (error) {
+      console.error('Error fetching fornecedores:', error)
+    }
+  }
+
   const handleOpenModal = (insumo?: Insumo) => {
     setEditingInsumo(insumo || null)
     if (insumo) {
@@ -99,6 +122,7 @@ export default function InsumosPage() {
         nome: insumo.nome,
         marca: insumo.marca || '',
         fornecedor: insumo.fornecedor || '',
+        fornecedorId: insumo.fornecedorId || '',
         categoriaId: insumo.categoriaId,
         unidadeCompraId: insumo.unidadeCompraId,
         pesoLiquidoGramas: insumo.pesoLiquidoGramas.toString(),
@@ -109,6 +133,7 @@ export default function InsumosPage() {
         nome: '',
         marca: '',
         fornecedor: '',
+        fornecedorId: '',
         categoriaId: '',
         unidadeCompraId: '',
         pesoLiquidoGramas: '',
@@ -250,6 +275,9 @@ export default function InsumosPage() {
                         {insumo.marca || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {insumo.fornecedorRel?.nome || insumo.fornecedor || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {insumo.categoria.nome}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -327,12 +355,21 @@ export default function InsumosPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Fornecedor
               </label>
-              <input
-                type="text"
-                value={formData.fornecedor}
-                onChange={(e) => setFormData({ ...formData, fornecedor: e.target.value })}
+              <select
+                value={formData.fornecedorId}
+                onChange={(e) => setFormData({ ...formData, fornecedorId: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              >
+                <option value="">Selecione um fornecedor</option>
+                {fornecedores.map((fornecedor) => (
+                  <option key={fornecedor.id} value={fornecedor.id}>
+                    {fornecedor.nome}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Não encontrou o fornecedor? <a href="/dashboard/fornecedores" className="text-blue-600 hover:text-blue-800">Cadastre aqui</a>
+              </p>
             </div>
 
             <div>

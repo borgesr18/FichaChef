@@ -61,6 +61,7 @@ model Insumo {
   nome                 String
   marca                String?
   fornecedor           String?
+  fornecedorId         String?               @map("fornecedor_id")
   categoriaId          String                @map("categoria_id")
   unidadeCompraId      String                @map("unidade_compra_id")
   pesoLiquidoGramas    Float                 @map("peso_liquido_gramas")
@@ -71,7 +72,9 @@ model Insumo {
   ingredientes         Ingrediente[]
   categoria            CategoriaInsumo       @relation(fields: [categoriaId], references: [id])
   unidadeCompra        UnidadeMedida         @relation(fields: [unidadeCompraId], references: [id])
+  fornecedorRel        Fornecedor?           @relation(fields: [fornecedorId], references: [id])
   movimentacoesEstoque MovimentacaoEstoque[]
+  fornecedorPrecos     FornecedorPreco[]
 
   @@map("insumos")
 }
@@ -192,4 +195,43 @@ model ProducaoProduto {
   produto             Produto   @relation(fields: [produtoId], references: [id])
 
   @@map("producoes_produto")
+}
+
+model Fornecedor {
+  id            String   @id @default(cuid())
+  nome          String
+  razaoSocial   String?  @map("razao_social")
+  cnpj          String?
+  telefone      String?
+  email         String?
+  endereco      String?
+  cidade        String?
+  estado        String?
+  cep           String?
+  contato       String?
+  observacoes   String?
+  ativo         Boolean  @default(true)
+  userId        String   @map("user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  insumos       Insumo[]
+  precos        FornecedorPreco[]
+
+  @@map("fornecedores")
+}
+
+model FornecedorPreco {
+  id           String     @id @default(cuid())
+  fornecedorId String     @map("fornecedor_id")
+  insumoId     String     @map("insumo_id")
+  preco        Float
+  dataVigencia DateTime   @map("data_vigencia")
+  ativo        Boolean    @default(true)
+  observacoes  String?
+  userId       String     @map("user_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  fornecedor   Fornecedor @relation(fields: [fornecedorId], references: [id])
+  insumo       Insumo     @relation(fields: [insumoId], references: [id])
+
+  @@map("fornecedor_precos")
 }

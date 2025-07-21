@@ -5,6 +5,7 @@ export const insumoSchema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
   marca: z.string().optional(),
   fornecedor: z.string().optional(),
+  fornecedorId: z.string().optional(),
   categoriaId: z.string().min(1, 'Categoria é obrigatória'),
   unidadeCompraId: z.string().min(1, 'Unidade de compra é obrigatória'),
   pesoLiquidoGramas: z.number().positive('Peso deve ser positivo'),
@@ -106,4 +107,34 @@ export const producaoProdutoSchema = z.object({
 })
 
 export type ProducaoProdutoInput = z.infer<typeof producaoProdutoSchema>
+
+// Schema para Fornecedor
+export const fornecedorSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  razaoSocial: z.string().optional(),
+  cnpj: z.string().optional(),
+  telefone: z.string().optional(),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  endereco: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
+  contato: z.string().optional(),
+  observacoes: z.string().optional(),
+  ativo: z.boolean().default(true),
+})
+
+export type FornecedorInput = z.infer<typeof fornecedorSchema>
+
+// Schema para Preço de Fornecedor
+export const fornecedorPrecoSchema = z.object({
+  fornecedorId: z.string().min(1, 'Fornecedor é obrigatório'),
+  insumoId: z.string().min(1, 'Insumo é obrigatório'),
+  preco: z.number().positive('Preço deve ser positivo'),
+  dataVigencia: z.date(),
+  ativo: z.boolean().default(true),
+  observacoes: z.string().optional(),
+})
+
+export type FornecedorPrecoInput = z.infer<typeof fornecedorPrecoSchema>
 
