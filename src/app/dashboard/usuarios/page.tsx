@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Edit, Shield, Plus, Mail, Trash2 } from 'lucide-react'
+import { Users, Edit, Shield, Plus, Mail, Trash2, Key } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
 interface Usuario {
@@ -20,8 +20,13 @@ export default function UsuariosPage() {
   const [currentUser, setCurrentUser] = useState<{ role?: string } | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
   const [inviteLoading, setInviteLoading] = useState(false)
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
+  const [resetMethod, setResetMethod] = useState<'direct' | 'email'>('email')
+  const [newPassword, setNewPassword] = useState('')
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
@@ -151,6 +156,49 @@ export default function UsuariosPage() {
     }
   }
 
+  const openPasswordResetModal = (usuario: Usuario) => {
+    setSelectedUser(usuario)
+    setShowPasswordResetModal(true)
+    setResetMethod('email')
+    setNewPassword('')
+  }
+
+  const resetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedUser) return
+
+    setPasswordResetLoading(true)
+
+    try {
+      const endpoint = resetMethod === 'direct' ? 'reset-password' : 'send-password-reset'
+      const body = resetMethod === 'direct' 
+        ? { userId: selectedUser.userId, newPassword }
+        : { email: selectedUser.email }
+
+      const response = await fetch(`/api/usuarios/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setShowPasswordResetModal(false)
+        setSelectedUser(null)
+        setNewPassword('')
+        alert(data.message || 'Senha redefinida com sucesso!')
+      } else {
+        const error = await response.json()
+        alert(`Erro ao redefinir senha: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      alert('Erro ao redefinir senha')
+    } finally {
+      setPasswordResetLoading(false)
+    }
+  }
+
   if (currentUser && currentUser.role !== 'chef') {
     return (
       <DashboardLayout>
@@ -245,6 +293,13 @@ export default function UsuariosPage() {
                           title="Editar usuário"
                         >
                           <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => openPasswordResetModal(usuario)}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Redefinir senha"
+                        >
+                          <Key className="h-4 w-4" />
                         </button>
                         <button 
                           onClick={() => deleteUser(usuario.userId)}
@@ -384,6 +439,97 @@ export default function UsuariosPage() {
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
               >
                 {inviteLoading ? 'Enviando...' : 'Enviar Convite'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* Modal para Redefinir Senha */}
+        <Modal
+          isOpen={showPasswordResetModal}
+          onClose={() => setShowPasswordResetModal(false)}
+          title="Redefinir Senha"
+        >
+          <form onSubmit={resetPassword} className="space-y-4">
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Redefinindo senha para: <strong>{selectedUser?.nome || selectedUser?.email}</strong>
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Método de Redefinição
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="resetMethod"
+                    value="email"
+                    checked={resetMethod === 'email'}
+                    onChange={(e) => setResetMethod(e.target.value as 'direct' | 'email')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Enviar email de redefinição</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="resetMethod"
+                    value="direct"
+                    checked={resetMethod === 'direct'}
+                    onChange={(e) => setResetMethod(e.target.value as 'direct' | 'email')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Definir nova senha diretamente</span>
+                </label>
+              </div>
+            </div>
+
+            {resetMethod === 'email' && (
+              <div className="bg-blue-50 p-3 rounded-md">
+                <p className="text-sm text-blue-700">
+                  Um email será enviado para <strong>{selectedUser?.email}</strong> com instruções para redefinir a senha.
+                </p>
+              </div>
+            )}
+
+            {resetMethod === 'direct' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nova Senha
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  A senha será alterada imediatamente.
+                </p>
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowPasswordResetModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={passwordResetLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md disabled:opacity-50"
+              >
+                {passwordResetLoading ? 'Processando...' : 
+                 resetMethod === 'email' ? 'Enviar Email' : 'Redefinir Senha'}
               </button>
             </div>
           </form>
