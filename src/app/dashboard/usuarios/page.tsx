@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Shield, Plus, Mail, Trash2, Key } from 'lucide-react'
+import { Users, Shield, Plus, Mail, Key } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
 interface Usuario {
@@ -136,25 +136,6 @@ export default function UsuariosPage() {
     }
   }
 
-  const deleteUser = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return
-
-    try {
-      const response = await fetch(`/api/usuarios/${userId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        await fetchUsuarios()
-      } else {
-        const error = await response.json()
-        alert(`Erro ao excluir usuário: ${error.error}`)
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      alert('Erro ao excluir usuário')
-    }
-  }
 
   const openPasswordResetModal = (usuario: Usuario) => {
     setSelectedUser(usuario)
