@@ -99,6 +99,23 @@ export async function authenticateUserWithProfile(): Promise<AuthenticatedUser |
   const user = await authenticateUser()
   if (!user) return null
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  const isDevMode = !supabaseUrl || !supabaseKey || 
+                    supabaseUrl === '' || supabaseKey === '' ||
+                    supabaseUrl.includes('placeholder') || 
+                    supabaseKey.includes('placeholder')
+
+  if (isDevMode) {
+    console.log('🔧 Modo desenvolvimento: usando perfil padrão (chef)')
+    return {
+      ...user,
+      role: 'chef',
+      nome: 'Usuário Desenvolvimento'
+    }
+  }
+
   try {
     const { prisma } = await import('./prisma')
     
