@@ -167,3 +167,10 @@ export function createForbiddenResponse(message: string = 'Acesso negado') {
   )
 }
 
+export function createErrorResponse(message: string, status: number = 500) {
+  return NextResponse.json(
+    { error: message },
+    { status }
+  )
+}
+
