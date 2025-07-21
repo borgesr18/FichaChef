@@ -50,7 +50,7 @@ export default function RelatoriosPage() {
 
   useEffect(() => {
     fetchReport()
-  }, [reportType, fetchReport])
+  }, [reportType])
 
   const handleExportPDF = () => {
     console.log('Exporting PDF...', reportData)
