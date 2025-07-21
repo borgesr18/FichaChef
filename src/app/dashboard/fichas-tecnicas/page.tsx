@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
-import { FileText, Plus, Search, Edit, Trash2, X } from 'lucide-react'
+import { FileText, Plus, Search, Edit, Trash2, X, Calculator } from 'lucide-react'
 import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface FichaTecnica {
@@ -55,6 +55,24 @@ export default function FichasTecnicasPage() {
   const [editingFicha, setEditingFicha] = useState<FichaTecnica | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isScalingModalOpen, setIsScalingModalOpen] = useState(false)
+  const [scalingFicha, setScalingFicha] = useState<FichaTecnica | null>(null)
+  const [targetPortions, setTargetPortions] = useState('')
+  const [scaledData, setScaledData] = useState<{
+    ingredientes: Array<{
+      id: string
+      insumoId: string
+      quantidadeGramas: number
+      insumo: {
+        nome: string
+        precoUnidade: number
+        pesoLiquidoGramas: number
+      }
+    }>
+    custoTotal: number
+    pesoTotal: number
+    tempoPreparoEscalado?: number
+  } | null>(null)
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -174,6 +192,52 @@ export default function FichasTecnicasPage() {
       }
       return total
     }, 0)
+  }
+
+  const handleOpenScalingModal = (ficha: FichaTecnica) => {
+    setScalingFicha(ficha)
+    setTargetPortions(ficha.numeroPorcoes.toString())
+    setScaledData(null)
+    setIsScalingModalOpen(true)
+  }
+
+  const handleCloseScalingModal = () => {
+    setIsScalingModalOpen(false)
+    setScalingFicha(null)
+    setTargetPortions('')
+    setScaledData(null)
+  }
+
+  const calculateScaling = () => {
+    if (!scalingFicha || !targetPortions) return
+
+    const targetPortionsNum = parseInt(targetPortions)
+    if (targetPortionsNum <= 0) return
+
+    const scaleFactor = targetPortionsNum / scalingFicha.numeroPorcoes
+    
+    const scaledIngredientes = scalingFicha.ingredientes.map(ing => ({
+      ...ing,
+      quantidadeGramas: ing.quantidadeGramas * scaleFactor
+    }))
+
+    const custoTotal = scaledIngredientes.reduce((total, ing) => {
+      const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+      return total + (custoPorGrama * ing.quantidadeGramas)
+    }, 0)
+
+    const pesoTotal = scalingFicha.pesoFinalGramas * scaleFactor
+    
+    const tempoPreparoEscalado = scalingFicha.tempoPreparo 
+      ? Math.round(scalingFicha.tempoPreparo * Math.sqrt(scaleFactor))
+      : undefined
+
+    setScaledData({
+      ingredientes: scaledIngredientes,
+      custoTotal,
+      pesoTotal,
+      tempoPreparoEscalado
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -322,6 +386,13 @@ export default function FichasTecnicasPage() {
                           R$ {custoTotal.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleOpenScalingModal(ficha)}
+                            className="text-green-600 hover:text-green-900 mr-3"
+                            title="Escalar Receita"
+                          >
+                            <Calculator className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={() => handleOpenModal(ficha)}
                             className="text-blue-600 hover:text-blue-900 mr-3"
@@ -556,6 +627,153 @@ export default function FichasTecnicasPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={isScalingModalOpen}
+        onClose={handleCloseScalingModal}
+        title={`Escalar Receita: ${scalingFicha?.nome || ''}`}
+        size="xl"
+      >
+        <div className="space-y-6">
+          {scalingFicha && (
+            <div className="bg-blue-50 p-4 rounded-md">
+              <h4 className="font-medium text-blue-900 mb-2">Receita Original</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-blue-700">
+                <div>
+                  <span className="font-medium">Porções:</span> {scalingFicha.numeroPorcoes}
+                </div>
+                <div>
+                  <span className="font-medium">Peso:</span> {scalingFicha.pesoFinalGramas}g
+                </div>
+                <div>
+                  <span className="font-medium">Custo:</span> R$ {scalingFicha.ingredientes.reduce((total, ing) => {
+                    const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+                    return total + (custoPorGrama * ing.quantidadeGramas)
+                  }, 0).toFixed(2)}
+                </div>
+                {scalingFicha.tempoPreparo && (
+                  <div>
+                    <span className="font-medium">Tempo:</span> {scalingFicha.tempoPreparo} min
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Número de Porções Desejadas *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="1000"
+                value={targetPortions}
+                onChange={(e) => setTargetPortions(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ex: 20"
+              />
+              <button
+                onClick={calculateScaling}
+                disabled={!targetPortions || parseInt(targetPortions) <= 0}
+                className="mt-3 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Calcular Escalabilidade
+              </button>
+            </div>
+
+            {scaledData && (
+              <div className="bg-green-50 p-4 rounded-md">
+                <h4 className="font-medium text-green-900 mb-3">Receita Escalada</h4>
+                <div className="space-y-2 text-sm text-green-700">
+                  <div className="flex justify-between">
+                    <span>Porções:</span>
+                    <span className="font-medium">{targetPortions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Peso Total:</span>
+                    <span className="font-medium">{scaledData.pesoTotal.toFixed(1)}g</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Custo Total:</span>
+                    <span className="font-medium">R$ {scaledData.custoTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Custo por Porção:</span>
+                    <span className="font-medium">R$ {(scaledData.custoTotal / parseInt(targetPortions)).toFixed(2)}</span>
+                  </div>
+                  {scaledData.tempoPreparoEscalado && (
+                    <div className="flex justify-between">
+                      <span>Tempo Estimado:</span>
+                      <span className="font-medium">{scaledData.tempoPreparoEscalado} min</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {scaledData && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Ingredientes Escalados</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Ingrediente
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                        Quantidade Original
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                        Quantidade Escalada
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                        Custo
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {scaledData.ingredientes.map((ing, index) => {
+                      const originalIng = scalingFicha?.ingredientes[index]
+                      const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+                      const custoIngrediente = custoPorGrama * ing.quantidadeGramas
+                      
+                      return (
+                        <tr key={index}>
+                          <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                            {ing.insumo.nome}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-500 text-right">
+                            {originalIng?.quantidadeGramas.toFixed(1)}g
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-900 text-right font-medium">
+                            {ing.quantidadeGramas.toFixed(1)}g
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-500 text-right">
+                            R$ {custoIngrediente.toFixed(2)}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              onClick={handleCloseScalingModal}
+              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       </Modal>
     </DashboardLayout>
   )

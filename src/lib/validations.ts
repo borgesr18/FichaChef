@@ -168,3 +168,11 @@ export const notificacaoSchema = z.object({
 
 export type NotificacaoInput = z.infer<typeof notificacaoSchema>
 
+// Schema para Escalabilidade de Receita
+export const escalabilidadeReceitaSchema = z.object({
+  fichaTecnicaId: z.string().min(1, 'Ficha técnica é obrigatória'),
+  porcoeDesejadas: z.number().int().positive('Número de porções deve ser positivo').max(1000, 'Máximo 1000 porções'),
+})
+
+export type EscalabilidadeReceitaInput = z.infer<typeof escalabilidadeReceitaSchema>
+
