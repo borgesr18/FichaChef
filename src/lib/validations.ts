@@ -213,3 +213,14 @@ export const menuPeriodoSchema = z.object({
 
 export type MenuPeriodoInput = z.infer<typeof menuPeriodoSchema>
 
+export const analiseTemporalSchema = z.object({
+  insumoId: z.string().min(1, 'Insumo é obrigatório').optional(),
+  fornecedorId: z.string().min(1, 'Fornecedor é obrigatório').optional(),
+  dataInicio: z.date(),
+  dataFim: z.date(),
+  periodo: z.enum(['monthly', 'quarterly', 'yearly']).default('monthly'),
+  mesesProjecao: z.number().int().min(1).max(24).default(6),
+})
+
+export type AnaliseTemporalInput = z.infer<typeof analiseTemporalSchema>
+
