@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Edit, Shield, Plus, Mail, Trash2, Key } from 'lucide-react'
+import { Users, Shield, Plus, Mail, Key } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
 interface Usuario {
@@ -136,25 +136,6 @@ export default function UsuariosPage() {
     }
   }
 
-  const deleteUser = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return
-
-    try {
-      const response = await fetch(`/api/usuarios/${userId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        await fetchUsuarios()
-      } else {
-        const error = await response.json()
-        alert(`Erro ao excluir usuário: ${error.error}`)
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      alert('Erro ao excluir usuário')
-    }
-  }
 
   const openPasswordResetModal = (usuario: Usuario) => {
     setSelectedUser(usuario)
@@ -289,24 +270,11 @@ export default function UsuariosPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar usuário"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button 
                           onClick={() => openPasswordResetModal(usuario)}
                           className="text-yellow-600 hover:text-yellow-900"
                           title="Redefinir senha"
                         >
                           <Key className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => deleteUser(usuario.userId)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Excluir usuário"
-                        >
-                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>

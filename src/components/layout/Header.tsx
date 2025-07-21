@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, Bell } from 'lucide-react'
+import { LogOut, User, Bell, Search, Star } from 'lucide-react'
 
 interface Notificacao {
   id: string
@@ -14,7 +14,12 @@ interface Notificacao {
   createdAt: string
 }
 
-export default function Header() {
+interface HeaderProps {
+  onGlobalSearch?: () => void
+  onToggleWorkflow?: () => void
+}
+
+export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {
   const { user, signOut } = useSupabase()
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
@@ -63,11 +68,44 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-64 right-0 h-16 bg-white border-b border-gray-200 z-30">
       <div className="flex items-center justify-between h-full px-6">
-        <h1 className="text-xl font-semibold text-gray-900">
-          FichaChef – Sistema de Fichas Técnicas
-        </h1>
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-semibold text-gray-900">
+            FichaChef – Sistema de Fichas Técnicas
+          </h1>
+          
+          {onGlobalSearch && (
+            <button
+              onClick={onGlobalSearch}
+              className="hidden lg:flex items-center space-x-2 px-3 py-1 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              <span>Buscar</span>
+              <kbd className="px-1 py-0.5 text-xs bg-gray-200 rounded">⌘K</kbd>
+            </button>
+          )}
+        </div>
         
         <div className="flex items-center space-x-4">
+          {onGlobalSearch && (
+            <button
+              onClick={onGlobalSearch}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              title="Busca Global"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          )}
+          
+          {onToggleWorkflow && (
+            <button
+              onClick={onToggleWorkflow}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+              title="Favoritos e Recentes"
+            >
+              <Star className="h-5 w-5" />
+            </button>
+          )}
+          
           {user && (
             <>
               <div className="relative">
