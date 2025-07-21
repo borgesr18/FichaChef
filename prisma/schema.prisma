@@ -152,6 +152,7 @@ model Produto {
   produtoFichas ProdutoFichaTecnica[]
   movimentacoesProduto MovimentacaoProduto[]
   producoesProduto ProducaoProduto[]
+  menuItens        MenuItem[]
 
   @@map("produtos")
 }
@@ -270,4 +271,47 @@ model Notificacao {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("notificacoes")
+}
+
+model Menu {
+  id          String     @id @default(cuid())
+  nome        String
+  descricao   String?
+  tipo        String     // 'cafe_manha', 'almoco', 'jantar', 'lanche'
+  ativo       Boolean    @default(true)
+  userId      String     @map("user_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  itens       MenuItem[]
+  periodos    MenuPeriodo[]
+
+  @@map("menus")
+}
+
+model MenuItem {
+  id         String  @id @default(cuid())
+  menuId     String  @map("menu_id")
+  produtoId  String  @map("produto_id")
+  quantidade Int     @default(1)
+  observacoes String?
+  menu       Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  produto    Produto @relation(fields: [produtoId], references: [id])
+
+  @@map("menu_itens")
+}
+
+model MenuPeriodo {
+  id          String   @id @default(cuid())
+  menuId      String   @map("menu_id")
+  dataInicio  DateTime @map("data_inicio")
+  dataFim     DateTime @map("data_fim")
+  tipo        String   // 'semanal', 'mensal', 'personalizado'
+  ativo       Boolean  @default(true)
+  observacoes String?
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@map("menu_periodos")
 }
