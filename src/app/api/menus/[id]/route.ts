@@ -12,15 +12,16 @@ import { menuSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const user = await authenticateUser()
   if (!user) {
     return createUnauthorizedResponse()
   }
 
   const menu = await prisma.menu.findFirst({
-    where: { id: params.id, userId: user.id },
+    where: { id, userId: user.id },
     include: {
       itens: {
         include: {
@@ -56,8 +57,9 @@ export const GET = withErrorHandler(async function GET(
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const user = await authenticateUser()
   if (!user) {
     return createUnauthorizedResponse()
@@ -73,7 +75,7 @@ export const PUT = withErrorHandler(async function PUT(
   const data = parsedBody.data
 
   const existingMenu = await prisma.menu.findFirst({
-    where: { id: params.id, userId: user.id }
+    where: { id, userId: user.id }
   })
 
   if (!existingMenu) {
@@ -81,11 +83,11 @@ export const PUT = withErrorHandler(async function PUT(
   }
 
   await prisma.menuItem.deleteMany({
-    where: { menuId: params.id }
+    where: { menuId: id }
   })
 
   const menu = await prisma.menu.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       nome: data.nome,
       descricao: data.descricao,
@@ -130,15 +132,16 @@ export const PUT = withErrorHandler(async function PUT(
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const user = await authenticateUser()
   if (!user) {
     return createUnauthorizedResponse()
   }
 
   const existingMenu = await prisma.menu.findFirst({
-    where: { id: params.id, userId: user.id }
+    where: { id, userId: user.id }
   })
 
   if (!existingMenu) {
@@ -146,7 +149,7 @@ export const DELETE = withErrorHandler(async function DELETE(
   }
 
   await prisma.menu.delete({
-    where: { id: params.id }
+    where: { id }
   })
 
   return createSuccessResponse({ message: 'Menu excluído com sucesso' })

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
-import { Calendar, Plus, Search, Edit, Trash2, X, Calculator, Clock } from 'lucide-react'
+import { Calendar, Plus, Search, Edit, Trash2, X, Clock } from 'lucide-react'
 import { calculateMenuCost } from '@/lib/utils'
 
 interface Produto {
