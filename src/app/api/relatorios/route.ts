@@ -1,0 +1,377 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { authenticateUser } from '@/lib/auth'
+
+interface ProducaoItem {
+  id: string
+  nome: string
+  quantidadeTotal: number
+  numeroProducoes: number
+  tipo: string
+}
+
+interface EstoqueItem {
+  id: string
+  nome: string
+  saldoAtual: number
+  entradas: number
+  saidas: number
+  precoUnidade?: number
+  precoVenda?: number
+  valorEstoque: number
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await authenticateUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const reportType = searchParams.get('type') || 'custos'
+
+    let reportData = {}
+
+    switch (reportType) {
+      case 'custos':
+        reportData = await generateCostReport(user.id)
+        break
+      case 'producao':
+        reportData = await generateProductionReport(user.id)
+        break
+      case 'estoque':
+        reportData = await generateInventoryReport(user.id)
+        break
+      case 'fichas':
+        reportData = await generateRecipeReport(user.id)
+        break
+      default:
+        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+    }
+
+    return NextResponse.json(reportData)
+  } catch (error) {
+    console.error('Error generating report:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+async function generateCostReport(userId: string) {
+  const produtos = await prisma.produto.findMany({
+    where: { userId },
+    include: {
+      produtoFichas: {
+        include: {
+          fichaTecnica: {
+            include: {
+              ingredientes: {
+                include: {
+                  insumo: true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+
+  const fichasTecnicas = await prisma.fichaTecnica.findMany({
+    where: { userId },
+    include: {
+      ingredientes: {
+        include: {
+          insumo: true
+        }
+      }
+    }
+  })
+
+  const costAnalysis = {
+    produtos: produtos.map(produto => {
+      const custoTotal = produto.produtoFichas.reduce((total, produtoFicha) => {
+        const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal, ing) => {
+          const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+          return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
+        }, 0)
+        const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
+        return total + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
+      }, 0)
+      
+      const pesoTotal = produto.produtoFichas.reduce((total, f) => total + f.quantidadeGramas, 0)
+      const margemLucroReal = produto.precoVenda > 0 ? ((produto.precoVenda - custoTotal) / produto.precoVenda) * 100 : 0
+      
+      return {
+        nome: produto.nome,
+        custoProducao: custoTotal,
+        precoVenda: produto.precoVenda,
+        margemLucroConfigurada: produto.margemLucro,
+        margemLucroReal: margemLucroReal,
+        pesoTotal: pesoTotal,
+        custoPorGrama: pesoTotal > 0 ? custoTotal / pesoTotal : 0
+      }
+    }),
+    fichasTecnicas: fichasTecnicas.map(ficha => {
+      const custoTotal = ficha.ingredientes.reduce((total, ing) => {
+        const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+        return total + (custoPorGrama * ing.quantidadeGramas)
+      }, 0)
+      
+      return {
+        nome: ficha.nome,
+        custoTotal: custoTotal,
+        pesoFinal: ficha.pesoFinalGramas,
+        custoPorGrama: custoTotal / ficha.pesoFinalGramas,
+        custoPorPorcao: custoTotal / ficha.numeroPorcoes,
+        numeroPorcoes: ficha.numeroPorcoes
+      }
+    })
+  }
+
+  return {
+    type: 'custos',
+    data: costAnalysis,
+    summary: {
+      totalProdutos: produtos.length,
+      totalFichas: fichasTecnicas.length,
+      custoMedioProduto: costAnalysis.produtos.reduce((sum, p) => sum + p.custoProducao, 0) / (produtos.length || 1),
+      custoMedioFicha: costAnalysis.fichasTecnicas.reduce((sum, f) => sum + f.custoTotal, 0) / (fichasTecnicas.length || 1)
+    }
+  }
+}
+
+async function generateProductionReport(userId: string) {
+  const whereClause: Record<string, unknown> = { userId }
+
+  const [producoesFichas, producoesProdutos] = await Promise.all([
+    prisma.producao.findMany({
+      where: whereClause,
+      include: {
+        fichaTecnica: true
+      },
+      orderBy: { dataProducao: 'desc' }
+    }),
+    prisma.producaoProduto.findMany({
+      where: whereClause,
+      include: {
+        produto: true
+      },
+      orderBy: { dataProducao: 'desc' }
+    })
+  ])
+
+  const fichasProducao = producoesFichas.reduce((acc, prod) => {
+    const existing = acc.find(item => item.id === prod.fichaTecnica.id)
+    if (existing) {
+      (existing as ProducaoItem).quantidadeTotal += prod.quantidadeProduzida;
+      (existing as ProducaoItem).numeroProducoes += 1
+    } else {
+      acc.push({
+        id: prod.fichaTecnica.id,
+        nome: prod.fichaTecnica.nome,
+        quantidadeTotal: prod.quantidadeProduzida,
+        numeroProducoes: 1,
+        tipo: 'ficha'
+      })
+    }
+    return acc
+  }, [] as ProducaoItem[])
+
+  const produtosProducao = producoesProdutos.reduce((acc, prod) => {
+    const existing = acc.find(item => item.id === prod.produto.id)
+    if (existing) {
+      (existing as ProducaoItem).quantidadeTotal += prod.quantidadeProduzida;
+      (existing as ProducaoItem).numeroProducoes += 1
+    } else {
+      acc.push({
+        id: prod.produto.id,
+        nome: prod.produto.nome,
+        quantidadeTotal: prod.quantidadeProduzida,
+        numeroProducoes: 1,
+        tipo: 'produto'
+      })
+    }
+    return acc
+  }, [] as ProducaoItem[])
+
+  return {
+    type: 'producao',
+    data: {
+      fichas: fichasProducao,
+      produtos: produtosProducao,
+      producoesFichas: producoesFichas,
+      producoesProdutos: producoesProdutos
+    },
+    summary: {
+      totalProducoesFichas: producoesFichas.length,
+      totalProducoesProdutos: producoesProdutos.length,
+      quantidadeTotalFichas: fichasProducao.reduce((sum, f) => sum + f.quantidadeTotal, 0),
+      quantidadeTotalProdutos: produtosProducao.reduce((sum, p) => sum + p.quantidadeTotal, 0)
+    }
+  }
+}
+
+async function generateInventoryReport(userId: string) {
+  const whereClause: Record<string, unknown> = { userId }
+
+  const [movimentacoesInsumos, movimentacoesProdutos] = await Promise.all([
+    prisma.movimentacaoEstoque.findMany({
+      where: whereClause,
+      include: {
+        insumo: true
+      },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.movimentacaoProduto.findMany({
+      where: whereClause,
+      include: {
+        produto: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+  ])
+
+  const estoqueInsumos = movimentacoesInsumos.reduce((acc, mov) => {
+    const existing = acc.find(item => item.id === mov.insumo.id)
+    const quantidade = mov.tipo === 'entrada' ? mov.quantidade : -mov.quantidade
+    
+    if (existing) {
+      (existing as EstoqueItem).saldoAtual += quantidade;
+      (existing as EstoqueItem).entradas += mov.tipo === 'entrada' ? mov.quantidade : 0;
+      (existing as EstoqueItem).saidas += mov.tipo === 'saida' ? mov.quantidade : 0
+    } else {
+      acc.push({
+        id: mov.insumo.id,
+        nome: mov.insumo.nome,
+        saldoAtual: quantidade,
+        entradas: mov.tipo === 'entrada' ? mov.quantidade : 0,
+        saidas: mov.tipo === 'saida' ? mov.quantidade : 0,
+        precoUnidade: mov.insumo.precoUnidade,
+        valorEstoque: 0
+      })
+    }
+    return acc
+  }, [] as EstoqueItem[])
+
+  estoqueInsumos.forEach(item => {
+    item.valorEstoque = (item.saldoAtual / 1000) * (item.precoUnidade || 0)
+  })
+
+  const estoqueProdutos = movimentacoesProdutos.reduce((acc, mov) => {
+    const existing = acc.find(item => item.id === mov.produto.id)
+    const quantidade = mov.tipo === 'entrada' ? mov.quantidade : -mov.quantidade
+    
+    if (existing) {
+      (existing as EstoqueItem).saldoAtual += quantidade;
+      (existing as EstoqueItem).entradas += mov.tipo === 'entrada' ? mov.quantidade : 0;
+      (existing as EstoqueItem).saidas += mov.tipo === 'saida' ? mov.quantidade : 0
+    } else {
+      acc.push({
+        id: mov.produto.id,
+        nome: mov.produto.nome,
+        saldoAtual: quantidade,
+        entradas: mov.tipo === 'entrada' ? mov.quantidade : 0,
+        saidas: mov.tipo === 'saida' ? mov.quantidade : 0,
+        precoVenda: mov.produto.precoVenda,
+        valorEstoque: 0
+      })
+    }
+    return acc
+  }, [] as EstoqueItem[])
+
+  estoqueProdutos.forEach(item => {
+    item.valorEstoque = item.saldoAtual * (item.precoVenda || 0)
+  })
+
+  return {
+    type: 'estoque',
+    data: {
+      insumos: estoqueInsumos,
+      produtos: estoqueProdutos,
+      movimentacoesInsumos: movimentacoesInsumos,
+      movimentacoesProdutos: movimentacoesProdutos
+    },
+    summary: {
+      totalInsumos: estoqueInsumos.length,
+      totalProdutos: estoqueProdutos.length,
+      valorTotalInsumos: estoqueInsumos.reduce((sum, i) => sum + i.valorEstoque, 0),
+      valorTotalProdutos: estoqueProdutos.reduce((sum, p) => sum + p.valorEstoque, 0)
+    }
+  }
+}
+
+async function generateRecipeReport(userId: string) {
+  const whereClause: Record<string, unknown> = { userId }
+
+  const [fichasTecnicas, producoes] = await Promise.all([
+    prisma.fichaTecnica.findMany({
+      where: { userId },
+      include: {
+        categoria: true,
+        ingredientes: {
+          include: {
+            insumo: true
+          }
+        }
+      }
+    }),
+    prisma.producao.findMany({
+      where: whereClause,
+      include: {
+        fichaTecnica: true
+      }
+    })
+  ])
+
+  const fichasComUso = fichasTecnicas.map(ficha => {
+    const producoesFicha = producoes.filter(p => p.fichaTecnicaId === ficha.id)
+    const quantidadeTotal = producoesFicha.reduce((sum, p) => sum + p.quantidadeProduzida, 0)
+    
+    const custoTotal = ficha.ingredientes.reduce((total, ing) => {
+      const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+      return total + (custoPorGrama * ing.quantidadeGramas)
+    }, 0)
+
+    return {
+      id: ficha.id,
+      nome: ficha.nome,
+      categoria: ficha.categoria.nome,
+      numeroProducoes: producoesFicha.length,
+      quantidadeTotal: quantidadeTotal,
+      pesoFinal: ficha.pesoFinalGramas,
+      numeroPorcoes: ficha.numeroPorcoes,
+      custoTotal: custoTotal,
+      custoPorPorcao: custoTotal / ficha.numeroPorcoes,
+      nivelDificuldade: ficha.nivelDificuldade,
+      tempoPreparo: ficha.tempoPreparo
+    }
+  })
+
+  const fichasOrdenadas = fichasComUso.sort((a, b) => b.numeroProducoes - a.numeroProducoes)
+
+  return {
+    type: 'fichas',
+    data: {
+      fichasMaisUsadas: fichasOrdenadas.slice(0, 10),
+      todasFichas: fichasOrdenadas,
+      categorias: fichasTecnicas.reduce((acc, ficha) => {
+        const categoria = ficha.categoria.nome
+        const existing = acc.find(c => c.nome === categoria)
+        if (existing) {
+          (existing as { quantidade: number }).quantidade += 1
+        } else {
+          acc.push({ nome: categoria, quantidade: 1 })
+        }
+        return acc
+      }, [] as Array<Record<string, unknown>>)
+    },
+    summary: {
+      totalFichas: fichasTecnicas.length,
+      totalProducoes: producoes.length,
+      fichasMaisPopular: fichasOrdenadas[0]?.nome || 'Nenhuma',
+      mediaProducoesPorFicha: producoes.length / (fichasTecnicas.length || 1)
+    }
+  }
+}
