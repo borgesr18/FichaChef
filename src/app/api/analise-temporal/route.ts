@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
@@ -17,10 +16,7 @@ import {
 } from '@/lib/utils'
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('analise-temporal', 'write')
 
   const body = await request.json()
   const parsedBody = analiseTemporalSchema.safeParse({
@@ -140,10 +136,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 })
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('analise-temporal', 'read')
 
   const { searchParams } = new URL(request.url)
   const type = searchParams.get('type')

@@ -1,18 +1,14 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse,
   createSuccessResponse 
 } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('alertas', 'read')
 
   const { searchParams } = new URL(request.url)
   const lida = searchParams.get('lida')
@@ -30,10 +26,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('alertas', 'write')
 
   const body = await request.json()
   const { ids, lida } = body
@@ -49,6 +42,9 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
     },
     data: { lida }
   })
+
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'update', 'alertas', undefined, 'notificacao', { ids, lida }, request)
 
   return createSuccessResponse({ message: 'Notificações atualizadas com sucesso' })
 })

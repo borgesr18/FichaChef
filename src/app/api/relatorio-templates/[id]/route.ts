@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
 
 const templateSchema = z.object({
@@ -30,10 +31,7 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'write')
 
     const body = await request.json()
     const validatedData = templateSchema.parse(body)
@@ -46,6 +44,8 @@ export async function PUT(
       },
       data: validatedData
     })
+
+    await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, request)
 
     return NextResponse.json(template)
   } catch (error) {
@@ -62,10 +62,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'admin')
 
     const params = await context.params
     await prisma.relatorioTemplate.delete({
@@ -74,6 +71,8 @@ export async function DELETE(
         userId: user.id
       }
     })
+
+    await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, request)
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
 
 const templateSchema = z.object({
@@ -27,10 +28,7 @@ const templateSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'read')
 
     const { searchParams } = new URL(request.url)
     const tipo = searchParams.get('tipo')
@@ -55,10 +53,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'write')
 
     const body = await request.json()
     const validatedData = templateSchema.parse(body)
@@ -69,6 +64,16 @@ export async function POST(request: NextRequest) {
         userId: user.id
       }
     })
+
+    await logUserAction(
+      user.id,
+      'create',
+      'relatorio-templates',
+      template.id,
+      'template',
+      { nome: template.nome, tipo: template.tipo },
+      request
+    )
 
     return NextResponse.json(template, { status: 201 })
   } catch (error) {

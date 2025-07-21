@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
@@ -10,10 +9,7 @@ import { withErrorHandler } from '@/lib/api-helpers'
 import { categoriaSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('fichas-tecnicas', 'read')
 
   const categorias = await prisma.categoriaReceita.findMany({
     where: { userId: user.id },
@@ -24,10 +20,7 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('fichas-tecnicas', 'write')
 
   const body = await request.json()
   const parsedBody = categoriaSchema.safeParse(body)
@@ -45,6 +38,9 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       userId: user.id,
     },
   })
+
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'create', 'categorias-receitas', categoria.id, 'categoria', { nome, descricao }, request)
 
   return createSuccessResponse(categoria, 201)
 })

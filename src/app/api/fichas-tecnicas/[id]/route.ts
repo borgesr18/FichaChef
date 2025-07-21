@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('fichas-tecnicas', 'read')
 
     const ficha = await prisma.fichaTecnica.findUnique({
       where: { 
@@ -40,11 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('fichas-tecnicas', 'write')
 
     const body = await request.json()
     const { 
@@ -100,6 +93,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'fichas-tecnicas', id, 'FichaTecnica', { nome }, request)
+
     return NextResponse.json(ficha)
   } catch (error) {
     console.error('Error updating ficha tecnica:', error)
@@ -110,11 +105,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
 
     await prisma.fichaTecnica.delete({
       where: { 
@@ -122,6 +113,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         userId: user.id
       }
     })
+
+    await logUserAction(user.id, 'delete', 'fichas-tecnicas', id, 'FichaTecnica', {}, request)
 
     return NextResponse.json({ message: 'Ficha técnica deletada com sucesso' })
   } catch (error) {

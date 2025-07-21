@@ -2,18 +2,15 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { insumoSchema } from '@/lib/validations'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('insumos', 'read')
 
   const insumos = await prisma.insumo.findMany({
     where: { userId: user.id },
@@ -29,10 +26,7 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('insumos', 'write')
 
   const body = await request.json()
   const parsedBody = insumoSchema.safeParse(body)
@@ -54,6 +48,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       fornecedorRel: true,
     },
   })
+
+  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', { nome: insumo.nome }, request)
 
   return createSuccessResponse(insumo, 201)
 })

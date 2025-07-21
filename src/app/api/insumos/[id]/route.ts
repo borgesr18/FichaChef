@@ -2,22 +2,18 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { insumoSchema } from '@/lib/validations'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createServerErrorResponse,
   createSuccessResponse,
   createNotFoundResponse
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+    const user = await authenticateWithPermission('insumos', 'write')
 
     const body = await request.json()
     
@@ -49,6 +45,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'insumos', id, 'insumo', data, request)
+
     return createSuccessResponse(insumo)
   } catch (error) {
     console.error('Error updating insumo:', error)
@@ -59,11 +57,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+    const user = await authenticateWithPermission('insumos', 'admin')
 
     // Verificar se o insumo existe e pertence ao usuário
     const existingInsumo = await prisma.insumo.findFirst({
@@ -77,6 +71,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.insumo.delete({
       where: { id }
     })
+
+    await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { nome: existingInsumo.nome }, request)
 
     return createSuccessResponse({ message: 'Insumo deletado com sucesso' })
   } catch (error) {

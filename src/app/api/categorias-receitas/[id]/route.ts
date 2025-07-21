@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('fichas-tecnicas', 'write')
 
     const body = await request.json()
     const { nome, descricao } = body
@@ -31,6 +28,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'categorias-receitas', id, 'categoria', { nome, descricao })
+
     return NextResponse.json(categoria)
   } catch (error) {
     console.error('Error updating categoria receita:', error)
@@ -41,11 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
 
     await prisma.categoriaReceita.delete({
       where: { 
@@ -53,6 +48,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         userId: user.id
       }
     })
+
+    await logUserAction(user.id, 'delete', 'categorias-receitas', id, 'categoria')
 
     return NextResponse.json({ message: 'Categoria deletada com sucesso' })
   } catch (error) {

@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
 
@@ -14,10 +14,7 @@ export const PUT = withErrorHandler(async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('produtos', 'write')
 
   const body = await request.json()
   const parsedBody = produtoSchema.safeParse(body)
@@ -59,6 +56,8 @@ export const PUT = withErrorHandler(async function PUT(
     }
   })
 
+  await logUserAction(user.id, 'update', 'produtos', id, 'produto', { nome: data.nome }, request)
+
   return createSuccessResponse(produto)
 })
 
@@ -67,14 +66,13 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('produtos', 'admin')
 
   await prisma.produto.delete({
     where: { id, userId: user.id },
   })
+
+  await logUserAction(user.id, 'delete', 'produtos', id, 'produto', {}, request)
 
   return createSuccessResponse({ message: 'Produto excluído com sucesso' })
 })
