@@ -235,3 +235,39 @@ model FornecedorPreco {
 
   @@map("fornecedor_precos")
 }
+
+model ConfiguracaoAlerta {
+  id                    String   @id @default(cuid())
+  tipo                  String   // 'estoque_baixo', 'validade_proxima', 'custo_alto'
+  itemTipo              String   @map("item_tipo") // 'insumo' ou 'produto'
+  itemId                String   @map("item_id")
+  ativo                 Boolean  @default(true)
+  limiteEstoqueBaixo    Float?   @map("limite_estoque_baixo")
+  diasAntesVencimento   Int?     @map("dias_antes_vencimento")
+  margemCustoMaxima     Float?   @map("margem_custo_maxima")
+  userId                String   @map("user_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracoes_alerta")
+}
+
+model Notificacao {
+  id          String    @id @default(cuid())
+  tipo        String    // 'estoque_baixo', 'validade_proxima', 'custo_alto'
+  titulo      String
+  mensagem    String
+  itemTipo    String    @map("item_tipo") // 'insumo' ou 'produto'
+  itemId      String    @map("item_id")
+  itemNome    String    @map("item_nome")
+  prioridade  String    @default("media") // 'baixa', 'media', 'alta', 'critica'
+  lida        Boolean   @default(false)
+  dataLimite  DateTime? @map("data_limite") // Para alertas de validade
+  valorAtual  Float?    @map("valor_atual") // Para alertas de estoque ou custo
+  valorLimite Float?    @map("valor_limite") // Para comparação
+  userId      String    @map("user_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("notificacoes")
+}
