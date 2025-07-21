@@ -73,6 +73,14 @@ export function requirePermission(
   module: string,
   permission: ModulePermission
 ) {
+  if (!userRole) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`⚠️ Usuário sem papel definido tentando acessar '${module}' com permissão '${permission}' - permitindo em modo desenvolvimento`)
+      return
+    }
+    throw new Error(`Acesso negado. Usuário sem papel definido para o módulo '${module}'`)
+  }
+  
   if (!hasPermission(userRole, module, permission)) {
     throw new Error(`Acesso negado. Permissão '${permission}' necessária para o módulo '${module}'`)
   }
@@ -106,5 +114,9 @@ export async function logUserAction(
     })
   } catch (error) {
     console.error('Error logging user action:', error)
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📝 [DEV] Ação de auditoria: ${userId} -> ${acao} em ${modulo}${itemId ? ` (${itemId})` : ''}`)
+    }
   }
 }
