@@ -138,3 +138,33 @@ export const fornecedorPrecoSchema = z.object({
 
 export type FornecedorPrecoInput = z.infer<typeof fornecedorPrecoSchema>
 
+// Schema para Configuração de Alerta
+export const configuracaoAlertaSchema = z.object({
+  tipo: z.enum(['estoque_baixo', 'validade_proxima', 'custo_alto']),
+  itemTipo: z.enum(['insumo', 'produto']),
+  itemId: z.string().min(1, 'Item é obrigatório'),
+  ativo: z.boolean().default(true),
+  limiteEstoqueBaixo: z.number().positive().optional(),
+  diasAntesVencimento: z.number().int().positive().optional(),
+  margemCustoMaxima: z.number().positive().optional(),
+})
+
+export type ConfiguracaoAlertaInput = z.infer<typeof configuracaoAlertaSchema>
+
+// Schema para Notificação
+export const notificacaoSchema = z.object({
+  tipo: z.enum(['estoque_baixo', 'validade_proxima', 'custo_alto']),
+  titulo: z.string().min(1, 'Título é obrigatório'),
+  mensagem: z.string().min(1, 'Mensagem é obrigatória'),
+  itemTipo: z.enum(['insumo', 'produto']),
+  itemId: z.string().min(1, 'Item é obrigatório'),
+  itemNome: z.string().min(1, 'Nome do item é obrigatório'),
+  prioridade: z.enum(['baixa', 'media', 'alta', 'critica']).default('media'),
+  lida: z.boolean().default(false),
+  dataLimite: z.date().optional(),
+  valorAtual: z.number().optional(),
+  valorLimite: z.number().optional(),
+})
+
+export type NotificacaoInput = z.infer<typeof notificacaoSchema>
+
