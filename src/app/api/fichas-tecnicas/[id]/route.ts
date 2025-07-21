@@ -2,6 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authenticateUser } from '@/lib/auth'
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const user = await authenticateUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const ficha = await prisma.fichaTecnica.findUnique({
+      where: { 
+        id,
+        userId: user.id
+      },
+      include: {
+        categoria: true,
+        ingredientes: {
+          include: {
+            insumo: true
+          }
+        }
+      }
+    })
+
+    if (!ficha) {
+      return NextResponse.json({ error: 'Ficha técnica não encontrada' }, { status: 404 })
+    }
+
+    return NextResponse.json(ficha)
+  } catch (error) {
+    console.error('Error fetching ficha tecnica:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
