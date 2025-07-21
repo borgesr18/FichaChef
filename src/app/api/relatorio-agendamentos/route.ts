@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
 
 const agendamentoSchema = z.object({
@@ -18,10 +19,7 @@ const agendamentoSchema = z.object({
 
 export async function GET() {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'read')
 
     const agendamentos = await prisma.relatorioAgendamento.findMany({
       where: { userId: user.id },
@@ -38,10 +36,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await authenticateUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'write')
 
     const body = await request.json()
     const validatedData = agendamentoSchema.parse(body)
@@ -56,6 +51,8 @@ export async function POST(request: NextRequest) {
       },
       include: { template: true }
     })
+
+    await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, request)
 
     return NextResponse.json(agendamento, { status: 201 })
   } catch (error) {

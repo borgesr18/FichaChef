@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('producao', 'write')
 
     const body = await request.json()
     const { 
@@ -43,6 +40,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'producao', id, 'producao', { lote, quantidadeProduzida }, request)
+
     return NextResponse.json(producao)
   } catch (error) {
     console.error('Error updating producao:', error)
@@ -53,11 +52,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('producao', 'admin')
 
     await prisma.producao.delete({
       where: { 
@@ -65,6 +60,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         userId: user.id
       }
     })
+
+    await logUserAction(user.id, 'delete', 'producao', id, 'producao', {}, request)
 
     return NextResponse.json({ message: 'Produção deletada com sucesso' })
   } catch (error) {

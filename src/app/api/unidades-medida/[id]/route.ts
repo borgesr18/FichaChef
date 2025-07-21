@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('configuracoes', 'write')
 
     const body = await request.json()
     const { nome, simbolo, tipo } = body
@@ -32,6 +29,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'unidades-medida', id, 'UnidadeMedida', { nome, simbolo, tipo }, request)
+
     return NextResponse.json(unidade)
   } catch (error) {
     console.error('Error updating unidade medida:', error)
@@ -42,11 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('configuracoes', 'admin')
 
     await prisma.unidadeMedida.delete({
       where: { 
@@ -54,6 +49,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         userId: user.id
       }
     })
+
+    await logUserAction(user.id, 'delete', 'unidades-medida', id, 'UnidadeMedida', {}, request)
 
     return NextResponse.json({ message: 'Unidade deletada com sucesso' })
   } catch (error) {

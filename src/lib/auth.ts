@@ -4,6 +4,8 @@ import { createClient } from './supabase-server'
 export interface AuthenticatedUser {
   id: string
   email?: string
+  role?: string
+  nome?: string
 }
 
 export async function authenticateUser(): Promise<AuthenticatedUser | null> {
@@ -91,5 +93,60 @@ export function createNotFoundResponse(resource: string = 'Recurso') {
 
 export function createSuccessResponse(data: unknown, status: number = 200) {
   return NextResponse.json(data, { status })
+}
+
+export async function authenticateUserWithProfile(): Promise<AuthenticatedUser | null> {
+  const user = await authenticateUser()
+  if (!user) return null
+
+  try {
+    const { prisma } = await import('./prisma')
+    
+    let perfil = await prisma.perfilUsuario.findUnique({
+      where: { userId: user.id }
+    })
+
+    if (!perfil) {
+      perfil = await prisma.perfilUsuario.create({
+        data: {
+          userId: user.id,
+          email: user.email,
+          role: 'cozinheiro'
+        }
+      })
+    }
+
+    return {
+      ...user,
+      role: perfil.role || undefined,
+      nome: perfil.nome || undefined
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
+    return user
+  }
+}
+
+export async function authenticateWithPermission(
+  module: string,
+  permission: 'read' | 'write' | 'admin' = 'read'
+): Promise<AuthenticatedUser> {
+  const user = await authenticateUserWithProfile()
+  
+  if (!user) {
+    throw new Error('Usuário não autenticado')
+  }
+
+  const { requirePermission } = await import('./permissions')
+  requirePermission(user.role as 'chef' | 'cozinheiro' | 'gerente', module, permission)
+
+  return user
+}
+
+export function createForbiddenResponse(message: string = 'Acesso negado') {
+  return NextResponse.json(
+    { error: message },
+    { status: 403 }
+  )
 }
 

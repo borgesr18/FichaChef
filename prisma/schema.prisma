@@ -10,7 +10,7 @@ datasource db {
 model PerfilUsuario {
   id        String   @id @default(cuid())
   userId    String   @unique @map("user_id")
-  role      String   @default("editor")
+  role      String   @default("cozinheiro")
   nome      String?
   email     String?
   createdAt DateTime @default(now()) @map("created_at")
@@ -365,4 +365,19 @@ model RelatorioExecucao {
   agendamento   RelatorioAgendamento @relation(fields: [agendamentoId], references: [id])
 
   @@map("relatorio_execucoes")
+}
+
+model AuditoriaAcao {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  acao      String   // 'create', 'update', 'delete', 'view'
+  modulo    String   // 'insumos', 'fichas-tecnicas', 'produtos', etc.
+  itemId    String?  @map("item_id")
+  itemTipo  String?  @map("item_tipo")
+  detalhes  Json?    // Additional details about the action
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("auditoria_acoes")
 }

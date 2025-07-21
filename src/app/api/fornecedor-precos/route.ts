@@ -2,18 +2,15 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { fornecedorPrecoSchema } from '@/lib/validations'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('fornecedores', 'read')
 
   const { searchParams } = new URL(request.url)
   const insumoId = searchParams.get('insumoId')
@@ -36,10 +33,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('fornecedores', 'write')
 
   const body = await request.json()
   const parsedBody = fornecedorPrecoSchema.safeParse({
@@ -73,6 +67,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       insumo: true,
     },
   })
+
+  await logUserAction(user.id, 'create', 'fornecedores', preco.id, 'fornecedor_preco', data, request)
 
   return createSuccessResponse(preco, 201)
 })

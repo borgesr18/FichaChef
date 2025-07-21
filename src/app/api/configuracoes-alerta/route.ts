@@ -2,18 +2,15 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { configuracaoAlertaSchema } from '@/lib/validations'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
+import { logUserAction } from '@/lib/permissions'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('alertas', 'read')
 
   const { searchParams } = new URL(request.url)
   const tipo = searchParams.get('tipo')
@@ -32,10 +29,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('alertas', 'write')
 
   const body = await request.json()
   const parsedBody = configuracaoAlertaSchema.safeParse(body)
@@ -63,6 +57,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         userId: user.id,
       },
     })
+    
+    await logUserAction(user.id, 'update', 'alertas', configuracao.id, 'configuracao_alerta', data, request)
     return createSuccessResponse(configuracao)
   } else {
     const configuracao = await prisma.configuracaoAlerta.create({
@@ -71,6 +67,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         userId: user.id,
       },
     })
+    
+    await logUserAction(user.id, 'create', 'alertas', configuracao.id, 'configuracao_alerta', data, request)
     return createSuccessResponse(configuracao, 201)
   }
 })

@@ -2,22 +2,18 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createValidationErrorResponse, 
   createServerErrorResponse,
   createSuccessResponse,
   createNotFoundResponse
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+    const user = await authenticateWithPermission('fornecedores', 'write')
 
     const body = await request.json()
     const validationResult = fornecedorSchema.safeParse(body)
@@ -47,6 +43,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }
     })
 
+    await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, request)
+
     return createSuccessResponse(fornecedor)
   } catch (error) {
     console.error('Error updating fornecedor:', error)
@@ -57,11 +55,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return createUnauthorizedResponse()
-    }
+    const user = await authenticateWithPermission('fornecedores', 'admin')
 
     const existingFornecedor = await prisma.fornecedor.findFirst({
       where: { id, userId: user.id }
@@ -74,6 +68,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.fornecedor.delete({
       where: { id }
     })
+
+    await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, request)
 
     return createSuccessResponse({ message: 'Fornecedor deletado com sucesso' })
   } catch (error) {

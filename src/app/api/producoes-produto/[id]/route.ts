@@ -1,23 +1,20 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { producaoProdutoSchema } from '@/lib/validations'
+import { logUserAction } from '@/lib/permissions'
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('producao', 'write')
 
   const body = await request.json()
   
@@ -45,6 +42,8 @@ export const PUT = withErrorHandler(async function PUT(
     },
   })
 
+  await logUserAction(user.id, 'update', 'producao', id, 'producao-produto', data, request)
+
   return createSuccessResponse(producao)
 })
 
@@ -53,14 +52,13 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('producao', 'admin')
 
   await prisma.producaoProduto.delete({
     where: { id, userId: user.id },
   })
+
+  await logUserAction(user.id, 'delete', 'producao', id, 'producao-produto', undefined, request)
 
   return createSuccessResponse({ message: 'Produção de produto excluída com sucesso' })
 })

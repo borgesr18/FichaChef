@@ -1,16 +1,13 @@
 import { prisma } from '@/lib/prisma'
 import { 
-  authenticateUser, 
-  createUnauthorizedResponse, 
+  authenticateWithPermission, 
   createSuccessResponse 
 } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
+import { logUserAction } from '@/lib/permissions'
 
-export const POST = withErrorHandler(async function POST() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+export const POST = withErrorHandler(async function POST(request) {
+  const user = await authenticateWithPermission('alertas', 'write')
 
   const alertasGerados = []
 
@@ -166,6 +163,16 @@ export const POST = withErrorHandler(async function POST() {
       }
     }
   }
+
+  await logUserAction(
+    user.id,
+    'create',
+    'alertas',
+    undefined,
+    'processamento',
+    { alertasGerados: alertasGerados.length },
+    request
+  )
 
   return createSuccessResponse({ 
     message: `${alertasGerados.length} alertas processados`,

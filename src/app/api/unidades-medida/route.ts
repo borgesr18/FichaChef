@@ -1,19 +1,16 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { unidadeMedidaSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('insumos', 'read')
 
   const unidades = await prisma.unidadeMedida.findMany({
     where: { userId: user.id },
@@ -24,10 +21,7 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('insumos', 'write')
 
   const body = await request.json()
   const parsedBody = unidadeMedidaSchema.safeParse(body)
@@ -44,6 +38,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       userId: user.id,
     },
   })
+
+  await logUserAction(user.id, 'create', 'unidades-medida', unidade.id, 'UnidadeMedida', data, request)
 
   return createSuccessResponse(unidade, 201)
 })

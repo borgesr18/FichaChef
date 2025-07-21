@@ -1,19 +1,16 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { movimentacaoEstoqueSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('estoque', 'read')
 
   const movimentacoes = await prisma.movimentacaoEstoque.findMany({
     where: { userId: user.id },
@@ -27,10 +24,7 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('estoque', 'write')
 
   const body = await request.json()
   const parsedBody = movimentacaoEstoqueSchema.safeParse(body)
@@ -50,6 +44,16 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       insumo: true,
     },
   })
+
+  await logUserAction(
+    user.id,
+    'create',
+    'estoque',
+    movimentacao.id,
+    'movimentacao',
+    { tipo: data.tipo, quantidade: data.quantidade, motivo: data.motivo },
+    request
+  )
 
   return createSuccessResponse(movimentacao, 201)
 })

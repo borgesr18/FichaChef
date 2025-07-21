@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateUser } from '@/lib/auth'
+import { authenticateWithPermission } from '@/lib/auth'
+import { logUserAction } from '@/lib/permissions'
 
 interface ProducaoItem {
   id: string
@@ -23,11 +24,7 @@ interface EstoqueItem {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await authenticateUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await authenticateWithPermission('relatorios', 'read')
 
     const { searchParams } = new URL(request.url)
     const reportType = searchParams.get('type') || 'custos'
@@ -59,6 +56,16 @@ export async function GET(request: NextRequest) {
       default:
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
+
+    await logUserAction(
+      user.id,
+      'view',
+      'relatorios',
+      undefined,
+      reportType,
+      { reportType },
+      request
+    )
 
     return NextResponse.json(reportData)
   } catch (error) {
