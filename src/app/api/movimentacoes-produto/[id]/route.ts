@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
@@ -14,10 +13,7 @@ export const PUT = withErrorHandler(async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('estoque', 'write')
 
   const body = await request.json()
   const parsedBody = movimentacaoProdutoSchema.safeParse(body)
@@ -38,6 +34,9 @@ export const PUT = withErrorHandler(async function PUT(
     },
   })
 
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'update', 'estoque', id, 'movimentacao-produto', data, request)
+
   return createSuccessResponse(movimentacao)
 })
 
@@ -46,14 +45,14 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('estoque', 'admin')
 
   await prisma.movimentacaoProduto.delete({
     where: { id, userId: user.id },
   })
+
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'delete', 'estoque', id, 'movimentacao-produto', undefined, request)
 
   return createSuccessResponse({ message: 'Movimentação de produto excluída com sucesso' })
 })

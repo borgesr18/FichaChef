@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
   createNotFoundResponse,
@@ -15,10 +14,7 @@ export const GET = withErrorHandler(async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('cardapios', 'read')
 
   const menu = await prisma.menu.findFirst({
     where: { id, userId: user.id },
@@ -60,10 +56,7 @@ export const PUT = withErrorHandler(async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('cardapios', 'write')
 
   const body = await request.json()
   const parsedBody = menuSchema.safeParse(body)
@@ -127,6 +120,9 @@ export const PUT = withErrorHandler(async function PUT(
     }
   })
 
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'update', 'cardapios', id, 'menu', { nome: data.nome }, request)
+
   return createSuccessResponse(menu)
 })
 
@@ -135,10 +131,7 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('cardapios', 'admin')
 
   const existingMenu = await prisma.menu.findFirst({
     where: { id, userId: user.id }

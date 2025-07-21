@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  authenticateUser,
-  createUnauthorizedResponse,
+  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
@@ -10,10 +9,7 @@ import { withErrorHandler } from '@/lib/api-helpers'
 import { menuSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('cardapios', 'read')
 
   const menus = await prisma.menu.findMany({
     where: { userId: user.id },
@@ -48,10 +44,7 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateUser()
-  if (!user) {
-    return createUnauthorizedResponse()
-  }
+  const user = await authenticateWithPermission('cardapios', 'write')
 
   const body = await request.json()
   const parsedBody = menuSchema.safeParse(body)
@@ -102,6 +95,9 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       periodos: true
     }
   })
+
+  const { logUserAction } = await import('@/lib/permissions')
+  await logUserAction(user.id, 'create', 'cardapios', menu.id, 'menu', { nome: menu.nome }, request)
 
   return createSuccessResponse(menu, 201)
 })
