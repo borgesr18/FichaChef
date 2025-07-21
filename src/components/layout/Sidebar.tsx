@@ -15,12 +15,14 @@ import {
   BarChart3, 
   FileBarChart,
   Menu,
-  X
+  X,
+  Truck
 } from 'lucide-react'
 
 const menuItems = [
   { href: '/dashboard', icon: BarChart3, label: 'Dashboard' },
   { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações' },
+  { href: '/dashboard/fornecedores', icon: Truck, label: 'Fornecedores' },
   { href: '/dashboard/insumos', icon: Package, label: 'Insumos' },
   { href: '/dashboard/fichas-tecnicas', icon: FileText, label: 'Fichas Técnicas' },
   { href: '/dashboard/producao', icon: Factory, label: 'Produção' },

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { insumoSchema } from '@/lib/validations'
+import { fornecedorSchema } from '@/lib/validations'
 import { 
   authenticateUser, 
   createUnauthorizedResponse, 
@@ -15,17 +15,17 @@ export const GET = withErrorHandler(async function GET() {
     return createUnauthorizedResponse()
   }
 
-  const insumos = await prisma.insumo.findMany({
+  const fornecedores = await prisma.fornecedor.findMany({
     where: { userId: user.id },
     include: {
-      categoria: true,
-      unidadeCompra: true,
-      fornecedorRel: true,
+      _count: {
+        select: { insumos: true, precos: true }
+      }
     },
     orderBy: { nome: 'asc' },
   })
 
-  return createSuccessResponse(insumos)
+  return createSuccessResponse(fornecedores)
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
@@ -35,7 +35,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const parsedBody = insumoSchema.safeParse(body)
+  const parsedBody = fornecedorSchema.safeParse(body)
 
   if (!parsedBody.success) {
     return createValidationErrorResponse(parsedBody.error.message)
@@ -43,17 +43,17 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const insumo = await prisma.insumo.create({
+  const fornecedor = await prisma.fornecedor.create({
     data: {
       ...data,
       userId: user.id,
     },
     include: {
-      categoria: true,
-      unidadeCompra: true,
-      fornecedorRel: true,
+      _count: {
+        select: { insumos: true, precos: true }
+      }
     },
   })
 
-  return createSuccessResponse(insumo, 201)
+  return createSuccessResponse(fornecedor, 201)
 })
