@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Edit, Shield, Plus, Mail, Trash2, Key } from 'lucide-react'
+import { Users, Shield, Plus, Mail, Trash2, Key } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 
 interface Usuario {
@@ -288,12 +288,6 @@ export default function UsuariosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button 
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Editar usuário"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
                         <button 
                           onClick={() => openPasswordResetModal(usuario)}
                           className="text-yellow-600 hover:text-yellow-900"
