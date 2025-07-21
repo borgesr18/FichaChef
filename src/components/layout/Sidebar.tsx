@@ -18,7 +18,8 @@ import {
   X,
   Truck,
   Bell,
-  Calendar
+  Calendar,
+  TrendingUp
 } from 'lucide-react'
 
 const menuItems = [
@@ -33,6 +34,7 @@ const menuItems = [
   { href: '/dashboard/produtos', icon: ShoppingCart, label: 'Produtos' },
   { href: '/dashboard/cardapios', icon: Calendar, label: 'Cardápios' },
   { href: '/dashboard/calculo-preco', icon: Calculator, label: 'Cálculo de Preço' },
+  { href: '/dashboard/analise-temporal', icon: TrendingUp, label: 'Análise Temporal' },
   { href: '/dashboard/impressao', icon: Printer, label: 'Impressão' },
   { href: '/dashboard/relatorios', icon: FileBarChart, label: 'Relatórios' },
 ]
