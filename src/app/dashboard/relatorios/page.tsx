@@ -163,6 +163,9 @@ export default function RelatoriosPage() {
                 <option value="producao">Relatório de Produção</option>
                 <option value="estoque">Controle de Estoque</option>
                 <option value="fichas">Fichas Mais Utilizadas</option>
+                <option value="rentabilidade">Relatório de Rentabilidade</option>
+                <option value="abc-insumos">Análise ABC de Insumos</option>
+                <option value="desperdicio">Relatório de Desperdício</option>
               </select>
             </div>
 
@@ -227,6 +230,9 @@ export default function RelatoriosPage() {
               {reportType === 'producao' && 'Relatório de Produção'}
               {reportType === 'estoque' && 'Controle de Estoque'}
               {reportType === 'fichas' && 'Fichas Mais Utilizadas'}
+              {reportType === 'rentabilidade' && 'Relatório de Rentabilidade'}
+              {reportType === 'abc-insumos' && 'Análise ABC de Insumos'}
+              {reportType === 'desperdicio' && 'Relatório de Desperdício'}
             </h3>
             
             {renderReportContent()}

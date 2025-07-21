@@ -47,6 +47,15 @@ export async function GET(request: NextRequest) {
       case 'fichas':
         reportData = await generateRecipeReport(user.id)
         break
+      case 'rentabilidade':
+        reportData = await generateProfitabilityReport(user.id)
+        break
+      case 'abc-insumos':
+        reportData = await generateAbcInsumosReport(user.id)
+        break
+      case 'desperdicio':
+        reportData = await generateWasteReport(user.id)
+        break
       default:
         return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
@@ -372,6 +381,261 @@ async function generateRecipeReport(userId: string) {
       totalProducoes: producoes.length,
       fichasMaisPopular: fichasOrdenadas[0]?.nome || 'Nenhuma',
       mediaProducoesPorFicha: producoes.length / (fichasTecnicas.length || 1)
+    }
+  }
+}
+
+async function generateProfitabilityReport(userId: string) {
+  const produtos = await prisma.produto.findMany({
+    where: { userId },
+    include: {
+      produtoFichas: {
+        include: {
+          fichaTecnica: {
+            include: {
+              ingredientes: {
+                include: {
+                  insumo: true
+                }
+              }
+            }
+          }
+        }
+      },
+      producoesProduto: true,
+      movimentacoesProduto: true
+    }
+  })
+
+  const produtosRentabilidade = produtos.map(produto => {
+    const custoProducao = produto.produtoFichas.reduce((total, produtoFicha) => {
+      const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal, ing) => {
+        const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+        return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
+      }, 0)
+      const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
+      return total + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
+    }, 0)
+
+    const quantidadeProduzida = produto.producoesProduto.reduce((sum, p) => sum + p.quantidadeProduzida, 0)
+    const quantidadeVendida = produto.movimentacoesProduto
+      .filter(m => m.tipo === 'saida')
+      .reduce((sum, m) => sum + m.quantidade, 0)
+    
+    const receitaTotal = quantidadeVendida * produto.precoVenda
+    const custoTotal = quantidadeVendida * custoProducao
+    const lucroTotal = receitaTotal - custoTotal
+    const margemLucroReal = receitaTotal > 0 ? (lucroTotal / receitaTotal) * 100 : 0
+
+    return {
+      id: produto.id,
+      nome: produto.nome,
+      custoProducao,
+      precoVenda: produto.precoVenda,
+      margemLucroConfigurada: produto.margemLucro,
+      margemLucroReal,
+      quantidadeProduzida,
+      quantidadeVendida,
+      receitaTotal,
+      custoTotal,
+      lucroTotal,
+      rentabilidade: margemLucroReal >= produto.margemLucro ? 'Alta' : margemLucroReal >= produto.margemLucro * 0.8 ? 'Média' : 'Baixa'
+    }
+  })
+
+  const produtosOrdenados = produtosRentabilidade.sort((a, b) => b.margemLucroReal - a.margemLucroReal)
+
+  return {
+    type: 'rentabilidade',
+    data: {
+      produtos: produtosOrdenados,
+      maisRentaveis: produtosOrdenados.slice(0, 5),
+      menosRentaveis: produtosOrdenados.slice(-5).reverse()
+    },
+    summary: {
+      totalProdutos: produtos.length,
+      receitaTotal: produtosRentabilidade.reduce((sum, p) => sum + p.receitaTotal, 0),
+      custoTotal: produtosRentabilidade.reduce((sum, p) => sum + p.custoTotal, 0),
+      lucroTotal: produtosRentabilidade.reduce((sum, p) => sum + p.lucroTotal, 0),
+      margemMediaReal: produtosRentabilidade.reduce((sum, p) => sum + p.margemLucroReal, 0) / (produtos.length || 1)
+    }
+  }
+}
+
+async function generateAbcInsumosReport(userId: string) {
+  const insumos = await prisma.insumo.findMany({
+    where: { userId },
+    include: {
+      ingredientes: {
+        include: {
+          fichaTecnica: {
+            include: {
+              producoes: true
+            }
+          }
+        }
+      }
+    }
+  })
+
+  const insumosAnalise = insumos.map(insumo => {
+    const usoTotal = insumo.ingredientes.reduce((total, ingrediente) => {
+      const producoes = ingrediente.fichaTecnica.producoes
+      const quantidadeUsadaPorProducao = producoes.reduce((sum, producao) => {
+        return sum + (ingrediente.quantidadeGramas * producao.quantidadeProduzida / ingrediente.fichaTecnica.pesoFinalGramas)
+      }, 0)
+      return total + quantidadeUsadaPorProducao
+    }, 0)
+
+    const numeroReceitas = insumo.ingredientes.length
+    const numeroProducoes = insumo.ingredientes.reduce((sum, ing) => sum + ing.fichaTecnica.producoes.length, 0)
+    const valorTotal = usoTotal * (insumo.precoUnidade / insumo.pesoLiquidoGramas)
+
+    return {
+      id: insumo.id,
+      nome: insumo.nome,
+      usoTotal,
+      numeroReceitas,
+      numeroProducoes,
+      valorTotal,
+      precoUnidade: insumo.precoUnidade,
+      frequenciaUso: numeroProducoes
+    }
+  })
+
+  const insumosOrdenados = insumosAnalise.sort((a, b) => b.valorTotal - a.valorTotal)
+  
+  const valorTotalGeral = insumosOrdenados.reduce((sum, i) => sum + i.valorTotal, 0)
+  let valorAcumulado = 0
+  const insumosClassificados = insumosOrdenados.map(insumo => {
+    valorAcumulado += insumo.valorTotal
+    const percentualAcumulado = (valorAcumulado / valorTotalGeral) * 100
+    
+    let classificacao: 'A' | 'B' | 'C' = 'C'
+    if (percentualAcumulado <= 80) classificacao = 'A'
+    else if (percentualAcumulado <= 95) classificacao = 'B'
+
+    return {
+      ...insumo,
+      classificacao,
+      percentualValor: (insumo.valorTotal / valorTotalGeral) * 100,
+      percentualAcumulado
+    }
+  })
+
+  return {
+    type: 'abc-insumos',
+    data: {
+      insumos: insumosClassificados,
+      classeA: insumosClassificados.filter(i => i.classificacao === 'A'),
+      classeB: insumosClassificados.filter(i => i.classificacao === 'B'),
+      classeC: insumosClassificados.filter(i => i.classificacao === 'C')
+    },
+    summary: {
+      totalInsumos: insumos.length,
+      valorTotalGeral,
+      quantidadeA: insumosClassificados.filter(i => i.classificacao === 'A').length,
+      quantidadeB: insumosClassificados.filter(i => i.classificacao === 'B').length,
+      quantidadeC: insumosClassificados.filter(i => i.classificacao === 'C').length,
+      percentualValorA: insumosClassificados.filter(i => i.classificacao === 'A').reduce((sum, i) => sum + i.percentualValor, 0)
+    }
+  }
+}
+
+async function generateWasteReport(userId: string) {
+  const [movimentacoesInsumos, movimentacoesProdutos] = await Promise.all([
+    prisma.movimentacaoEstoque.findMany({
+      where: { userId },
+      include: { insumo: true },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.movimentacaoProduto.findMany({
+      where: { userId },
+      include: { produto: true },
+      orderBy: { createdAt: 'desc' }
+    })
+  ])
+
+  const hoje = new Date()
+  const itensVencidos = [
+    ...movimentacoesInsumos.filter(m => m.dataValidade && m.dataValidade < hoje && m.tipo === 'entrada'),
+    ...movimentacoesProdutos.filter(m => m.dataValidade && m.dataValidade < hoje && m.tipo === 'entrada')
+  ]
+
+  const saldosInsumos = movimentacoesInsumos.reduce((acc, mov) => {
+    const existing = acc.find(item => item.id === mov.insumo.id)
+    const quantidade = mov.tipo === 'entrada' ? mov.quantidade : -mov.quantidade
+    
+    if (existing) {
+      existing.saldo += quantidade
+      existing.movimentacoes.push(mov)
+    } else {
+      acc.push({
+        id: mov.insumo.id,
+        nome: mov.insumo.nome,
+        tipo: 'insumo',
+        saldo: quantidade,
+        precoUnidade: mov.insumo.precoUnidade,
+        movimentacoes: [mov]
+      })
+    }
+    return acc
+  }, [] as Array<{id: string, nome: string, tipo: string, saldo: number, precoUnidade: number, movimentacoes: Array<{id: string, quantidade: number, tipo: string, dataValidade?: Date | null, createdAt: Date}>}>)
+
+  const saldosProdutos = movimentacoesProdutos.reduce((acc, mov) => {
+    const existing = acc.find(item => item.id === mov.produto.id)
+    const quantidade = mov.tipo === 'entrada' ? mov.quantidade : -mov.quantidade
+    
+    if (existing) {
+      existing.saldo += quantidade
+      existing.movimentacoes.push(mov)
+    } else {
+      acc.push({
+        id: mov.produto.id,
+        nome: mov.produto.nome,
+        tipo: 'produto',
+        saldo: quantidade,
+        precoUnidade: mov.produto.precoVenda,
+        movimentacoes: [mov]
+      })
+    }
+    return acc
+  }, [] as Array<{id: string, nome: string, tipo: string, saldo: number, precoUnidade: number, movimentacoes: Array<{id: string, quantidade: number, tipo: string, dataValidade?: Date | null, createdAt: Date}>}>)
+
+  const itensComPerda = [...saldosInsumos, ...saldosProdutos].filter(item => item.saldo < 0)
+  const perdas = itensComPerda.map(item => ({
+    ...item,
+    valorPerda: Math.abs(item.saldo) * item.precoUnidade,
+    motivoPerda: 'Saldo Negativo'
+  }))
+
+  const perdasPorVencimento = itensVencidos.map(item => ({
+    id: 'insumo' in item ? item.insumo.id : item.produto.id,
+    nome: 'insumo' in item ? item.insumo.nome : item.produto.nome,
+    tipo: 'insumo' in item ? 'insumo' : 'produto',
+    quantidade: item.quantidade,
+    valorPerda: item.quantidade * ('insumo' in item ? item.insumo.precoUnidade / item.insumo.pesoLiquidoGramas : item.produto.precoVenda),
+    dataVencimento: item.dataValidade,
+    motivoPerda: 'Vencimento'
+  }))
+
+  const todasPerdas = [...perdas, ...perdasPorVencimento]
+
+  return {
+    type: 'desperdicio',
+    data: {
+      perdas: todasPerdas,
+      perdasPorSaldoNegativo: perdas,
+      perdasPorVencimento: perdasPorVencimento,
+      itensVencidos: itensVencidos.length,
+      itensComSaldoNegativo: itensComPerda.length
+    },
+    summary: {
+      totalPerdas: todasPerdas.length,
+      valorTotalPerdas: todasPerdas.reduce((sum, p) => sum + p.valorPerda, 0),
+      valorPerdasVencimento: perdasPorVencimento.reduce((sum, p) => sum + p.valorPerda, 0),
+      valorPerdasSaldoNegativo: perdas.reduce((sum, p) => sum + p.valorPerda, 0),
+      percentualPerdaVencimento: perdasPorVencimento.length / (todasPerdas.length || 1) * 100
     }
   }
 }
