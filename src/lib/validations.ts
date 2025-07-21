@@ -176,3 +176,40 @@ export const escalabilidadeReceitaSchema = z.object({
 
 export type EscalabilidadeReceitaInput = z.infer<typeof escalabilidadeReceitaSchema>
 
+// Schema para Menu
+export const menuSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  descricao: z.string().optional(),
+  tipo: z.enum(['cafe_manha', 'almoco', 'jantar', 'lanche']),
+  ativo: z.boolean().default(true),
+  itens: z.array(z.object({
+    produtoId: z.string().min(1, 'Produto é obrigatório'),
+    quantidade: z.number().int().positive('Quantidade deve ser positiva'),
+    observacoes: z.string().optional(),
+  })).min(1, 'Pelo menos um item é obrigatório'),
+})
+
+export type MenuInput = z.infer<typeof menuSchema>
+
+// Schema para MenuItem
+export const menuItemSchema = z.object({
+  menuId: z.string().min(1, 'Menu é obrigatório'),
+  produtoId: z.string().min(1, 'Produto é obrigatório'),
+  quantidade: z.number().int().positive('Quantidade deve ser positiva'),
+  observacoes: z.string().optional(),
+})
+
+export type MenuItemInput = z.infer<typeof menuItemSchema>
+
+// Schema para MenuPeriodo
+export const menuPeriodoSchema = z.object({
+  menuId: z.string().min(1, 'Menu é obrigatório'),
+  dataInicio: z.date(),
+  dataFim: z.date(),
+  tipo: z.enum(['semanal', 'mensal', 'personalizado']),
+  ativo: z.boolean().default(true),
+  observacoes: z.string().optional(),
+})
+
+export type MenuPeriodoInput = z.infer<typeof menuPeriodoSchema>
+
