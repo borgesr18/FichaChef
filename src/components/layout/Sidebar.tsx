@@ -55,6 +55,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchUserRole()
@@ -69,11 +70,13 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       }
     } catch (error) {
       console.error('Error fetching user role:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
   const filteredMenuItems = menuItems.filter(item => {
-    if (!userRole) return true
+    if (loading || !userRole) return true
     return item.roles.includes(userRole)
   })
 
@@ -107,31 +110,37 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </div>
         
         <nav className="mt-6">
-          {filteredMenuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => {
-                  // Close mobile menu when clicking a link
-                  if (window.innerWidth < 1024) {
-                    onToggle()
-                  }
-                }}
-                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-              >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.label}
-              </Link>
-            )
-          })}
+          {loading ? (
+            <div className="px-6 py-3 text-sm text-gray-400">
+              Carregando menu...
+            </div>
+          ) : (
+            filteredMenuItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    // Close mobile menu when clicking a link
+                    if (window.innerWidth < 1024) {
+                      onToggle()
+                    }
+                  }}
+                  className={`flex items-center px-6 py-3 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.label}
+                </Link>
+              )
+            })
+          )}
         </nav>
       </div>
     </>

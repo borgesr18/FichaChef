@@ -16,6 +16,23 @@ export const GET = withErrorHandler(async function GET() {
     return createUnauthorizedResponse()
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  const isDevMode = !supabaseUrl || !supabaseKey || 
+                    supabaseUrl === '' || supabaseKey === '' ||
+                    supabaseUrl.includes('placeholder') || 
+                    supabaseKey.includes('placeholder')
+
+  if (isDevMode) {
+    return createSuccessResponse({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      nome: user.nome
+    })
+  }
+
   const perfil = await prisma.perfilUsuario.findUnique({
     where: { userId: user.id }
   })
