@@ -32,6 +32,11 @@ export function withErrorHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
         }
       }
 
+      if (error instanceof Error && error.name === 'PrismaClientInitializationError') {
+        console.error('Database connectivity error:', error.message)
+        return createServerErrorResponse('Database temporarily unavailable. Please try again.')
+      }
+
       return createServerErrorResponse()
     }
   }

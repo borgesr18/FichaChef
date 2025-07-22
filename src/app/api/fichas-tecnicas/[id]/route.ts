@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -8,19 +9,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const user = await authenticateWithPermission('fichas-tecnicas', 'read')
 
-    const ficha = await prisma.fichaTecnica.findUnique({
-      where: { 
-        id,
-        userId: user.id
-      },
-      include: {
-        categoria: true,
-        ingredientes: {
-          include: {
-            insumo: true
+    const ficha = await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.findUnique({
+        where: { 
+          id,
+          userId: user.id
+        },
+        include: {
+          categoria: true,
+          ingredientes: {
+            include: {
+              insumo: true
+            }
           }
         }
-      }
+      })
     })
 
     if (!ficha) {
@@ -58,39 +61,43 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    await prisma.ingrediente.deleteMany({
-      where: { fichaTecnicaId: id }
+    await withDatabaseRetry(async () => {
+      return await prisma.ingrediente.deleteMany({
+        where: { fichaTecnicaId: id }
+      })
     })
 
-    const ficha = await prisma.fichaTecnica.update({
-      where: { 
-        id,
-        userId: user.id
-      },
-      data: {
-        nome,
-        categoriaId,
-        pesoFinalGramas: parseFloat(pesoFinalGramas),
-        numeroPorcoes: parseInt(numeroPorcoes),
-        tempoPreparo: tempoPreparo ? parseInt(tempoPreparo) : null,
-        temperaturaForno: temperaturaForno ? parseInt(temperaturaForno) : null,
-        modoPreparo,
-        nivelDificuldade,
-        ingredientes: {
-          create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
-            insumoId: ing.insumoId,
-            quantidadeGramas: parseFloat(ing.quantidadeGramas)
-          })) || []
-        }
-      },
-      include: {
-        categoria: true,
-        ingredientes: {
-          include: {
-            insumo: true
+    const ficha = await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.update({
+        where: { 
+          id,
+          userId: user.id
+        },
+        data: {
+          nome,
+          categoriaId,
+          pesoFinalGramas: parseFloat(pesoFinalGramas),
+          numeroPorcoes: parseInt(numeroPorcoes),
+          tempoPreparo: tempoPreparo ? parseInt(tempoPreparo) : null,
+          temperaturaForno: temperaturaForno ? parseInt(temperaturaForno) : null,
+          modoPreparo,
+          nivelDificuldade,
+          ingredientes: {
+            create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
+              insumoId: ing.insumoId,
+              quantidadeGramas: parseFloat(ing.quantidadeGramas)
+            })) || []
+          }
+        },
+        include: {
+          categoria: true,
+          ingredientes: {
+            include: {
+              insumo: true
+            }
           }
         }
-      }
+      })
     })
 
     await logUserAction(user.id, 'update', 'fichas-tecnicas', id, 'FichaTecnica', { nome }, request)
@@ -107,11 +114,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
 
-    await prisma.fichaTecnica.delete({
-      where: { 
-        id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.delete({
+        where: { 
+          id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'fichas-tecnicas', id, 'FichaTecnica', {}, request)

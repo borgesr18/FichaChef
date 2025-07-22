@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -12,24 +13,26 @@ import { produtoSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('produtos', 'read')
 
-  const produtos = await prisma.produto.findMany({
-    where: { userId: user.id },
-    include: {
-      produtoFichas: {
-        include: {
-          fichaTecnica: {
-            include: {
-              ingredientes: {
-                include: {
-                  insumo: true
+  const produtos = await withDatabaseRetry(async () => {
+    return await prisma.produto.findMany({
+      where: { userId: user.id },
+      include: {
+        produtoFichas: {
+          include: {
+            fichaTecnica: {
+              include: {
+                ingredientes: {
+                  include: {
+                    insumo: true
+                  }
                 }
               }
             }
           }
         }
-      }
-    },
-    orderBy: { nome: 'asc' },
+      },
+      orderBy: { nome: 'asc' },
+    })
   })
 
   return createSuccessResponse(produtos)
@@ -47,34 +50,36 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const produto = await prisma.produto.create({
-    data: {
-      nome: data.nome,
-      precoVenda: data.precoVenda,
-      margemLucro: data.margemLucro,
-      userId: user.id,
-      produtoFichas: {
-        create: data.fichas.map(ficha => ({
-          fichaTecnicaId: ficha.fichaTecnicaId,
-          quantidadeGramas: ficha.quantidadeGramas
-        }))
-      }
-    },
-    include: {
-      produtoFichas: {
-        include: {
-          fichaTecnica: {
-            include: {
-              ingredientes: {
-                include: {
-                  insumo: true
+  const produto = await withDatabaseRetry(async () => {
+    return await prisma.produto.create({
+      data: {
+        nome: data.nome,
+        precoVenda: data.precoVenda,
+        margemLucro: data.margemLucro,
+        userId: user.id,
+        produtoFichas: {
+          create: data.fichas.map(ficha => ({
+            fichaTecnicaId: ficha.fichaTecnicaId,
+            quantidadeGramas: ficha.quantidadeGramas
+          }))
+        }
+      },
+      include: {
+        produtoFichas: {
+          include: {
+            fichaTecnica: {
+              include: {
+                ingredientes: {
+                  include: {
+                    insumo: true
+                  }
                 }
               }
             }
           }
         }
       }
-    }
+    })
   })
 
   await logUserAction(user.id, 'create', 'produtos', produto.id, 'produto', { nome: data.nome }, request)

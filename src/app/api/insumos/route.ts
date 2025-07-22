@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -12,14 +13,16 @@ import { withErrorHandler } from '@/lib/api-helpers'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('insumos', 'read')
 
-  const insumos = await prisma.insumo.findMany({
-    where: { userId: user.id },
-    include: {
-      categoria: true,
-      unidadeCompra: true,
-      fornecedorRel: true,
-    },
-    orderBy: { nome: 'asc' },
+  const insumos = await withDatabaseRetry(async () => {
+    return await prisma.insumo.findMany({
+      where: { userId: user.id },
+      include: {
+        categoria: true,
+        unidadeCompra: true,
+        fornecedorRel: true,
+      },
+      orderBy: { nome: 'asc' },
+    })
   })
 
   return createSuccessResponse(insumos)
@@ -37,16 +40,18 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const insumo = await prisma.insumo.create({
-    data: {
-      ...data,
-      userId: user.id,
-    },
-    include: {
-      categoria: true,
-      unidadeCompra: true,
-      fornecedorRel: true,
-    },
+  const insumo = await withDatabaseRetry(async () => {
+    return await prisma.insumo.create({
+      data: {
+        ...data,
+        userId: user.id,
+      },
+      include: {
+        categoria: true,
+        unidadeCompra: true,
+        fornecedorRel: true,
+      },
+    })
   })
 
   await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', { nome: insumo.nome }, request)

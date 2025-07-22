@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -16,20 +17,22 @@ export const GET = withErrorHandler(async function GET(
   const { id } = await params
   const user = await authenticateWithPermission('cardapios', 'read')
 
-  const menu = await prisma.menu.findFirst({
-    where: { id, userId: user.id },
-    include: {
-      itens: {
-        include: {
-          produto: {
-            include: {
-              produtoFichas: {
-                include: {
-                  fichaTecnica: {
-                    include: {
-                      ingredientes: {
-                        include: {
-                          insumo: true
+  const menu = await withDatabaseRetry(async () => {
+    return await prisma.menu.findFirst({
+      where: { id, userId: user.id },
+      include: {
+        itens: {
+          include: {
+            produto: {
+              include: {
+                produtoFichas: {
+                  include: {
+                    fichaTecnica: {
+                      include: {
+                        ingredientes: {
+                          include: {
+                            insumo: true
+                          }
                         }
                       }
                     }
@@ -38,10 +41,10 @@ export const GET = withErrorHandler(async function GET(
               }
             }
           }
-        }
-      },
-      periodos: true
-    }
+        },
+        periodos: true
+      }
+    })
   })
 
   if (!menu) {
@@ -67,45 +70,51 @@ export const PUT = withErrorHandler(async function PUT(
 
   const data = parsedBody.data
 
-  const existingMenu = await prisma.menu.findFirst({
-    where: { id, userId: user.id }
+  const existingMenu = await withDatabaseRetry(async () => {
+    return await prisma.menu.findFirst({
+      where: { id, userId: user.id }
+    })
   })
 
   if (!existingMenu) {
     return createNotFoundResponse()
   }
 
-  await prisma.menuItem.deleteMany({
-    where: { menuId: id }
+  await withDatabaseRetry(async () => {
+    return await prisma.menuItem.deleteMany({
+      where: { menuId: id }
+    })
   })
 
-  const menu = await prisma.menu.update({
-    where: { id },
-    data: {
-      nome: data.nome,
-      descricao: data.descricao,
-      tipo: data.tipo,
-      ativo: data.ativo,
-      itens: {
-        create: data.itens.map(item => ({
-          produtoId: item.produtoId,
-          quantidade: item.quantidade,
-          observacoes: item.observacoes
-        }))
-      }
-    },
-    include: {
-      itens: {
-        include: {
-          produto: {
-            include: {
-              produtoFichas: {
-                include: {
-                  fichaTecnica: {
-                    include: {
-                      ingredientes: {
-                        include: {
-                          insumo: true
+  const menu = await withDatabaseRetry(async () => {
+    return await prisma.menu.update({
+      where: { id },
+      data: {
+        nome: data.nome,
+        descricao: data.descricao,
+        tipo: data.tipo,
+        ativo: data.ativo,
+        itens: {
+          create: data.itens.map(item => ({
+            produtoId: item.produtoId,
+            quantidade: item.quantidade,
+            observacoes: item.observacoes
+          }))
+        }
+      },
+      include: {
+        itens: {
+          include: {
+            produto: {
+              include: {
+                produtoFichas: {
+                  include: {
+                    fichaTecnica: {
+                      include: {
+                        ingredientes: {
+                          include: {
+                            insumo: true
+                          }
                         }
                       }
                     }
@@ -114,10 +123,10 @@ export const PUT = withErrorHandler(async function PUT(
               }
             }
           }
-        }
-      },
-      periodos: true
-    }
+        },
+        periodos: true
+      }
+    })
   })
 
   const { logUserAction } = await import('@/lib/permissions')
@@ -133,16 +142,20 @@ export const DELETE = withErrorHandler(async function DELETE(
   const { id } = await params
   const user = await authenticateWithPermission('cardapios', 'admin')
 
-  const existingMenu = await prisma.menu.findFirst({
-    where: { id, userId: user.id }
+  const existingMenu = await withDatabaseRetry(async () => {
+    return await prisma.menu.findFirst({
+      where: { id, userId: user.id }
+    })
   })
 
   if (!existingMenu) {
     return createNotFoundResponse()
   }
 
-  await prisma.menu.delete({
-    where: { id }
+  await withDatabaseRetry(async () => {
+    return await prisma.menu.delete({
+      where: { id }
+    })
   })
 
   return createSuccessResponse({ message: 'Menu excluído com sucesso' })

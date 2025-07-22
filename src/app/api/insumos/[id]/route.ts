@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -28,21 +29,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const data = validationResult.data
 
     // Verificar se o insumo existe e pertence ao usuário
-    const existingInsumo = await prisma.insumo.findFirst({
-      where: { id, userId: user.id }
+    const existingInsumo = await withDatabaseRetry(async () => {
+      return await prisma.insumo.findFirst({
+        where: { id, userId: user.id }
+      })
     })
 
     if (!existingInsumo) {
       return createNotFoundResponse('Insumo')
     }
 
-    const insumo = await prisma.insumo.update({
-      where: { id },
-      data,
-      include: {
-        categoria: true,
-        unidadeCompra: true
-      }
+    const insumo = await withDatabaseRetry(async () => {
+      return await prisma.insumo.update({
+        where: { id },
+        data,
+        include: {
+          categoria: true,
+          unidadeCompra: true
+        }
+      })
     })
 
     await logUserAction(user.id, 'update', 'insumos', id, 'insumo', data, request)
@@ -60,16 +65,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const user = await authenticateWithPermission('insumos', 'admin')
 
     // Verificar se o insumo existe e pertence ao usuário
-    const existingInsumo = await prisma.insumo.findFirst({
-      where: { id, userId: user.id }
+    const existingInsumo = await withDatabaseRetry(async () => {
+      return await prisma.insumo.findFirst({
+        where: { id, userId: user.id }
+      })
     })
 
     if (!existingInsumo) {
       return createNotFoundResponse('Insumo')
     }
 
-    await prisma.insumo.delete({
-      where: { id }
+    await withDatabaseRetry(async () => {
+      return await prisma.insumo.delete({
+        where: { id }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { nome: existingInsumo.nome }, request)

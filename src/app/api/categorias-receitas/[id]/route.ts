@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -17,15 +18,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    const categoria = await prisma.categoriaReceita.update({
-      where: { 
-        id,
-        userId: user.id
-      },
-      data: {
-        nome,
-        descricao
-      }
+    const categoria = await withDatabaseRetry(async () => {
+      return await prisma.categoriaReceita.update({
+        where: { 
+          id,
+          userId: user.id
+        },
+        data: {
+          nome,
+          descricao
+        }
+      })
     })
 
     await logUserAction(user.id, 'update', 'categorias-receitas', id, 'categoria', { nome, descricao })
@@ -42,11 +45,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
 
-    await prisma.categoriaReceita.delete({
-      where: { 
-        id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.categoriaReceita.delete({
+        where: { 
+          id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'categorias-receitas', id, 'categoria')

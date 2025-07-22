@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
@@ -28,13 +29,15 @@ export async function PUT(
     const validatedData = agendamentoSchema.parse(body)
 
     const params = await context.params
-    const agendamento = await prisma.relatorioAgendamento.update({
-      where: {
-        id: params.id,
-        userId: user.id
-      },
-      data: validatedData,
-      include: { template: true }
+    const agendamento = await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.update({
+        where: {
+          id: params.id,
+          userId: user.id
+        },
+        data: validatedData,
+        include: { template: true }
+      })
     })
 
     await logUserAction(user.id, 'update', 'relatorio-agendamentos', params.id, 'agendamento', validatedData, request)
@@ -57,11 +60,13 @@ export async function DELETE(
     const user = await authenticateWithPermission('relatorios', 'admin')
 
     const params = await context.params
-    await prisma.relatorioAgendamento.delete({
-      where: {
-        id: params.id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.delete({
+        where: {
+          id: params.id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'relatorio-agendamentos', params.id, 'agendamento', {}, request)

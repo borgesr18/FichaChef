@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -25,22 +26,26 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const data = validationResult.data
 
-    const existingFornecedor = await prisma.fornecedor.findFirst({
-      where: { id, userId: user.id }
+    const existingFornecedor = await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.findFirst({
+        where: { id, userId: user.id }
+      })
     })
 
     if (!existingFornecedor) {
       return createNotFoundResponse('Fornecedor')
     }
 
-    const fornecedor = await prisma.fornecedor.update({
-      where: { id },
-      data,
-      include: {
-        _count: {
-          select: { insumos: true, precos: true }
+    const fornecedor = await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.update({
+        where: { id },
+        data,
+        include: {
+          _count: {
+            select: { insumos: true, precos: true }
+          }
         }
-      }
+      })
     })
 
     await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, request)
@@ -57,16 +62,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('fornecedores', 'admin')
 
-    const existingFornecedor = await prisma.fornecedor.findFirst({
-      where: { id, userId: user.id }
+    const existingFornecedor = await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.findFirst({
+        where: { id, userId: user.id }
+      })
     })
 
     if (!existingFornecedor) {
       return createNotFoundResponse('Fornecedor')
     }
 
-    await prisma.fornecedor.delete({
-      where: { id }
+    await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.delete({
+        where: { id }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, request)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
@@ -33,15 +34,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const tipo = searchParams.get('tipo')
 
-    const templates = await prisma.relatorioTemplate.findMany({
-      where: {
-        userId: user.id,
-        ...(tipo && { tipo })
-      },
-      orderBy: [
-        { padrao: 'desc' },
-        { createdAt: 'desc' }
-      ]
+    const templates = await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.findMany({
+        where: {
+          userId: user.id,
+          ...(tipo && { tipo })
+        },
+        orderBy: [
+          { padrao: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      })
     })
 
     return NextResponse.json(templates)
@@ -58,11 +61,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = templateSchema.parse(body)
 
-    const template = await prisma.relatorioTemplate.create({
-      data: {
-        ...validatedData,
-        userId: user.id
-      }
+    const template = await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.create({
+        data: {
+          ...validatedData,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(

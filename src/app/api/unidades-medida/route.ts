@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -12,9 +13,11 @@ import { unidadeMedidaSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('insumos', 'read')
 
-  const unidades = await prisma.unidadeMedida.findMany({
-    where: { userId: user.id },
-    orderBy: { nome: 'asc' },
+  const unidades = await withDatabaseRetry(async () => {
+    return await prisma.unidadeMedida.findMany({
+      where: { userId: user.id },
+      orderBy: { nome: 'asc' },
+    })
   })
 
   return createSuccessResponse(unidades)
@@ -32,11 +35,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const unidade = await prisma.unidadeMedida.create({
-    data: {
-      ...data,
-      userId: user.id,
-    },
+  const unidade = await withDatabaseRetry(async () => {
+    return await prisma.unidadeMedida.create({
+      data: {
+        ...data,
+        userId: user.id,
+      },
+    })
   })
 
   await logUserAction(user.id, 'create', 'unidades-medida', unidade.id, 'UnidadeMedida', data, request)

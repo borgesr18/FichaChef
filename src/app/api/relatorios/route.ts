@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -75,34 +76,38 @@ export async function GET(request: NextRequest) {
 }
 
 async function generateCostReport(userId: string) {
-  const produtos = await prisma.produto.findMany({
-    where: { userId },
-    include: {
-      produtoFichas: {
-        include: {
-          fichaTecnica: {
-            include: {
-              ingredientes: {
-                include: {
-                  insumo: true
+  const produtos = await withDatabaseRetry(async () => {
+    return await prisma.produto.findMany({
+      where: { userId },
+      include: {
+        produtoFichas: {
+          include: {
+            fichaTecnica: {
+              include: {
+                ingredientes: {
+                  include: {
+                    insumo: true
+                  }
                 }
               }
             }
           }
         }
       }
-    }
+    })
   })
 
-  const fichasTecnicas = await prisma.fichaTecnica.findMany({
-    where: { userId },
-    include: {
-      ingredientes: {
-        include: {
-          insumo: true
+  const fichasTecnicas = await withDatabaseRetry(async () => {
+    return await prisma.fichaTecnica.findMany({
+      where: { userId },
+      include: {
+        ingredientes: {
+          include: {
+            insumo: true
+          }
         }
       }
-    }
+    })
   })
 
   const costAnalysis = {
@@ -162,19 +167,23 @@ async function generateProductionReport(userId: string) {
   const whereClause: Record<string, unknown> = { userId }
 
   const [producoesFichas, producoesProdutos] = await Promise.all([
-    prisma.producao.findMany({
-      where: whereClause,
-      include: {
-        fichaTecnica: true
-      },
-      orderBy: { dataProducao: 'desc' }
+    withDatabaseRetry(async () => {
+      return await prisma.producao.findMany({
+        where: whereClause,
+        include: {
+          fichaTecnica: true
+        },
+        orderBy: { dataProducao: 'desc' }
+      })
     }),
-    prisma.producaoProduto.findMany({
-      where: whereClause,
-      include: {
-        produto: true
-      },
-      orderBy: { dataProducao: 'desc' }
+    withDatabaseRetry(async () => {
+      return await prisma.producaoProduto.findMany({
+        where: whereClause,
+        include: {
+          produto: true
+        },
+        orderBy: { dataProducao: 'desc' }
+      })
     })
   ])
 
@@ -233,19 +242,23 @@ async function generateInventoryReport(userId: string) {
   const whereClause: Record<string, unknown> = { userId }
 
   const [movimentacoesInsumos, movimentacoesProdutos] = await Promise.all([
-    prisma.movimentacaoEstoque.findMany({
-      where: whereClause,
-      include: {
-        insumo: true
-      },
-      orderBy: { createdAt: 'desc' }
+    withDatabaseRetry(async () => {
+      return await prisma.movimentacaoEstoque.findMany({
+        where: whereClause,
+        include: {
+          insumo: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })
     }),
-    prisma.movimentacaoProduto.findMany({
-      where: whereClause,
-      include: {
-        produto: true
-      },
-      orderBy: { createdAt: 'desc' }
+    withDatabaseRetry(async () => {
+      return await prisma.movimentacaoProduto.findMany({
+        where: whereClause,
+        include: {
+          produto: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })
     })
   ])
 
