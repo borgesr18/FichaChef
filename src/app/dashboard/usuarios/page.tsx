@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Users, Shield, Plus, Mail, Key } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 
 interface Usuario {
   id: string
@@ -197,20 +200,22 @@ export default function UsuariosPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Users className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <Users className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Gerenciamento de Usuários</h1>
           </div>
           <div className="flex space-x-3">
             <button
               onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02] transform"
             >
               <Mail className="h-4 w-4 mr-2" />
               Convidar Usuário
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200 hover:scale-[1.02] transform"
             >
               <Plus className="h-4 w-4 mr-2" />
               Criar Usuário
@@ -224,64 +229,60 @@ export default function UsuariosPage() {
             <p className="mt-2 text-gray-600">Carregando usuários...</p>
           </div>
         ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Usuário
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Papel
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Criado em
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {usuarios.map((usuario) => (
-                  <tr key={usuario.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+            <ModernTable
+              columns={[
+                { key: 'usuario', label: 'Usuário', sortable: true,
+                  render: (_, row) => {
+                    const usuario = row as unknown as Usuario
+                    return (
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {usuario.nome || 'Sem nome'}
                         </div>
                         <div className="text-sm text-gray-500">{usuario.email}</div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    )
+                  }},
+                { key: 'role', label: 'Papel', sortable: true,
+                  render: (value, row) => {
+                    const usuario = row as unknown as Usuario
+                    return (
                       <select
-                        value={usuario.role}
+                        value={value as string}
                         onChange={(e) => updateUserRole(usuario.userId, e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-2 py-1"
+                        className="text-sm border border-slate-300 rounded-lg px-2 py-1 bg-white hover:bg-slate-50 transition-colors duration-200"
                       >
                         <option value="cozinheiro">Cozinheiro</option>
                         <option value="gerente">Gerente</option>
                         <option value="chef">Chef</option>
                       </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(usuario.createdAt).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    )
+                  }},
+                { key: 'createdAt', label: 'Criado em', sortable: true,
+                  render: (value) => new Date(value as string).toLocaleDateString('pt-BR') },
+                { key: 'actions', label: 'Ações', align: 'center',
+                  render: (_, row) => {
+                    const usuario = row as unknown as Usuario
+                    return (
+                      <div className="flex items-center justify-center space-x-2">
                         <button 
                           onClick={() => openPasswordResetModal(usuario)}
-                          className="text-yellow-600 hover:text-yellow-900"
+                          className="p-2 text-yellow-600 hover:text-white hover:bg-yellow-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
                           title="Redefinir senha"
                         >
                           <Key className="h-4 w-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )
+                  }}
+              ]}
+              data={usuarios as unknown as Record<string, unknown>[]}
+              searchable={false}
+              pagination={true}
+              pageSize={10}
+              loading={loading}
+            />
           </div>
         )}
 
@@ -292,78 +293,62 @@ export default function UsuariosPage() {
           title="Criar Novo Usuário"
         >
           <form onSubmit={createUser} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="usuario@exemplo.com"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Email"
+              type="email"
+              value={newUser.email}
+              onChange={(value) => setNewUser({ ...newUser, email: value })}
+              required
+            />
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha
-              </label>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Senha"
+              type="password"
+              value={newUser.password}
+              onChange={(value) => setNewUser({ ...newUser, password: value })}
+              required
+            />
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome
-              </label>
-              <input
-                type="text"
-                required
-                value={newUser.nome}
-                onChange={(e) => setNewUser({ ...newUser, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Nome completo"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Nome"
+              value={newUser.nome}
+              onChange={(value) => setNewUser({ ...newUser, nome: value })}
+              required
+            />
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Papel
-              </label>
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="cozinheiro">Cozinheiro</option>
-                <option value="gerente">Gerente</option>
-                <option value="chef">Chef</option>
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Papel"
+              value={newUser.role}
+              onChange={(value) => setNewUser({ ...newUser, role: value })}
+              options={[
+                { value: 'cozinheiro', label: 'Cozinheiro' },
+                { value: 'gerente', label: 'Gerente' },
+                { value: 'chef', label: 'Chef' }
+              ]}
+              required
+            />
             
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {createLoading ? 'Criando...' : 'Criar Usuário'}
+                {createLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Criando...</span>
+                  </>
+                ) : (
+                  <span className="font-medium">Criar Usuário</span>
+                )}
               </button>
             </div>
           </form>
@@ -377,36 +362,39 @@ export default function UsuariosPage() {
         >
           <form onSubmit={sendInvite} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email do Usuário
-              </label>
-              <input
+              <FloatingLabelInput
+                label="Email do Usuário"
                 type="email"
-                required
                 value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="usuario@exemplo.com"
+                onChange={(value) => setInviteEmail(value)}
+                required
               />
               <p className="mt-1 text-sm text-gray-500">
                 Um email de convite será enviado com instruções para criar a conta.
               </p>
             </div>
             
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
               <button
                 type="button"
                 onClick={() => setShowInviteModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={inviteLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {inviteLoading ? 'Enviando...' : 'Enviar Convite'}
+                {inviteLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Enviando...</span>
+                  </>
+                ) : (
+                  <span className="font-medium">Enviar Convite</span>
+                )}
               </button>
             </div>
           </form>
@@ -465,17 +453,12 @@ export default function UsuariosPage() {
 
             {resetMethod === 'direct' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nova Senha
-                </label>
-                <input
+                <FloatingLabelInput
+                  label="Nova Senha"
                   type="password"
-                  required
-                  minLength={6}
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Mínimo 6 caracteres"
+                  onChange={(value) => setNewPassword(value)}
+                  required
                 />
                 <p className="mt-1 text-sm text-gray-500">
                   A senha será alterada imediatamente.
@@ -494,10 +477,16 @@ export default function UsuariosPage() {
               <button
                 type="submit"
                 disabled={passwordResetLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {passwordResetLoading ? 'Processando...' : 
-                 resetMethod === 'email' ? 'Enviar Email' : 'Redefinir Senha'}
+                {passwordResetLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Processando...</span>
+                  </>
+                ) : (
+                  <span className="font-medium">{resetMethod === 'email' ? 'Enviar Email' : 'Redefinir Senha'}</span>
+                )}
               </button>
             </div>
           </form>

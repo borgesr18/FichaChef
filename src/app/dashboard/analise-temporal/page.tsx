@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
@@ -159,111 +162,84 @@ export default function AnaliseTemporalPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <BarChart3 className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Análise Temporal de Custos</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <BarChart3 className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Análise Temporal de Custos</h1>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Filtros de Análise</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Insumo (Opcional)
-              </label>
-              <select
-                value={filters.insumoId}
-                onChange={(e) => setFilters({ ...filters, insumoId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Todos os insumos</option>
-                {insumos.map((insumo) => (
-                  <option key={insumo.id} value={insumo.id}>
-                    {insumo.nome} {insumo._count && `(${insumo._count.fornecedorPrecos} preços)`}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <FloatingLabelSelect
+              label="Insumo (Opcional)"
+              value={filters.insumoId}
+              onChange={(value) => setFilters({ ...filters, insumoId: value })}
+              options={[
+                { value: '', label: 'Todos os insumos' },
+                ...insumos.map(insumo => ({
+                  value: insumo.id,
+                  label: `${insumo.nome}${insumo._count ? ` (${insumo._count.fornecedorPrecos} preços)` : ''}`
+                }))
+              ]}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fornecedor (Opcional)
-              </label>
-              <select
-                value={filters.fornecedorId}
-                onChange={(e) => setFilters({ ...filters, fornecedorId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Todos os fornecedores</option>
-                {fornecedores.map((fornecedor) => (
-                  <option key={fornecedor.id} value={fornecedor.id}>
-                    {fornecedor.nome} {fornecedor._count && `(${fornecedor._count.precos} preços)`}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Fornecedor (Opcional)"
+              value={filters.fornecedorId}
+              onChange={(value) => setFilters({ ...filters, fornecedorId: value })}
+              options={[
+                { value: '', label: 'Todos os fornecedores' },
+                ...fornecedores.map(fornecedor => ({
+                  value: fornecedor.id,
+                  label: `${fornecedor.nome}${fornecedor._count ? ` (${fornecedor._count.precos} preços)` : ''}`
+                }))
+              ]}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Início
-              </label>
-              <input
-                type="date"
-                value={filters.dataInicio}
-                onChange={(e) => setFilters({ ...filters, dataInicio: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Data Início"
+              type="date"
+              value={filters.dataInicio || ''}
+              onChange={(value) => setFilters({ ...filters, dataInicio: value || '' })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Fim
-              </label>
-              <input
-                type="date"
-                value={filters.dataFim}
-                onChange={(e) => setFilters({ ...filters, dataFim: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Data Fim"
+              type="date"
+              value={filters.dataFim || ''}
+              onChange={(value) => setFilters({ ...filters, dataFim: value || '' })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Período de Agrupamento
-              </label>
-              <select
-                value={filters.periodo}
-                onChange={(e) => setFilters({ ...filters, periodo: e.target.value as 'monthly' | 'quarterly' | 'yearly' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="monthly">Mensal</option>
-                <option value="quarterly">Trimestral</option>
-                <option value="yearly">Anual</option>
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Período de Agrupamento"
+              value={filters.periodo}
+              onChange={(value) => setFilters({ ...filters, periodo: value as 'monthly' | 'quarterly' | 'yearly' })}
+              options={[
+                { value: 'monthly', label: 'Mensal' },
+                { value: 'quarterly', label: 'Trimestral' },
+                { value: 'yearly', label: 'Anual' }
+              ]}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Meses de Projeção
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="24"
-                value={filters.mesesProjecao}
-                onChange={(e) => setFilters({ ...filters, mesesProjecao: parseInt(e.target.value) || 6 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Meses de Projeção"
+              type="number"
+              min="1"
+              max="24"
+              value={filters.mesesProjecao.toString()}
+              onChange={(value) => setFilters({ ...filters, mesesProjecao: parseInt(value) || 6 })}
+            />
           </div>
 
           <button
             onClick={handleAnalyze}
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
           >
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-12" />
             {loading ? 'Analisando...' : 'Realizar Análise'}
           </button>
         </div>
@@ -277,7 +253,7 @@ export default function AnaliseTemporalPage() {
         {analysisResults.length > 0 && (
           <div className="space-y-6">
             {analysisResults.map((analysis) => (
-              <div key={analysis.insumo.id} className="bg-white rounded-lg shadow">
+              <div key={analysis.insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-900 flex items-center">
                     <Target className="h-5 w-5 mr-2" />
@@ -395,50 +371,23 @@ export default function AnaliseTemporalPage() {
                   {analysis.groupedData.length > 0 && (
                     <div>
                       <h4 className="text-lg font-medium text-gray-900 mb-3">Dados Agrupados por Período</h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Período
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Preço Médio
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Menor Preço
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Maior Preço
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Registros
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {analysis.groupedData.map((group, index) => (
-                              <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {group.period}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {formatCurrency(group.averagePrice)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {formatCurrency(group.minPrice)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {formatCurrency(group.maxPrice)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {group.priceCount}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <ModernTable
+                        columns={[
+                          { key: 'period', label: 'Período', sortable: true },
+                          { key: 'averagePrice', label: 'Preço Médio', sortable: true,
+                            render: (value) => formatCurrency(value as number) },
+                          { key: 'minPrice', label: 'Menor Preço', sortable: true,
+                            render: (value) => formatCurrency(value as number) },
+                          { key: 'maxPrice', label: 'Maior Preço', sortable: true,
+                            render: (value) => formatCurrency(value as number) },
+                          { key: 'priceCount', label: 'Registros', sortable: true }
+                        ]}
+                        data={analysis.groupedData}
+                        searchable={false}
+                        pagination={true}
+                        pageSize={10}
+                        loading={false}
+                      />
                     </div>
                   )}
                 </div>

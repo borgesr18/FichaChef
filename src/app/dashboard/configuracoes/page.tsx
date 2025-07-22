@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 import { Settings, Plus, Edit, Trash2 } from 'lucide-react'
 
 interface CategoriaInsumo {
@@ -211,82 +214,50 @@ export default function ConfiguracoesPage() {
   }
 
   const renderTable = (data: (CategoriaInsumo | CategoriaReceita | UnidadeMedida)[], type: string) => {
-    if (data.length === 0) {
-      return (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <p className="text-gray-500 text-center">Nenhum item cadastrado</p>
-        </div>
-      )
-    }
+    const columns = [
+      { key: 'nome', label: 'Nome', sortable: true },
+      ...(type !== 'unidades-medida' ? [{ key: 'descricao', label: 'Descrição', sortable: true,
+        render: (value: unknown) => (value as string) || '-' }] : []),
+      ...(type === 'unidades-medida' ? [
+        { key: 'simbolo', label: 'Símbolo', sortable: true },
+        { key: 'tipo', label: 'Tipo', sortable: true }
+      ] : []),
+      { key: 'actions', label: 'Ações', align: 'center' as const,
+        render: (_: unknown, row: Record<string, unknown>) => (
+          <div className="flex items-center justify-center space-x-2">
+            <button
+              onClick={() => handleOpenModal(data.find(item => item.id === row.id))}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(row.id as string)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+    ]
+
+    const tableData = data.map(item => ({
+      id: item.id,
+      nome: item.nome,
+      ...(type !== 'unidades-medida' && 'descricao' in item ? { descricao: item.descricao } : {}),
+      ...(type === 'unidades-medida' && 'simbolo' in item ? { simbolo: item.simbolo } : {}),
+      ...(type === 'unidades-medida' && 'tipo' in item ? { tipo: item.tipo } : {})
+    }))
 
     return (
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nome
-              </th>
-              {type !== 'unidades-medida' && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Descrição
-                </th>
-              )}
-              {type === 'unidades-medida' && (
-                <>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Símbolo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo
-                  </th>
-                </>
-              )}
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ações
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((item) => (
-              <tr key={item.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {item.nome}
-                </td>
-                {type !== 'unidades-medida' && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {'descricao' in item ? item.descricao || '-' : '-'}
-                  </td>
-                )}
-                {type === 'unidades-medida' && (
-                  <>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {'simbolo' in item ? item.simbolo : ''}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {'tipo' in item ? item.tipo : ''}
-                    </td>
-                  </>
-                )}
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleOpenModal(item)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ModernTable
+        columns={columns}
+        data={tableData}
+        searchable={true}
+        pagination={true}
+        pageSize={10}
+        loading={loading}
+      />
     )
   }
 
@@ -294,20 +265,22 @@ export default function ConfiguracoesPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center">
-          <Settings className="h-6 w-6 text-gray-600 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
+          <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+            <Settings className="h-6 w-6 text-orange-600" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configurações</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="border-b border-slate-200/60">
             <nav className="-mb-px flex space-x-8 px-6">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-orange-500 text-orange-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -324,9 +297,9 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Categorias de Insumos</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Categoria
                   </button>
                 </div>
@@ -340,9 +313,9 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Categorias de Receitas</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Categoria
                   </button>
                 </div>
@@ -356,9 +329,9 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Unidades de Medida</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Unidade
                   </button>
                 </div>
@@ -381,18 +354,12 @@ export default function ConfiguracoesPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome *
-            </label>
-            <input
-              type="text"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
+          <FloatingLabelInput
+            label="Nome"
+            value={formData.nome}
+            onChange={(value) => setFormData({ ...formData, nome: value })}
+            required
+          />
 
           {activeTab !== 'unidades-medida' && (
             <div>
@@ -402,7 +369,7 @@ export default function ConfiguracoesPage() {
               <textarea
                 value={formData.descricao}
                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80"
                 rows={3}
               />
             </div>
@@ -410,34 +377,24 @@ export default function ConfiguracoesPage() {
 
           {activeTab === 'unidades-medida' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Símbolo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.simbolo}
-                  onChange={(e) => setFormData({ ...formData, simbolo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Símbolo"
+                value={formData.simbolo}
+                onChange={(value) => setFormData({ ...formData, simbolo: value })}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo *
-                </label>
-                <select
-                  value={formData.tipo}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                >
-                  <option value="peso">Peso</option>
-                  <option value="volume">Volume</option>
-                  <option value="unidade">Unidade</option>
-                </select>
-              </div>
+              <FloatingLabelSelect
+                label="Tipo"
+                value={formData.tipo}
+                onChange={(value) => setFormData({ ...formData, tipo: value })}
+                options={[
+                  { value: 'peso', label: 'Peso' },
+                  { value: 'volume', label: 'Volume' },
+                  { value: 'unidade', label: 'Unidade' }
+                ]}
+                required
+              />
             </>
           )}
 
@@ -445,14 +402,14 @@ export default function ConfiguracoesPage() {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="px-6 py-3 text-slate-700 bg-slate-200 rounded-xl hover:bg-slate-300 transition-all duration-200 hover:scale-105"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </button>

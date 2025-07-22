@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 import { ShoppingCart, Plus, Search, Edit, Trash2, X } from 'lucide-react'
 import { convertFormDataToNumbers } from '@/lib/form-utils'
 
@@ -240,114 +243,71 @@ export default function ProdutosPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fichas Técnicas
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Peso Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Custo Produção
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Margem Lucro
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preço Venda
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProdutos.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-4 animate-pulse">
-                        <div className="p-4 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full">
-                          <ShoppingCart className="h-12 w-12 text-orange-500 animate-bounce" />
+          <ModernTable
+            columns={[
+              { key: 'nome', label: 'Nome', sortable: true },
+              { key: 'fichasTecnicas', label: 'Fichas Técnicas', sortable: false,
+                render: (_, row) => {
+                  const produto = row as unknown as Produto
+                  return (
+                    <div className="text-sm text-slate-700">
+                      {produto.produtoFichas.map((f: { fichaTecnica: { nome: string }; quantidadeGramas: number }, index: number) => (
+                        <div key={index} className="mb-1 p-1 rounded bg-slate-50">
+                          {f.fichaTecnica.nome} ({f.quantidadeGramas}g)
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-slate-600 font-medium text-lg">
-                            Nenhum produto cadastrado.
-                          </p>
-                          <p className="text-slate-500 text-sm animate-pulse">
-                            Clique em &quot;Novo Produto&quot; para começar.
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredProdutos.map((produto) => {
-                    const custoTotal = produto.produtoFichas.reduce((total, produtoFicha) => {
-                      const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal, ing) => {
-                        const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-                        return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
-                      }, 0)
-                      const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
-                      return total + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
+                      ))}
+                    </div>
+                  )
+                }},
+              { key: 'pesoTotal', label: 'Peso Total', sortable: true, align: 'right',
+                render: (_, row) => {
+                  const produto = row as unknown as Produto
+                  const pesoTotal = produto.produtoFichas.reduce((total: number, f: { quantidadeGramas: number }) => total + f.quantidadeGramas, 0)
+                  return `${pesoTotal}g`
+                }},
+              { key: 'custoProducao', label: 'Custo Produção', sortable: true, align: 'right',
+                render: (_, row) => {
+                  const produto = row as unknown as Produto
+                  const custoTotal = produto.produtoFichas.reduce((total: number, produtoFicha: { fichaTecnica: { ingredientes: Array<{ insumo: { precoUnidade: number; pesoLiquidoGramas: number }; quantidadeGramas: number }>; pesoFinalGramas: number }; quantidadeGramas: number }) => {
+                    const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal: number, ing: { insumo: { precoUnidade: number; pesoLiquidoGramas: number }; quantidadeGramas: number }) => {
+                      const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+                      return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
                     }, 0)
-
-                    const pesoTotal = produto.produtoFichas.reduce((total, f) => total + f.quantidadeGramas, 0)
-
-                    return (
-                      <tr key={produto.id} className="hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-transparent transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:-translate-y-0.5 cursor-pointer group">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-slate-900 group-hover:text-orange-700 transition-colors duration-200">{produto.nome}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-slate-700 group-hover:text-slate-800 transition-colors duration-200">
-                            {produto.produtoFichas.map((f, index) => (
-                              <div key={index} className="mb-1 p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">
-                                {f.fichaTecnica.nome} ({f.quantidadeGramas}g)
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">
-                          {pesoTotal}g
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 group-hover:text-green-700 transition-colors duration-200">
-                          R$ {custoTotal.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">
-                          {produto.margemLucro}%
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
-                          R$ {produto.precoVenda.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end space-x-2">
-                            <button
-                              onClick={() => handleOpenModal(produto)}
-                              className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(produto.id)}
-                              className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
+                    const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
+                    return total + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
+                  }, 0)
+                  return <span className="font-semibold text-green-600">R$ {custoTotal.toFixed(2)}</span>
+                }},
+              { key: 'margemLucro', label: 'Margem Lucro', sortable: true, align: 'right',
+                render: (value) => `${value}%` },
+              { key: 'precoVenda', label: 'Preço Venda', sortable: true, align: 'right',
+                render: (value) => <span className="font-semibold text-blue-600">R$ {Number(value).toFixed(2)}</span> },
+              { key: 'actions', label: 'Ações', align: 'center',
+                render: (_, row) => (
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(row as unknown as Produto)}
+                      className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(row.id as string)}
+                      className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+            ]}
+            data={filteredProdutos as unknown as Record<string, unknown>[]}
+            searchable={false}
+            pagination={true}
+            pageSize={10}
+            loading={loading}
+          />
         </div>
 
         <Modal
@@ -363,47 +323,34 @@ export default function ProdutosPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome do Produto *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FloatingLabelInput
+                label="Nome do Produto"
+                value={formData.nome}
+                onChange={(value) => setFormData({ ...formData, nome: value })}
+                required
+                error={error && !formData.nome ? 'Nome é obrigatório' : ''}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preço de Venda (R$) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.precoVenda}
-                  onChange={(e) => setFormData({ ...formData, precoVenda: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Preço de Venda (R$)"
+                type="number"
+                step="0.01"
+                value={formData.precoVenda}
+                onChange={(value) => setFormData({ ...formData, precoVenda: value })}
+                required
+                error={error && !formData.precoVenda ? 'Preço é obrigatório' : ''}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Margem de Lucro (%) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.margemLucro}
-                  onChange={(e) => setFormData({ ...formData, margemLucro: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Margem de Lucro (%)"
+                type="number"
+                step="0.01"
+                value={formData.margemLucro}
+                onChange={(value) => setFormData({ ...formData, margemLucro: value })}
+                required
+                error={error && !formData.margemLucro ? 'Margem é obrigatória' : ''}
+              />
             </div>
 
             <div>
@@ -420,37 +367,33 @@ export default function ProdutosPage() {
               </div>
 
               {produtoFichas.map((produtoFicha, index) => (
-                <div key={index} className="flex items-center space-x-3 mb-3 p-3 border border-gray-200 rounded-md">
+                <div key={index} className="flex items-center space-x-3 mb-3 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
                   <div className="flex-1">
-                    <select
+                    <FloatingLabelSelect
+                      label="Ficha Técnica"
                       value={produtoFicha.fichaTecnicaId}
-                      onChange={(e) => updateProdutoFicha(index, 'fichaTecnicaId', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      onChange={(value) => updateProdutoFicha(index, 'fichaTecnicaId', value)}
+                      options={fichasTecnicas.map(ficha => ({ 
+                        value: ficha.id, 
+                        label: `${ficha.nome} (${ficha.pesoFinalGramas}g)` 
+                      }))}
                       required
-                    >
-                      <option value="">Selecione uma ficha técnica</option>
-                      {fichasTecnicas.map((ficha) => (
-                        <option key={ficha.id} value={ficha.id}>
-                          {ficha.nome} ({ficha.pesoFinalGramas}g)
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
                   <div className="w-32">
-                    <input
+                    <FloatingLabelInput
+                      label="Quantidade (g)"
                       type="number"
                       step="0.01"
-                      placeholder="Quantidade (g)"
-                      value={produtoFicha.quantidadeGramas}
-                      onChange={(e) => updateProdutoFicha(index, 'quantidadeGramas', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      value={produtoFicha.quantidadeGramas.toString()}
+                      onChange={(value) => updateProdutoFicha(index, 'quantidadeGramas', parseFloat(value) || 0)}
                       required
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => removeProdutoFicha(index)}
-                    className="text-red-600 hover:text-red-800"
+                    className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -477,20 +420,27 @@ export default function ProdutosPage() {
               </div>
             )}
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                {loading ? 'Salvando...' : editingProduto ? 'Atualizar' : 'Criar Produto'}
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <span className="font-medium">{editingProduto ? 'Atualizar' : 'Criar Produto'}</span>
+                )}
               </button>
             </div>
           </form>

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 import { FileText } from 'lucide-react'
 
 interface AuditoriaAcao {
@@ -58,96 +60,102 @@ export default function AuditoriaPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <FileText className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Auditoria de Ações</h1>
-          </div>
-          
-          <div className="flex space-x-4">
-            <select
-              value={filtroModulo}
-              onChange={(e) => setFiltroModulo(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2"
-            >
-              <option value="">Todos os módulos</option>
-              <option value="insumos">Insumos</option>
-              <option value="fichas-tecnicas">Fichas Técnicas</option>
-              <option value="produtos">Produtos</option>
-              <option value="producao">Produção</option>
-              <option value="estoque">Estoque</option>
-            </select>
-            
-            <select
-              value={filtroAcao}
-              onChange={(e) => setFiltroAcao(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2"
-            >
-              <option value="">Todas as ações</option>
-              <option value="create">Criar</option>
-              <option value="update">Atualizar</option>
-              <option value="delete">Excluir</option>
-              <option value="view">Visualizar</option>
-            </select>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Carregando logs de auditoria...</p>
-          </div>
-        ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Data/Hora
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Usuário
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ação
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Módulo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Item
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {acoes.map((acao) => (
-                    <tr key={acao.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(acao.createdAt).toLocaleString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {acao.usuario?.nome || acao.usuario?.email || 'Usuário desconhecido'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getAcaoColor(acao.acao)}`}>
-                          {acao.acao}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {acao.modulo}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {acao.itemTipo} {acao.itemId && `(${acao.itemId.slice(0, 8)}...)`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="space-y-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Auditoria de Ações</h1>
+              </div>
+              
+              <div className="flex space-x-4">
+                <FloatingLabelSelect
+                  label="Filtrar por Módulo"
+                  value={filtroModulo}
+                  onChange={(value: string) => setFiltroModulo(value)}
+                  options={[
+                    { value: '', label: 'Todos os módulos' },
+                    { value: 'insumos', label: 'Insumos' },
+                    { value: 'fichas-tecnicas', label: 'Fichas Técnicas' },
+                    { value: 'produtos', label: 'Produtos' },
+                    { value: 'producao', label: 'Produção' },
+                    { value: 'estoque', label: 'Estoque' }
+                  ]}
+                />
+                
+                <FloatingLabelSelect
+                  label="Filtrar por Ação"
+                  value={filtroAcao}
+                  onChange={(value: string) => setFiltroAcao(value)}
+                  options={[
+                    { value: '', label: 'Todas as ações' },
+                    { value: 'create', label: 'Criar' },
+                    { value: 'update', label: 'Atualizar' },
+                    { value: 'delete', label: 'Excluir' },
+                    { value: 'view', label: 'Visualizar' }
+                  ]}
+                />
+              </div>
             </div>
           </div>
-        )}
+
+          <div className="p-6">
+            <ModernTable
+              columns={[
+                { 
+                  key: 'createdAt', 
+                  label: 'Data/Hora', 
+                  sortable: true,
+                  render: (value: unknown) => new Date(value as string).toLocaleString('pt-BR')
+                },
+                { 
+                  key: 'usuario', 
+                  label: 'Usuário', 
+                  sortable: true,
+                  render: (value: unknown) => {
+                    const usuario = value as { nome?: string; email?: string } | null
+                    return usuario?.nome || usuario?.email || 'Usuário desconhecido'
+                  }
+                },
+                { 
+                  key: 'acao', 
+                  label: 'Ação', 
+                  sortable: true,
+                  render: (value: unknown) => (
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getAcaoColor(value as string)}`}>
+                      {value as string}
+                    </span>
+                  )
+                },
+                { 
+                  key: 'modulo', 
+                  label: 'Módulo', 
+                  sortable: true 
+                },
+                { 
+                  key: 'itemInfo', 
+                  label: 'Item', 
+                  render: (_, row: unknown) => {
+                    const auditRow = row as AuditoriaAcao
+                    return (
+                      <span className="text-sm text-gray-500">
+                        {auditRow.itemTipo} {auditRow.itemId && `(${auditRow.itemId.slice(0, 8)}...)`}
+                      </span>
+                    )
+                  }
+                }
+              ]}
+              data={acoes as unknown as Record<string, unknown>[]}
+              searchable={false}
+              pagination={true}
+              pageSize={10}
+              loading={loading}
+            />
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   )

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import { FileBarChart, Download, Filter, Package } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { generatePDF, generateExcel, downloadFile, getDefaultTemplate } from '@/lib/export-utils'
@@ -148,7 +150,7 @@ export default function RelatoriosPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Dados Detalhados</h3>
           <div className="text-sm text-gray-600">
             <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded overflow-auto max-h-96">
@@ -164,62 +166,50 @@ export default function RelatoriosPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center">
-          <FileBarChart className="h-6 w-6 text-gray-600 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Relatórios Gerenciais</h1>
+          <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+            <FileBarChart className="h-6 w-6 text-orange-600" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Relatórios Gerenciais</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Relatório
-              </label>
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="custos">Análise de Custos</option>
-                <option value="producao">Relatório de Produção</option>
-                <option value="estoque">Controle de Estoque</option>
-                <option value="fichas">Fichas Mais Utilizadas</option>
-                <option value="rentabilidade">Relatório de Rentabilidade</option>
-                <option value="abc-insumos">Análise ABC de Insumos</option>
-                <option value="desperdicio">Relatório de Desperdício</option>
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Tipo de Relatório"
+              value={reportType}
+              onChange={(value) => setReportType(value)}
+              options={[
+                { value: 'custos', label: 'Análise de Custos' },
+                { value: 'producao', label: 'Relatório de Produção' },
+                { value: 'estoque', label: 'Controle de Estoque' },
+                { value: 'fichas', label: 'Fichas Mais Utilizadas' },
+                { value: 'rentabilidade', label: 'Relatório de Rentabilidade' },
+                { value: 'abc-insumos', label: 'Análise ABC de Insumos' },
+                { value: 'desperdicio', label: 'Relatório de Desperdício' }
+              ]}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Inicial
-              </label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Data Inicial"
+              type="date"
+              value={dateFrom}
+              onChange={(value) => setDateFrom(value)}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Final
-              </label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Data Final"
+              type="date"
+              value={dateTo}
+              onChange={(value) => setDateTo(value)}
+            />
 
             <div className="flex items-end">
               <button 
                 onClick={fetchReport}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 flex items-center justify-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
               >
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-12" />
                 {loading ? 'Gerando...' : 'Gerar Relatório'}
               </button>
             </div>
@@ -229,17 +219,17 @@ export default function RelatoriosPage() {
             <button
               onClick={handleExportPDF}
               disabled={!reportData}
-              className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center"
+              className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:-translate-y-1" />
               Exportar PDF
             </button>
             <button
               onClick={handleExportExcel}
               disabled={!reportData}
-              className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl hover:from-green-600 hover:to-green-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:-translate-y-1" />
               Exportar Excel
             </button>
           </div>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import { Factory, Plus, Search, Edit, Trash2, FileText, Package } from 'lucide-react'
 import { convertFormDataToNumbers, convertFormDataToDates } from '@/lib/form-utils'
 
@@ -227,14 +229,16 @@ export default function ProducaoPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Factory className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Produção</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <Factory className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Produção</h1>
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Nova Produção
           </button>
         </div>
@@ -266,7 +270,7 @@ export default function ProducaoPage() {
           </nav>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
           <div className="p-6 border-b border-gray-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -371,80 +375,52 @@ export default function ProducaoPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'} *
-            </label>
-            <select
-              value={formData.itemId}
-              onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          <FloatingLabelSelect
+            label={`${activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'} *`}
+            value={formData.itemId}
+            onChange={(value: string) => setFormData({ ...formData, itemId: value })}
+            options={[
+              { value: '', label: `Selecione ${activeSection === 'fichas' ? 'uma ficha técnica' : 'um produto'}` },
+              ...currentItems.map((item) => ({ value: item.id, label: item.nome }))
+            ]}
+            required
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FloatingLabelInput
+              label="Data de Produção *"
+              type="date"
+              value={formData.dataProducao}
+              onChange={(value: string) => setFormData({ ...formData, dataProducao: value })}
               required
-            >
-              <option value="">{`Selecione ${activeSection === 'fichas' ? 'uma ficha técnica' : 'um produto'}`}</option>
-              {currentItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nome}
-                </option>
-              ))}
-            </select>
+            />
+
+            <FloatingLabelInput
+              label="Data de Validade *"
+              type="date"
+              value={formData.dataValidade}
+              onChange={(value: string) => setFormData({ ...formData, dataValidade: value })}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data de Produção *
-              </label>
-              <input
-                type="date"
-                value={formData.dataProducao}
-                onChange={(e) => setFormData({ ...formData, dataProducao: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
+            <FloatingLabelInput
+              label="Quantidade Produzida *"
+              type="number"
+              step="0.01"
+              value={formData.quantidadeProduzida}
+              onChange={(value: string) => setFormData({ ...formData, quantidadeProduzida: value })}
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data de Validade *
-              </label>
-              <input
-                type="date"
-                value={formData.dataValidade}
-                onChange={(e) => setFormData({ ...formData, dataValidade: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade Produzida *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.quantidadeProduzida}
-                onChange={(e) => setFormData({ ...formData, quantidadeProduzida: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Lote *
-              </label>
-              <input
-                type="text"
-                value={formData.lote}
-                onChange={(e) => setFormData({ ...formData, lote: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
+            <FloatingLabelInput
+              label="Lote *"
+              type="text"
+              value={formData.lote}
+              onChange={(value: string) => setFormData({ ...formData, lote: value })}
+              required
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
