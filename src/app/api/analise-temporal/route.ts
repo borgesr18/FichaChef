@@ -201,22 +201,26 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   }
 
   const [insumos, fornecedores] = await Promise.all([
-    prisma.insumo.findMany({
-      where: {
-        userId: user.id,
-        fornecedorPrecos: { some: {} }
-      },
-      select: { id: true, nome: true },
-      orderBy: { nome: 'asc' }
+    withDatabaseRetry(async () => {
+      return await prisma.insumo.findMany({
+        where: {
+          userId: user.id,
+          fornecedorPrecos: { some: {} }
+        },
+        select: { id: true, nome: true },
+        orderBy: { nome: 'asc' }
+      })
     }),
-    prisma.fornecedor.findMany({
-      where: {
-        userId: user.id,
-        ativo: true,
-        precos: { some: {} }
-      },
-      select: { id: true, nome: true },
-      orderBy: { nome: 'asc' }
+    withDatabaseRetry(async () => {
+      return await prisma.fornecedor.findMany({
+        where: {
+          userId: user.id,
+          ativo: true,
+          precos: { some: {} }
+        },
+        select: { id: true, nome: true },
+        orderBy: { nome: 'asc' }
+      })
     })
   ])
 

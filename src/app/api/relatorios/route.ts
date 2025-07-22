@@ -335,22 +335,26 @@ async function generateRecipeReport(userId: string) {
   const whereClause: Record<string, unknown> = { userId }
 
   const [fichasTecnicas, producoes] = await Promise.all([
-    prisma.fichaTecnica.findMany({
-      where: { userId },
-      include: {
-        categoria: true,
-        ingredientes: {
-          include: {
-            insumo: true
+    withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.findMany({
+        where: { userId },
+        include: {
+          categoria: true,
+          ingredientes: {
+            include: {
+              insumo: true
+            }
           }
         }
-      }
+      })
     }),
-    prisma.producao.findMany({
-      where: whereClause,
-      include: {
-        fichaTecnica: true
-      }
+    withDatabaseRetry(async () => {
+      return await prisma.producao.findMany({
+        where: whereClause,
+        include: {
+          fichaTecnica: true
+        }
+      })
     })
   ])
 
@@ -406,25 +410,27 @@ async function generateRecipeReport(userId: string) {
 }
 
 async function generateProfitabilityReport(userId: string) {
-  const produtos = await prisma.produto.findMany({
-    where: { userId },
-    include: {
-      produtoFichas: {
-        include: {
-          fichaTecnica: {
-            include: {
-              ingredientes: {
-                include: {
-                  insumo: true
+  const produtos = await withDatabaseRetry(async () => {
+    return await prisma.produto.findMany({
+      where: { userId },
+      include: {
+        produtoFichas: {
+          include: {
+            fichaTecnica: {
+              include: {
+                ingredientes: {
+                  include: {
+                    insumo: true
+                  }
                 }
               }
             }
           }
-        }
-      },
-      producoesProduto: true,
-      movimentacoesProduto: true
-    }
+        },
+        producoesProduto: true,
+        movimentacoesProduto: true
+      }
+    })
   })
 
   const produtosRentabilidade = produtos.map(produto => {
@@ -483,19 +489,21 @@ async function generateProfitabilityReport(userId: string) {
 }
 
 async function generateAbcInsumosReport(userId: string) {
-  const insumos = await prisma.insumo.findMany({
-    where: { userId },
-    include: {
-      ingredientes: {
-        include: {
-          fichaTecnica: {
-            include: {
-              producoes: true
+  const insumos = await withDatabaseRetry(async () => {
+    return await prisma.insumo.findMany({
+      where: { userId },
+      include: {
+        ingredientes: {
+          include: {
+            fichaTecnica: {
+              include: {
+                producoes: true
+              }
             }
           }
         }
       }
-    }
+    })
   })
 
   const insumosAnalise = insumos.map(insumo => {

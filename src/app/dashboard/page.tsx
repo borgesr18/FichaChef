@@ -33,7 +33,7 @@ export default function DashboardPage() {
         
         // Fetch stats from APIs with timeout
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
         
         const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.all([
           fetch('/api/insumos', { signal: controller.signal }),
@@ -75,7 +75,17 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
-        setError('Erro ao carregar estatísticas')
+        const errorMessage = err instanceof Error && err.name === 'AbortError' 
+          ? 'Tempo limite excedido ao carregar dados. Tente novamente.' 
+          : 'Erro ao carregar estatísticas. Verifique sua conexão.'
+        setError(errorMessage)
+        
+        addNotification({
+          type: 'error',
+          title: 'Erro no Dashboard',
+          message: errorMessage,
+          duration: 5000
+        })
       } finally {
         setLoading(false)
       }
