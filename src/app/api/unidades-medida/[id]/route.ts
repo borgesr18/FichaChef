@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -17,16 +18,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    const unidade = await prisma.unidadeMedida.update({
-      where: { 
-        id,
-        userId: user.id
-      },
-      data: {
-        nome,
-        simbolo,
-        tipo
-      }
+    const unidade = await withDatabaseRetry(async () => {
+      return await prisma.unidadeMedida.update({
+        where: { 
+          id,
+          userId: user.id
+        },
+        data: {
+          nome,
+          simbolo,
+          tipo
+        }
+      })
     })
 
     await logUserAction(user.id, 'update', 'unidades-medida', id, 'UnidadeMedida', { nome, simbolo, tipo }, request)
@@ -43,11 +46,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('configuracoes', 'admin')
 
-    await prisma.unidadeMedida.delete({
-      where: { 
-        id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.unidadeMedida.delete({
+        where: { 
+          id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'unidades-medida', id, 'UnidadeMedida', {}, request)

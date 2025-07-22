@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { generatePDF, generateExcel } from '@/lib/export-utils'
 
 interface ProcessingResult {
@@ -13,16 +14,18 @@ export async function POST() {
   try {
     const now = new Date()
     
-    const agendamentosVencidos = await prisma.relatorioAgendamento.findMany({
-      where: {
-        ativo: true,
-        proximaExecucao: {
-          lte: now
+    const agendamentosVencidos = await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.findMany({
+        where: {
+          ativo: true,
+          proximaExecucao: {
+            lte: now
+          }
+        },
+        include: {
+          template: true
         }
-      },
-      include: {
-        template: true
-      }
+      })
     })
 
     const results: ProcessingResult[] = []
@@ -61,23 +64,27 @@ export async function POST() {
           filename = `relatorio-${agendamento.tipo}-${new Date().toISOString().split('T')[0]}.xlsx`
         }
 
-        await prisma.relatorioExecucao.create({
-          data: {
-            agendamentoId: agendamento.id,
-            dataExecucao: now,
-            status: 'sucesso',
-            arquivo: filename,
-            userId: agendamento.userId
-          }
+        await withDatabaseRetry(async () => {
+          return await prisma.relatorioExecucao.create({
+            data: {
+              agendamentoId: agendamento.id,
+              dataExecucao: now,
+              status: 'sucesso',
+              arquivo: filename,
+              userId: agendamento.userId
+            }
+          })
         })
 
         const proximaExecucao = calculateNextExecution(agendamento)
-        await prisma.relatorioAgendamento.update({
-          where: { id: agendamento.id },
-          data: {
-            ultimaExecucao: now,
-            proximaExecucao
-          }
+        await withDatabaseRetry(async () => {
+          return await prisma.relatorioAgendamento.update({
+            where: { id: agendamento.id },
+            data: {
+              ultimaExecucao: now,
+              proximaExecucao
+            }
+          })
         })
 
         results.push({
@@ -87,14 +94,16 @@ export async function POST() {
         })
 
       } catch (error) {
-        await prisma.relatorioExecucao.create({
-          data: {
-            agendamentoId: agendamento.id,
-            dataExecucao: now,
-            status: 'erro',
-            erro: error instanceof Error ? error.message : 'Unknown error',
-            userId: agendamento.userId
-          }
+        await withDatabaseRetry(async () => {
+          return await prisma.relatorioExecucao.create({
+            data: {
+              agendamentoId: agendamento.id,
+              dataExecucao: now,
+              status: 'erro',
+              erro: error instanceof Error ? error.message : 'Unknown error',
+              userId: agendamento.userId
+            }
+          })
         })
 
         results.push({

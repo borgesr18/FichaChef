@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -23,21 +24,23 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    const producao = await prisma.producao.update({
-      where: { 
-        id,
-        userId: user.id
-      },
-      data: {
-        fichaTecnicaId,
-        dataProducao: new Date(dataProducao),
-        dataValidade: new Date(dataValidade),
-        quantidadeProduzida: parseFloat(quantidadeProduzida),
-        lote
-      },
-      include: {
-        fichaTecnica: true
-      }
+    const producao = await withDatabaseRetry(async () => {
+      return await prisma.producao.update({
+        where: { 
+          id,
+          userId: user.id
+        },
+        data: {
+          fichaTecnicaId,
+          dataProducao: new Date(dataProducao),
+          dataValidade: new Date(dataValidade),
+          quantidadeProduzida: parseFloat(quantidadeProduzida),
+          lote
+        },
+        include: {
+          fichaTecnica: true
+        }
+      })
     })
 
     await logUserAction(user.id, 'update', 'producao', id, 'producao', { lote, quantidadeProduzida }, request)
@@ -54,11 +57,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('producao', 'admin')
 
-    await prisma.producao.delete({
-      where: { 
-        id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.producao.delete({
+        where: { 
+          id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'producao', id, 'producao', {}, request)

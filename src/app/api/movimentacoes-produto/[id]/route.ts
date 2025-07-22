@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -24,14 +25,16 @@ export const PUT = withErrorHandler(async function PUT(
 
   const data = parsedBody.data
 
-  const movimentacao = await prisma.movimentacaoProduto.update({
-    where: { id, userId: user.id },
-    data: {
-      ...data,
-    },
-    include: {
-      produto: true,
-    },
+  const movimentacao = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoProduto.update({
+      where: { id, userId: user.id },
+      data: {
+        ...data,
+      },
+      include: {
+        produto: true,
+      },
+    })
   })
 
   const { logUserAction } = await import('@/lib/permissions')
@@ -47,8 +50,10 @@ export const DELETE = withErrorHandler(async function DELETE(
   const { id } = await params
   const user = await authenticateWithPermission('estoque', 'admin')
 
-  await prisma.movimentacaoProduto.delete({
-    where: { id, userId: user.id },
+  await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoProduto.delete({
+      where: { id, userId: user.id },
+    })
   })
 
   const { logUserAction } = await import('@/lib/permissions')

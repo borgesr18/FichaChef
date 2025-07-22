@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
@@ -37,12 +38,14 @@ export async function PUT(
     const validatedData = templateSchema.parse(body)
 
     const params = await context.params
-    const template = await prisma.relatorioTemplate.update({
-      where: {
-        id: params.id,
-        userId: user.id
-      },
-      data: validatedData
+    const template = await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.update({
+        where: {
+          id: params.id,
+          userId: user.id
+        },
+        data: validatedData
+      })
     })
 
     await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, request)
@@ -65,11 +68,13 @@ export async function DELETE(
     const user = await authenticateWithPermission('relatorios', 'admin')
 
     const params = await context.params
-    await prisma.relatorioTemplate.delete({
-      where: {
-        id: params.id,
-        userId: user.id
-      }
+    await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.delete({
+        where: {
+          id: params.id,
+          userId: user.id
+        }
+      })
     })
 
     await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, request)
