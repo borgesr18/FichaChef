@@ -224,7 +224,7 @@ export const analiseTemporalSchema = z.object({
   fornecedorId: z.string().min(1, 'Fornecedor é obrigatório').optional(),
   dataInicio: z.date(),
   dataFim: z.date(),
-  periodo: z.enum(['monthly', 'quarterly', 'yearly']).default('monthly'),
+  periodo: z.enum(['mensal', 'trimestral', 'anual', 'monthly', 'quarterly', 'yearly']).default('mensal'),
   mesesProjecao: z.number().int().min(1).max(24).default(6),
 })
 

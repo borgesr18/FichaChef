@@ -29,6 +29,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         setLoading(true)
+        setError('')
         
         // Fetch stats from APIs
         const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.all([
@@ -38,11 +39,15 @@ export default function DashboardPage() {
           fetch('/api/produtos')
         ])
 
+        if (!insumosRes.ok || !fichasRes.ok || !producoesRes.ok || !produtosRes.ok) {
+          throw new Error('One or more API requests failed')
+        }
+
         const [insumos, fichas, producoes, produtos] = await Promise.all([
-          insumosRes.ok ? insumosRes.json() : [],
-          fichasRes.ok ? fichasRes.json() : [],
-          producoesRes.ok ? producoesRes.json() : [],
-          produtosRes.ok ? produtosRes.json() : []
+          insumosRes.json(),
+          fichasRes.json(),
+          producoesRes.json(),
+          produtosRes.json()
         ])
 
         const newStats = {
@@ -53,6 +58,7 @@ export default function DashboardPage() {
         }
         
         setStats(newStats)
+        setError('') // Clear any previous errors on successful load
         
         if (newStats.insumos > 0 || newStats.fichasTecnicas > 0) {
           addNotification({
