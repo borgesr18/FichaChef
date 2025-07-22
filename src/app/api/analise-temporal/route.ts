@@ -105,7 +105,12 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
     const trendAnalysis = calculateLinearTrend(pricePoints)
     const projections = projectFutureCosts(pricePoints, mesesProjecao)
-    const groupedData = groupPricesByPeriod(pricePoints, periodo)
+    
+    const englishPeriod = periodo === 'mensal' ? 'monthly' : 
+                         periodo === 'trimestral' ? 'quarterly' : 
+                         periodo === 'anual' ? 'yearly' : periodo
+    
+    const groupedData = groupPricesByPeriod(pricePoints, englishPeriod as 'monthly' | 'quarterly' | 'yearly')
     const volatilityAnalysis = calculatePriceVolatility(pricePoints)
 
     return {
