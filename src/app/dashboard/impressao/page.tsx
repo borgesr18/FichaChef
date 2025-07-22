@@ -143,8 +143,10 @@ export default function ImpressaoPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center">
-          <Printer className="h-6 w-6 text-gray-600 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Impressão de Fichas Técnicas</h1>
+          <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+            <Printer className="h-6 w-6 text-orange-600" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Impressão de Fichas Técnicas</h1>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 no-print">
@@ -201,7 +203,7 @@ export default function ImpressaoPage() {
         </div>
 
         {selectedFicha && (
-          <div className="bg-white rounded-lg shadow print-content">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 print-content">
             <div className="print-header text-center border-b-2 border-gray-300 pb-4 mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">FichaChef</h1>
               <p className="text-lg text-gray-600">Sistema de Fichas Técnicas</p>

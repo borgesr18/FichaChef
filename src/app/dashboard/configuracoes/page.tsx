@@ -294,8 +294,10 @@ export default function ConfiguracoesPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center">
-          <Settings className="h-6 w-6 text-gray-600 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
+          <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+            <Settings className="h-6 w-6 text-orange-600" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configurações</h1>
         </div>
 
         <div className="bg-white rounded-lg shadow">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import ModernTable from '@/components/ui/ModernTable'
 import { Truck, Plus, Search, Edit, Trash2, Package } from 'lucide-react'
 
 interface Fornecedor {
@@ -68,7 +70,7 @@ export default function FornecedoresPage() {
     setEditingFornecedor(fornecedor || null)
     if (fornecedor) {
       setFormData({
-        nome: fornecedor.nome,
+        nome: fornecedor.nome || '',
         razaoSocial: fornecedor.razaoSocial || '',
         cnpj: fornecedor.cnpj || '',
         telefone: fornecedor.telefone || '',
@@ -79,7 +81,7 @@ export default function FornecedoresPage() {
         cep: fornecedor.cep || '',
         contato: fornecedor.contato || '',
         observacoes: fornecedor.observacoes || '',
-        ativo: fornecedor.ativo
+        ativo: fornecedor.ativo ?? true
       })
     } else {
       setFormData({
@@ -160,118 +162,108 @@ export default function FornecedoresPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Truck className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Gestão de Fornecedores</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <Truck className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Gestão de Fornecedores</h1>
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Novo Fornecedor
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-all duration-200 group-focus-within:text-orange-500 group-focus-within:scale-110" />
               <input
                 type="text"
                 placeholder="Buscar fornecedores..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 pr-4 py-3 w-full border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contato
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Localização
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Insumos
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredFornecedores.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      {searchTerm ? 'Nenhum fornecedor encontrado.' : 'Nenhum fornecedor cadastrado. Clique em "Novo Fornecedor" para começar.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredFornecedores.map((fornecedor) => (
-                    <tr key={fornecedor.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{fornecedor.nome}</div>
-                          {fornecedor.razaoSocial && (
-                            <div className="text-sm text-gray-500">{fornecedor.razaoSocial}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div>
-                          {fornecedor.telefone && <div>{fornecedor.telefone}</div>}
-                          {fornecedor.email && <div>{fornecedor.email}</div>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {fornecedor.cidade && fornecedor.estado ? `${fornecedor.cidade}, ${fornecedor.estado}` : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Package className="h-4 w-4 mr-1" />
-                          {fornecedor._count.insumos}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          fornecedor.ativo 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {fornecedor.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenModal(fornecedor)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(fornecedor.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+          <ModernTable
+            columns={[
+              { key: 'nome', label: 'Nome', sortable: true,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return (
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{String(fornecedor.nome || '')}</div>
+                      {fornecedor.razaoSocial ? (
+                        <div className="text-sm text-gray-500">{String(fornecedor.razaoSocial)}</div>
+                      ) : null}
+                    </div>
+                  )
+                }},
+              { key: 'contato', label: 'Contato', sortable: false,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return (
+                    <div className="text-sm text-gray-500">
+                      {fornecedor.telefone ? <div>{String(fornecedor.telefone)}</div> : null}
+                      {fornecedor.email ? <div>{String(fornecedor.email)}</div> : null}
+                    </div>
+                  )
+                }},
+              { key: 'localizacao', label: 'Localização', sortable: true,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return fornecedor.cidade && fornecedor.estado ? `${String(fornecedor.cidade)}, ${String(fornecedor.estado)}` : '-'
+                }},
+              { key: 'insumos', label: 'Insumos', sortable: true, align: 'center',
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  const count = fornecedor._count as Record<string, number> | undefined
+                  return (
+                    <div className="flex items-center justify-center">
+                      <Package className="h-4 w-4 mr-1" />
+                      {count?.insumos || 0}
+                    </div>
+                  )
+                }},
+              { key: 'ativo', label: 'Status', sortable: true,
+                render: (value) => (
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {value ? 'Ativo' : 'Inativo'}
+                  </span>
+                )},
+              { key: 'actions', label: 'Ações', align: 'center',
+                render: (_, row) => (
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(row as unknown as Fornecedor)}
+                      className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(row.id as string)}
+                      className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+            ]}
+            data={filteredFornecedores as unknown as Record<string, unknown>[]}
+            searchable={false}
+            pagination={true}
+            pageSize={10}
+            loading={loading}
+          />
         </div>
       </div>
 
@@ -288,167 +280,118 @@ export default function FornecedoresPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome *
-              </label>
-              <input
-                type="text"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Nome"
+              value={formData.nome}
+              onChange={(value) => setFormData({ ...formData, nome: value })}
+              required
+              error={error && !formData.nome ? 'Nome é obrigatório' : ''}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Razão Social
-              </label>
-              <input
-                type="text"
-                value={formData.razaoSocial}
-                onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Razão Social"
+              value={formData.razaoSocial}
+              onChange={(value) => setFormData({ ...formData, razaoSocial: value })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CNPJ
-              </label>
-              <input
-                type="text"
-                value={formData.cnpj}
-                onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="CNPJ"
+              value={formData.cnpj}
+              onChange={(value) => setFormData({ ...formData, cnpj: value })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefone
-              </label>
-              <input
-                type="text"
-                value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Telefone"
+              value={formData.telefone}
+              onChange={(value) => setFormData({ ...formData, telefone: value })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <FloatingLabelInput
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(value) => setFormData({ ...formData, email: value })}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contato
-              </label>
-              <input
-                type="text"
-                value={formData.contato}
-                onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Endereço
-              </label>
-              <input
-                type="text"
-                value={formData.endereco}
-                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cidade
-              </label>
-              <input
-                type="text"
-                value={formData.cidade}
-                onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Estado
-              </label>
-              <input
-                type="text"
-                value={formData.estado}
-                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CEP
-              </label>
-              <input
-                type="text"
-                value={formData.cep}
-                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Observações
-              </label>
-              <textarea
-                value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.ativo}
-                  onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                />
-                <span className="ml-2 text-sm text-gray-700">Fornecedor ativo</span>
-              </label>
-            </div>
+            <FloatingLabelInput
+              label="Contato"
+              value={formData.contato}
+              onChange={(value) => setFormData({ ...formData, contato: value })}
+            />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <FloatingLabelInput
+            label="Endereço"
+            value={formData.endereco}
+            onChange={(value) => setFormData({ ...formData, endereco: value })}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Cidade"
+              value={formData.cidade}
+              onChange={(value) => setFormData({ ...formData, cidade: value })}
+            />
+
+            <FloatingLabelInput
+              label="Estado"
+              value={formData.estado}
+              onChange={(value) => setFormData({ ...formData, estado: value })}
+            />
+
+            <FloatingLabelInput
+              label="CEP"
+              value={formData.cep}
+              onChange={(value) => setFormData({ ...formData, cep: value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Observações
+            </label>
+            <textarea
+              value={formData.observacoes}
+              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.ativo}
+                onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                className="rounded border-orange-300 text-orange-600 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+              />
+              <span className="ml-2 text-sm text-slate-700">Fornecedor ativo</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Salvando...</span>
+                </>
+              ) : (
+                <span className="font-medium">Salvar</span>
+              )}
             </button>
           </div>
         </form>
