@@ -170,18 +170,18 @@ export default function NotificationSystem({
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
-  const addNotification = (notification: Omit<Notification, 'id'>) => {
+  const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)
     setNotifications(prev => [...prev, { ...notification, id }])
-  }
+  }, [])
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id))
-  }
+  }, [])
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([])
-  }
+  }, [])
 
   return {
     notifications,
