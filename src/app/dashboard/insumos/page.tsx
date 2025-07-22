@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
+import { useNotifications } from '@/components/ui/NotificationSystem'
 import { Package, Plus, Search, Edit, Trash2 } from 'lucide-react'
 import { convertFormDataToNumbers } from '@/lib/form-utils'
 
@@ -45,6 +49,7 @@ interface Fornecedor {
 }
 
 export default function InsumosPage() {
+  const { addNotification } = useNotifications()
   const [searchTerm, setSearchTerm] = useState('')
   const [insumos, setInsumos] = useState<Insumo[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -203,12 +208,30 @@ export default function InsumosPage() {
       if (response.ok) {
         handleCloseModal()
         fetchInsumos()
+        addNotification({
+          type: 'success',
+          title: 'Sucesso!',
+          message: editingInsumo ? 'Insumo atualizado com sucesso' : 'Insumo criado com sucesso',
+          duration: 3000
+        })
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar insumo')
+        addNotification({
+          type: 'error',
+          title: 'Erro',
+          message: 'Falha ao salvar insumo',
+          duration: 5000
+        })
       }
     } catch {
       setError('Erro ao salvar insumo')
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Falha ao salvar insumo',
+        duration: 5000
+      })
     } finally {
       setLoading(false)
     }
@@ -221,9 +244,21 @@ export default function InsumosPage() {
       const response = await fetch(`/api/insumos/${id}`, { method: 'DELETE' })
       if (response.ok) {
         fetchInsumos()
+        addNotification({
+          type: 'success',
+          title: 'Sucesso!',
+          message: 'Insumo excluído com sucesso',
+          duration: 3000
+        })
       }
     } catch (error) {
       console.error('Error deleting insumo:', error)
+      addNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Falha ao excluir insumo',
+        duration: 5000
+      })
     }
   }
 
@@ -266,109 +301,43 @@ export default function InsumosPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200/60">
-              <thead className="bg-gradient-to-r from-slate-50 to-slate-100/80 backdrop-blur-sm">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Nome
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Marca
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Categoria
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Peso Líquido
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Preço
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Custo/g
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white/60 backdrop-blur-sm divide-y divide-slate-200/60">
-                {filteredInsumos.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center space-y-4 animate-pulse">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 group">
-                          <Package className="h-8 w-8 text-orange-400 animate-bounce group-hover:rotate-12 transition-transform duration-300" />
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-slate-600 font-medium text-lg">
-                            {searchTerm ? 'Nenhum insumo encontrado.' : 'Nenhum insumo cadastrado.'}
-                          </p>
-                          {!searchTerm && (
-                            <p className="text-slate-500 text-sm animate-pulse">
-                              Clique em &quot;Novo Insumo&quot; para começar.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredInsumos.map((insumo, index) => (
-                    <tr 
-                      key={insumo.id} 
-                      className="hover:bg-gradient-to-r hover:from-orange-50/30 hover:to-orange-100/20 hover:shadow-lg transition-all duration-300 group hover:scale-[1.01] hover:-translate-y-0.5"
-                      style={{ animationDelay: `${index * 50}ms` }}
+          <ModernTable
+            columns={[
+              { key: 'nome', label: 'Nome', sortable: true },
+              { key: 'marca', label: 'Marca', sortable: true },
+              { key: 'categoria.nome', label: 'Categoria', sortable: true },
+              { key: 'pesoLiquidoGramas', label: 'Peso (g)', sortable: true, align: 'right',
+                render: (value) => `${value}g` },
+              { key: 'precoUnidade', label: 'Preço (R$)', sortable: true, align: 'right',
+                render: (value) => `R$ ${Number(value).toFixed(2)}` },
+              { key: 'custoGrama', label: 'Custo/g', sortable: false, align: 'right',
+                render: (_, row) => `R$ ${(Number(row.precoUnidade) / Number(row.pesoLiquidoGramas)).toFixed(4)}/g` },
+              { key: 'actions', label: 'Ações', align: 'center',
+                render: (_, row) => (
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(row as unknown as Insumo)}
+                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Editar"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 group-hover:text-orange-700 transition-all duration-300">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110"></div>
-                          <span>{insumo.nome}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        {insumo.marca || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        {insumo.fornecedorRel?.nome || insumo.fornecedor || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        {insumo.categoria.nome}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        <span className="px-2 py-1 bg-slate-100 group-hover:bg-slate-200 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">{insumo.pesoLiquidoGramas}g</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        <span className="px-2 py-1 bg-green-100 group-hover:bg-green-200 text-green-800 group-hover:text-green-900 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">R$ {insumo.precoUnidade.toFixed(2)}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
-                        <span className="px-2 py-1 bg-blue-100 group-hover:bg-blue-200 text-blue-800 group-hover:text-blue-900 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">R$ {(insumo.precoUnidade / insumo.pesoLiquidoGramas).toFixed(4)}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2 opacity-70 group-hover:opacity-100 transition-all duration-300">
-                          <button
-                            onClick={() => handleOpenModal(insumo)}
-                            className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-lg transition-all duration-300 hover:scale-125 hover:shadow-lg hover:rotate-3 transform"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4 transition-transform duration-300 hover:rotate-12" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(insumo.id)}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-125 hover:shadow-lg hover:-rotate-3 transform"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4 transition-transform duration-300 hover:rotate-12" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(row.id as string)}
+                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+            ]}
+            data={filteredInsumos as unknown as Record<string, unknown>[]}
+            searchable={false}
+            pagination={true}
+            pageSize={10}
+            loading={loading}
+          />
         </div>
       </div>
 
@@ -386,278 +355,141 @@ export default function InsumosPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="group">
-              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                Nome *
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
-                  placeholder="Digite o nome do insumo"
-                  required
-                />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-            </div>
+            <FloatingLabelInput
+              label="Nome do Insumo"
+              value={formData.nome}
+              onChange={(value) => setFormData({ ...formData, nome: value })}
+              required
+              error={error && !formData.nome ? 'Nome é obrigatório' : ''}
+            />
 
-            <div className="group">
-              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                Marca
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.marca}
-                  onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
-                  placeholder="Digite a marca (opcional)"
-                />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-            </div>
+            <FloatingLabelInput
+              label="Marca"
+              value={formData.marca}
+              onChange={(value) => setFormData({ ...formData, marca: value })}
+            />
 
-            <div className="group">
-              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                Fornecedor
-              </label>
-              <div className="relative">
-                <select
-                  value={formData.fornecedorId}
-                  onChange={(e) => setFormData({ ...formData, fornecedorId: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] appearance-none cursor-pointer"
-                >
-                  <option value="">Selecione um fornecedor</option>
-                  {fornecedores.map((fornecedor) => (
-                    <option key={fornecedor.id} value={fornecedor.id}>
-                      {fornecedor.nome}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-              <p className="mt-2 text-xs text-slate-500 group-focus-within:text-slate-600 transition-colors duration-300">
-                Não encontrou o fornecedor? <a href="/dashboard/fornecedores" className="text-orange-600 hover:text-orange-800 font-medium transition-colors duration-200 hover:underline">Cadastre aqui</a>
-              </p>
-            </div>
+            <FloatingLabelSelect
+              label="Fornecedor"
+              value={formData.fornecedorId}
+              onChange={(value) => setFormData({ ...formData, fornecedorId: value })}
+              options={fornecedores.map(fornecedor => ({ value: fornecedor.id, label: fornecedor.nome }))}
+            />
 
-            <div className="group">
-              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                Categoria *
-              </label>
-              <div className="relative">
-                <select
-                  value={formData.categoriaId}
-                  onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] appearance-none cursor-pointer"
-                  required
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categorias.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nome}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-            </div>
+            <FloatingLabelSelect
+              label="Categoria"
+              value={formData.categoriaId}
+              onChange={(value) => setFormData({ ...formData, categoriaId: value })}
+              options={categorias.map(categoria => ({ value: categoria.id, label: categoria.nome }))}
+              required
+              error={error && !formData.categoriaId ? 'Categoria é obrigatória' : ''}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Unidade de Compra *
-              </label>
-              <select
-                value={formData.unidadeCompraId}
-                onChange={(e) => setFormData({ ...formData, unidadeCompraId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Selecione uma unidade</option>
-                {unidades.map((unidade) => (
-                  <option key={unidade.id} value={unidade.id}>
-                    {unidade.nome} ({unidade.simbolo})
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Unidade de Compra"
+              value={formData.unidadeCompraId}
+              onChange={(value) => setFormData({ ...formData, unidadeCompraId: value })}
+              options={unidades.map(unidade => ({ value: unidade.id, label: `${unidade.nome} (${unidade.simbolo})` }))}
+              required
+              error={error && !formData.unidadeCompraId ? 'Unidade é obrigatória' : ''}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Peso Líquido (gramas) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.pesoLiquidoGramas}
-                onChange={(e) => setFormData({ ...formData, pesoLiquidoGramas: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
+            <FloatingLabelInput
+              label="Peso Líquido (gramas)"
+              type="number"
+              value={formData.pesoLiquidoGramas}
+              onChange={(value) => setFormData({ ...formData, pesoLiquidoGramas: value })}
+              required
+              error={error && !formData.pesoLiquidoGramas ? 'Peso é obrigatório' : ''}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preço da Unidade (R$) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.precoUnidade}
-                onChange={(e) => setFormData({ ...formData, precoUnidade: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
+            <FloatingLabelInput
+              label="Preço por Unidade (R$)"
+              type="number"
+              step="0.01"
+              value={formData.precoUnidade}
+              onChange={(value) => setFormData({ ...formData, precoUnidade: value })}
+              required
+              error={error && !formData.precoUnidade ? 'Preço é obrigatório' : ''}
+            />
           </div>
 
           <div className="mt-8 pt-8 border-t border-slate-200/60">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                Informações Nutricionais (por 100g)
-              </h3>
-              <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium">Opcional</span>
+              <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
+              <h3 className="text-lg font-bold text-slate-800">Informações Nutricionais (por 100g)</h3>
+              <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Opcional</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                  <span className="flex items-center space-x-2">
-                    <span>Calorias</span>
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">kcal</span>
-                  </span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.calorias}
-                    onChange={(e) => setFormData({ ...formData, calorias: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
-                    placeholder="Ex: 250"
-                  />
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                </div>
-              </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <FloatingLabelInput
+                label="Calorias (kcal)"
+                type="number"
+                step="0.01"
+                value={formData.calorias}
+                onChange={(value) => setFormData({ ...formData, calorias: value })}
+              />
 
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                  <span className="flex items-center space-x-2">
-                    <span>Proteínas</span>
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">g</span>
-                  </span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.proteinas}
-                    onChange={(e) => setFormData({ ...formData, proteinas: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
-                    placeholder="Ex: 15.5"
-                  />
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                </div>
-              </div>
+              <FloatingLabelInput
+                label="Proteínas (g)"
+                type="number"
+                step="0.01"
+                value={formData.proteinas}
+                onChange={(value) => setFormData({ ...formData, proteinas: value })}
+              />
 
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
-                  <span className="flex items-center space-x-2">
-                    <span>Carboidratos</span>
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">g</span>
-                  </span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.carboidratos}
-                    onChange={(e) => setFormData({ ...formData, carboidratos: e.target.value })}
-                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
-                    placeholder="Ex: 30.2"
-                  />
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                </div>
-              </div>
+              <FloatingLabelInput
+                label="Carboidratos (g)"
+                type="number"
+                step="0.01"
+                value={formData.carboidratos}
+                onChange={(value) => setFormData({ ...formData, carboidratos: value })}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Gorduras (g)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.gorduras}
-                  onChange={(e) => setFormData({ ...formData, gorduras: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 8.5"
-                />
-              </div>
+              <FloatingLabelInput
+                label="Gorduras (g)"
+                type="number"
+                step="0.01"
+                value={formData.gorduras}
+                onChange={(value) => setFormData({ ...formData, gorduras: value })}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fibras (g)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.fibras}
-                  onChange={(e) => setFormData({ ...formData, fibras: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 2.1"
-                />
-              </div>
+              <FloatingLabelInput
+                label="Fibras (g)"
+                type="number"
+                step="0.01"
+                value={formData.fibras}
+                onChange={(value) => setFormData({ ...formData, fibras: value })}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sódio (mg)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.sodio}
-                  onChange={(e) => setFormData({ ...formData, sodio: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 150"
-                />
-              </div>
+              <FloatingLabelInput
+                label="Sódio (mg)"
+                type="number"
+                step="0.01"
+                value={formData.sodio}
+                onChange={(value) => setFormData({ ...formData, sodio: value })}
+              />
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
             <button
               type="button"
               onClick={handleCloseModal}
-              className="group px-6 py-3 text-slate-700 bg-slate-200/80 backdrop-blur-sm rounded-xl hover:bg-slate-300/80 transition-all duration-300 hover:shadow-md hover:scale-[1.02] border border-slate-300/60"
+              className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
             >
-              <span className="font-medium">Cancelar</span>
+              Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="group px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/50 hover:scale-[1.02] backdrop-blur-sm border border-orange-400/20"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {loading ? (
-                <div className="flex items-center space-x-2">
+                <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span className="font-medium">Salvando...</span>
-                </div>
+                  <span>Salvando...</span>
+                </>
               ) : (
                 <span className="font-medium">Salvar</span>
               )}
