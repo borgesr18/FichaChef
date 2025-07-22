@@ -4,7 +4,7 @@ import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-uti
 import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const createUserSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -20,12 +20,12 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const validatedData = createUserSchema.parse(body)
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  const isDevMode = !supabaseUrl || !supabaseKey || 
-                    supabaseUrl === '' || supabaseKey === '' ||
+  const isDevMode = !supabaseUrl || !supabaseServiceKey || 
+                    supabaseUrl === '' || supabaseServiceKey === '' ||
                     supabaseUrl.includes('placeholder') || 
-                    supabaseKey.includes('placeholder')
+                    supabaseServiceKey.includes('placeholder')
 
   if (isDevMode) {
     const mockUserId = `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -50,7 +50,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   }
 
   try {
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: validatedData.email,
       password: validatedData.password,
       email_confirm: true
