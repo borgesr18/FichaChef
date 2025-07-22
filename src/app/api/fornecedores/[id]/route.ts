@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -36,15 +36,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return createNotFoundResponse('Fornecedor')
     }
 
-    const fornecedor = await withDatabaseRetry(async () => {
-      return await prisma.fornecedor.update({
-        where: { id },
-        data,
-        include: {
-          _count: {
-            select: { insumos: true, precos: true }
+    const fornecedor = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fornecedor.update({
+          where: { id },
+          data,
+          include: {
+            _count: {
+              select: { insumos: true, precos: true }
+            }
           }
-        }
+        })
       })
     })
 
@@ -72,9 +74,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return createNotFoundResponse('Fornecedor')
     }
 
-    await withDatabaseRetry(async () => {
-      return await prisma.fornecedor.delete({
-        where: { id }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fornecedor.delete({
+          where: { id }
+        })
       })
     })
 

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { configuracaoAlertaSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -21,10 +21,12 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   if (tipo) where.tipo = tipo
   if (itemTipo) where.itemTipo = itemTipo
 
-  const configuracoes = await withDatabaseRetry(async () => {
-    return await prisma.configuracaoAlerta.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+  const configuracoes = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.configuracaoAlerta.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      })
     })
   })
 
@@ -43,37 +45,43 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const existing = await withDatabaseRetry(async () => {
-    return await prisma.configuracaoAlerta.findFirst({
-      where: {
-        userId: user.id,
-        tipo: data.tipo,
-        itemId: data.itemId,
-        itemTipo: data.itemTipo
-      }
+  const existing = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.configuracaoAlerta.findFirst({
+        where: {
+          userId: user.id,
+          tipo: data.tipo,
+          itemId: data.itemId,
+          itemTipo: data.itemTipo
+        }
+      })
     })
   })
 
   if (existing) {
-    const configuracao = await withDatabaseRetry(async () => {
-      return await prisma.configuracaoAlerta.update({
-        where: { id: existing.id },
-        data: {
-          ...data,
-          userId: user.id,
-        },
+    const configuracao = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.configuracaoAlerta.update({
+          where: { id: existing.id },
+          data: {
+            ...data,
+            userId: user.id,
+          },
+        })
       })
     })
     
     await logUserAction(user.id, 'update', 'alertas', configuracao.id, 'configuracao_alerta', data, request)
     return createSuccessResponse(configuracao)
   } else {
-    const configuracao = await withDatabaseRetry(async () => {
-      return await prisma.configuracaoAlerta.create({
-        data: {
-          ...data,
-          userId: user.id,
-        },
+    const configuracao = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.configuracaoAlerta.create({
+          data: {
+            ...data,
+            userId: user.id,
+          },
+        })
       })
     })
     

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -33,15 +33,17 @@ export const PUT = withErrorHandler(async function PUT(
 
   const data = parsedBody.data
 
-  const producao = await withDatabaseRetry(async () => {
-    return await prisma.producaoProduto.update({
-      where: { id, userId: user.id },
-      data: {
-        ...data,
-      },
-      include: {
-        produto: true,
-      },
+  const producao = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.producaoProduto.update({
+        where: { id, userId: user.id },
+        data: {
+          ...data,
+        },
+        include: {
+          produto: true,
+        },
+      })
     })
   })
 
@@ -57,9 +59,11 @@ export const DELETE = withErrorHandler(async function DELETE(
   const { id } = await params
   const user = await authenticateWithPermission('producao', 'admin')
 
-  await withDatabaseRetry(async () => {
-    return await prisma.producaoProduto.delete({
-      where: { id, userId: user.id },
+  await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.producaoProduto.delete({
+        where: { id, userId: user.id },
+      })
     })
   })
 

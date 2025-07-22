@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
   authenticateWithPermission, 
   createValidationErrorResponse,
@@ -17,11 +17,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const where: { userId: string; lida?: boolean } = { userId: user.id }
   if (lida !== null) where.lida = lida === 'true'
 
-  const notificacoes = await withDatabaseRetry(async () => {
-    return await prisma.notificacao.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: 50,
+  const notificacoes = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.notificacao.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
     })
   })
 
@@ -38,13 +40,15 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
     return createValidationErrorResponse('IDs devem ser um array e lida deve ser boolean')
   }
 
-  await withDatabaseRetry(async () => {
-    return await prisma.notificacao.updateMany({
-      where: {
-        id: { in: ids },
-        userId: user.id
-      },
-      data: { lida }
+  await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.notificacao.updateMany({
+        where: {
+          id: { in: ids },
+          userId: user.id
+        },
+        data: { lida }
+      })
     })
   })
 

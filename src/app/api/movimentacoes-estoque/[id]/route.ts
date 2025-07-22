@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -25,23 +25,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    const movimentacao = await withDatabaseRetry(async () => {
-      return await prisma.movimentacaoEstoque.update({
-        where: { 
-          id,
-          userId: user.id
-        },
-        data: {
-          insumoId,
-          tipo,
-          quantidade: parseFloat(quantidade),
-          motivo,
-          lote,
-          dataValidade: dataValidade ? new Date(dataValidade) : null
-        },
-        include: {
-          insumo: true
-        }
+    const movimentacao = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.movimentacaoEstoque.update({
+          where: { 
+            id,
+            userId: user.id
+          },
+          data: {
+            insumoId,
+            tipo,
+            quantidade: parseFloat(quantidade),
+            motivo,
+            lote,
+            dataValidade: dataValidade ? new Date(dataValidade) : null
+          },
+          include: {
+            insumo: true
+          }
+        })
       })
     })
 
@@ -59,12 +61,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('estoque', 'admin')
 
-    await withDatabaseRetry(async () => {
-      return await prisma.movimentacaoEstoque.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.movimentacaoEstoque.delete({
+          where: { 
+            id,
+            userId: user.id
+          }
+        })
       })
     })
 

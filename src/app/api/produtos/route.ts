@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -13,25 +13,27 @@ import { produtoSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('produtos', 'read')
 
-  const produtos = await withDatabaseRetry(async () => {
-    return await prisma.produto.findMany({
-      where: { userId: user.id },
-      include: {
-        produtoFichas: {
-          include: {
-            fichaTecnica: {
-              include: {
-                ingredientes: {
-                  include: {
-                    insumo: true
+  const produtos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.produto.findMany({
+        where: { userId: user.id },
+        include: {
+          produtoFichas: {
+            include: {
+              fichaTecnica: {
+                include: {
+                  ingredientes: {
+                    include: {
+                      insumo: true
+                    }
                   }
                 }
               }
             }
           }
-        }
-      },
-      orderBy: { nome: 'asc' },
+        },
+        orderBy: { nome: 'asc' },
+      })
     })
   })
 
@@ -50,35 +52,37 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const produto = await withDatabaseRetry(async () => {
-    return await prisma.produto.create({
-      data: {
-        nome: data.nome,
-        precoVenda: data.precoVenda,
-        margemLucro: data.margemLucro,
-        userId: user.id,
-        produtoFichas: {
-          create: data.fichas.map(ficha => ({
-            fichaTecnicaId: ficha.fichaTecnicaId,
-            quantidadeGramas: ficha.quantidadeGramas
-          }))
-        }
-      },
-      include: {
-        produtoFichas: {
-          include: {
-            fichaTecnica: {
-              include: {
-                ingredientes: {
-                  include: {
-                    insumo: true
+  const produto = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.produto.create({
+        data: {
+          nome: data.nome,
+          precoVenda: data.precoVenda,
+          margemLucro: data.margemLucro,
+          userId: user.id,
+          produtoFichas: {
+            create: data.fichas.map(ficha => ({
+              fichaTecnicaId: ficha.fichaTecnicaId,
+              quantidadeGramas: ficha.quantidadeGramas
+            }))
+          }
+        },
+        include: {
+          produtoFichas: {
+            include: {
+              fichaTecnica: {
+                include: {
+                  ingredientes: {
+                    include: {
+                      insumo: true
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
+      })
     })
   })
 

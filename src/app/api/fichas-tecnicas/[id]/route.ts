@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -9,20 +9,22 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const user = await authenticateWithPermission('fichas-tecnicas', 'read')
 
-    const ficha = await withDatabaseRetry(async () => {
-      return await prisma.fichaTecnica.findUnique({
-        where: { 
-          id,
-          userId: user.id
-        },
-        include: {
-          categoria: true,
-          ingredientes: {
-            include: {
-              insumo: true
+    const ficha = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fichaTecnica.findUnique({
+          where: { 
+            id,
+            userId: user.id
+          },
+          include: {
+            categoria: true,
+            ingredientes: {
+              include: {
+                insumo: true
+              }
             }
           }
-        }
+        })
       })
     })
 
@@ -61,42 +63,46 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    await withDatabaseRetry(async () => {
-      return await prisma.ingrediente.deleteMany({
-        where: { fichaTecnicaId: id }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.ingrediente.deleteMany({
+          where: { fichaTecnicaId: id }
+        })
       })
     })
 
-    const ficha = await withDatabaseRetry(async () => {
-      return await prisma.fichaTecnica.update({
-        where: { 
-          id,
-          userId: user.id
-        },
-        data: {
-          nome,
-          categoriaId,
-          pesoFinalGramas: parseFloat(pesoFinalGramas),
-          numeroPorcoes: parseInt(numeroPorcoes),
-          tempoPreparo: tempoPreparo ? parseInt(tempoPreparo) : null,
-          temperaturaForno: temperaturaForno ? parseInt(temperaturaForno) : null,
-          modoPreparo,
-          nivelDificuldade,
-          ingredientes: {
-            create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
-              insumoId: ing.insumoId,
-              quantidadeGramas: parseFloat(ing.quantidadeGramas)
-            })) || []
-          }
-        },
-        include: {
-          categoria: true,
-          ingredientes: {
-            include: {
-              insumo: true
+    const ficha = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fichaTecnica.update({
+          where: { 
+            id,
+            userId: user.id
+          },
+          data: {
+            nome,
+            categoriaId,
+            pesoFinalGramas: parseFloat(pesoFinalGramas),
+            numeroPorcoes: parseInt(numeroPorcoes),
+            tempoPreparo: tempoPreparo ? parseInt(tempoPreparo) : null,
+            temperaturaForno: temperaturaForno ? parseInt(temperaturaForno) : null,
+            modoPreparo,
+            nivelDificuldade,
+            ingredientes: {
+              create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
+                insumoId: ing.insumoId,
+                quantidadeGramas: parseFloat(ing.quantidadeGramas)
+              })) || []
+            }
+          },
+          include: {
+            categoria: true,
+            ingredientes: {
+              include: {
+                insumo: true
+              }
             }
           }
-        }
+        })
       })
     })
 
@@ -114,12 +120,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
 
-    await withDatabaseRetry(async () => {
-      return await prisma.fichaTecnica.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fichaTecnica.delete({
+          where: { 
+            id,
+            userId: user.id
+          }
+        })
       })
     })
 

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authenticateWithPermission, createSuccessResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   await authenticateWithPermission('auditoria', 'read')
@@ -15,11 +15,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   if (modulo) where.modulo = modulo
   if (acao) where.acao = acao
 
-  const acoes = await withDatabaseRetry(async () => {
-    return await prisma.auditoriaAcao.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: 100,
+  const acoes = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.auditoriaAcao.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      })
     })
   })
 
