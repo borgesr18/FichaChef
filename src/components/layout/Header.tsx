@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 import { LogOut, User, Bell, Search, Star } from 'lucide-react'
+import { withRequestDeduplication } from '@/lib/request-cache'
 
 interface Notificacao {
   id: string
@@ -26,24 +27,10 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   const [showNotifications, setShowNotifications] = useState(false)
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
 
-  useEffect(() => {
-    if (user) {
-      fetchNotificacoes()
-      const interval = setInterval(fetchNotificacoes, 5 * 60 * 1000)
-      return () => clearInterval(interval)
-    }
-  }, [user])
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentDateTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const fetchNotificacoes = async () => {
+  const fetchNotificacoes = useCallback(async () => {
     try {
-      const response = await fetch('/api/notificacoes?lida=false')
+      const response = await withRequestDeduplication('notifications', () => 
+        fetch('/api/notificacoes?lida=false'))
       if (response.ok) {
         const data = await response.json()
         setNotificacoes(data)
@@ -51,7 +38,22 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
     } catch (error) {
       console.error('Error fetching notifications:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchNotificacoes()
+      const interval = setInterval(fetchNotificacoes, 5 * 60 * 1000)
+      return () => clearInterval(interval)
+    }
+  }, [user, fetchNotificacoes])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const marcarComoLida = async (ids: string[]) => {
     try {

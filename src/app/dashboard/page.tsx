@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ModernChart from '@/components/ui/ModernChart'
 import NotificationSystem, { useNotifications } from '@/components/ui/NotificationSystem'
 import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
+import { withRequestDeduplication } from '@/lib/request-cache'
 
 interface DashboardStats {
   insumos: number
@@ -36,16 +37,21 @@ export default function DashboardPage() {
         const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
         
         const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.all([
-          fetch('/api/insumos', { signal: controller.signal }),
-          fetch('/api/fichas-tecnicas', { signal: controller.signal }),
-          fetch('/api/producao', { signal: controller.signal }),
-          fetch('/api/produtos', { signal: controller.signal })
+          withRequestDeduplication('dashboard-insumos', () => 
+            fetch('/api/insumos', { signal: controller.signal })),
+          withRequestDeduplication('dashboard-fichas', () => 
+            fetch('/api/fichas-tecnicas', { signal: controller.signal })),
+          withRequestDeduplication('dashboard-producao', () => 
+            fetch('/api/producao', { signal: controller.signal })),
+          withRequestDeduplication('dashboard-produtos', () => 
+            fetch('/api/produtos', { signal: controller.signal }))
         ])
         
         clearTimeout(timeoutId)
 
         if (!insumosRes.ok || !fichasRes.ok || !producoesRes.ok || !produtosRes.ok) {
-          throw new Error(`API requests failed: ${insumosRes.status}, ${fichasRes.status}, ${producoesRes.status}, ${produtosRes.status}`)
+          const statuses = [insumosRes.status, fichasRes.status, producoesRes.status, produtosRes.status]
+          throw new Error(`API requests failed: ${statuses.join(', ')}`)
         }
 
         const [insumos, fichas, producoes, produtos] = await Promise.all([
@@ -63,14 +69,13 @@ export default function DashboardPage() {
         }
         
         setStats(newStats)
-        setError('')
         
-        if (newStats.insumos > 0 || newStats.fichasTecnicas > 0) {
+        if (newStats.insumos === 0 && newStats.fichasTecnicas === 0) {
           addNotification({
-            type: 'success',
-            title: 'Dashboard Atualizado',
-            message: 'Dados carregados com sucesso!',
-            duration: 3000
+            type: 'info',
+            title: 'Bem-vindo ao FichaChef!',
+            message: 'Comece cadastrando insumos e criando fichas técnicas.',
+            duration: 8000
           })
         }
       } catch (err) {
