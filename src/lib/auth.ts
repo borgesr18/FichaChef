@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from './supabase-server'
+import { withRequestDeduplication } from './request-cache'
 
 export interface AuthenticatedUser {
   id: string
@@ -148,16 +149,20 @@ export async function authenticateWithPermission(
   module: string,
   permission: 'read' | 'write' | 'admin' = 'read'
 ): Promise<AuthenticatedUser> {
-  const user = await authenticateUserWithProfile()
+  const cacheKey = `auth-${module}-${permission}`
   
-  if (!user) {
-    throw new Error('Usuário não autenticado')
-  }
+  return withRequestDeduplication(cacheKey, async () => {
+    const user = await authenticateUserWithProfile()
+    
+    if (!user) {
+      throw new Error('Usuário não autenticado')
+    }
 
-  const { requirePermission } = await import('./permissions')
-  requirePermission(user.role as 'chef' | 'cozinheiro' | 'gerente', module, permission)
+    const { requirePermission } = await import('./permissions')
+    requirePermission(user.role as 'chef' | 'cozinheiro' | 'gerente', module, permission)
 
-  return user
+    return user
+  }, 3000)
 }
 
 export function createForbiddenResponse(message: string = 'Acesso negado') {

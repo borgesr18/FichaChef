@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { 
   Settings, 
   Package, 
@@ -54,26 +55,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname()
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchUserRole()
-  }, [])
-
-  const fetchUserRole = async () => {
-    try {
-      const response = await fetch('/api/perfil-usuario')
-      if (response.ok) {
-        const data = await response.json()
-        setUserRole(data.role)
-      }
-    } catch (error) {
-      console.error('Error fetching user role:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { userRole, loading } = useSupabase()
 
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !userRole) return true
