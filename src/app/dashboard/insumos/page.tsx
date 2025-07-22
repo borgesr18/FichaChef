@@ -236,105 +236,132 @@ export default function InsumosPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Package className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Insumos</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center group">
+            <div className="p-2 bg-gradient-to-r from-orange-100 to-orange-200 rounded-xl mr-3 group-hover:shadow-lg transition-all duration-300 group-hover:scale-110">
+              <Package className="h-6 w-6 text-orange-600 transition-transform duration-200 group-hover:rotate-12" />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Insumos</h1>
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/50 hover:scale-[1.02] backdrop-blur-sm border border-orange-400/20"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Insumo
+            <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+            <span className="font-medium">Novo Insumo</span>
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-all duration-200 group-focus-within:text-orange-500 group-focus-within:scale-110" />
               <input
                 type="text"
                 placeholder="Buscar insumos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 pr-4 py-3 w-full border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
               />
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-200/60">
+              <thead className="bg-gradient-to-r from-slate-50 to-slate-100/80 backdrop-blur-sm">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Nome
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Marca
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Categoria
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Peso Líquido
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Preço
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Custo/g
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider hover:text-slate-800 transition-colors duration-200">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white/60 backdrop-blur-sm divide-y divide-slate-200/60">
                 {filteredInsumos.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      {searchTerm ? 'Nenhum insumo encontrado.' : 'Nenhum insumo cadastrado. Clique em "Novo Insumo" para começar.'}
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center space-y-4 animate-pulse">
+                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110 group">
+                          <Package className="h-8 w-8 text-orange-400 animate-bounce group-hover:rotate-12 transition-transform duration-300" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-slate-600 font-medium text-lg">
+                            {searchTerm ? 'Nenhum insumo encontrado.' : 'Nenhum insumo cadastrado.'}
+                          </p>
+                          {!searchTerm && (
+                            <p className="text-slate-500 text-sm animate-pulse">
+                              Clique em &quot;Novo Insumo&quot; para começar.
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
-                  filteredInsumos.map((insumo) => (
-                    <tr key={insumo.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {insumo.nome}
+                  filteredInsumos.map((insumo, index) => (
+                    <tr 
+                      key={insumo.id} 
+                      className="hover:bg-gradient-to-r hover:from-orange-50/30 hover:to-orange-100/20 hover:shadow-lg transition-all duration-300 group hover:scale-[1.01] hover:-translate-y-0.5"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 group-hover:text-orange-700 transition-all duration-300">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110"></div>
+                          <span>{insumo.nome}</span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
                         {insumo.marca || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
                         {insumo.fornecedorRel?.nome || insumo.fornecedor || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
                         {insumo.categoria.nome}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {insumo.pesoLiquidoGramas}g
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
+                        <span className="px-2 py-1 bg-slate-100 group-hover:bg-slate-200 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">{insumo.pesoLiquidoGramas}g</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        R$ {insumo.precoUnidade.toFixed(2)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
+                        <span className="px-2 py-1 bg-green-100 group-hover:bg-green-200 text-green-800 group-hover:text-green-900 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">R$ {insumo.precoUnidade.toFixed(2)}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        R$ {(insumo.precoUnidade / insumo.pesoLiquidoGramas).toFixed(4)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-all duration-300">
+                        <span className="px-2 py-1 bg-blue-100 group-hover:bg-blue-200 text-blue-800 group-hover:text-blue-900 rounded-lg text-xs font-medium transition-all duration-300 transform group-hover:scale-105">R$ {(insumo.precoUnidade / insumo.pesoLiquidoGramas).toFixed(4)}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenModal(insumo)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(insumo.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex justify-end space-x-2 opacity-70 group-hover:opacity-100 transition-all duration-300">
+                          <button
+                            onClick={() => handleOpenModal(insumo)}
+                            className="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-lg transition-all duration-300 hover:scale-125 hover:shadow-lg hover:rotate-3 transform"
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4 transition-transform duration-300 hover:rotate-12" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(insumo.id)}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-125 hover:shadow-lg hover:-rotate-3 transform"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4 transition-transform duration-300 hover:rotate-12" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -358,70 +385,94 @@ export default function InsumosPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="group">
+              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
                 Nome *
               </label>
-              <input
-                type="text"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
+                  placeholder="Digite o nome do insumo"
+                  required
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="group">
+              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
                 Marca
               </label>
-              <input
-                type="text"
-                value={formData.marca}
-                onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.marca}
+                  onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
+                  placeholder="Digite a marca (opcional)"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="group">
+              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
                 Fornecedor
               </label>
-              <select
-                value={formData.fornecedorId}
-                onChange={(e) => setFormData({ ...formData, fornecedorId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Selecione um fornecedor</option>
-                {fornecedores.map((fornecedor) => (
-                  <option key={fornecedor.id} value={fornecedor.id}>
-                    {fornecedor.nome}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-gray-500">
-                Não encontrou o fornecedor? <a href="/dashboard/fornecedores" className="text-blue-600 hover:text-blue-800">Cadastre aqui</a>
+              <div className="relative">
+                <select
+                  value={formData.fornecedorId}
+                  onChange={(e) => setFormData({ ...formData, fornecedorId: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] appearance-none cursor-pointer"
+                >
+                  <option value="">Selecione um fornecedor</option>
+                  {fornecedores.map((fornecedor) => (
+                    <option key={fornecedor.id} value={fornecedor.id}>
+                      {fornecedor.nome}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+              </div>
+              <p className="mt-2 text-xs text-slate-500 group-focus-within:text-slate-600 transition-colors duration-300">
+                Não encontrou o fornecedor? <a href="/dashboard/fornecedores" className="text-orange-600 hover:text-orange-800 font-medium transition-colors duration-200 hover:underline">Cadastre aqui</a>
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="group">
+              <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
                 Categoria *
               </label>
-              <select
-                value={formData.categoriaId}
-                onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Selecione uma categoria</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={formData.categoriaId}
+                  onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] appearance-none cursor-pointer"
+                  required
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+              </div>
             </div>
 
             <div>
@@ -472,51 +523,77 @@ export default function InsumosPage() {
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Informações Nutricionais (por 100g) - Opcional
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Calorias (kcal)
+          <div className="mt-8 pt-8 border-t border-slate-200/60">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                Informações Nutricionais (por 100g)
+              </h3>
+              <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium">Opcional</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="group">
+                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
+                  <span className="flex items-center space-x-2">
+                    <span>Calorias</span>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">kcal</span>
+                  </span>
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.calorias}
-                  onChange={(e) => setFormData({ ...formData, calorias: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 250"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.calorias}
+                    onChange={(e) => setFormData({ ...formData, calorias: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
+                    placeholder="Ex: 250"
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Proteínas (g)
+              <div className="group">
+                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
+                  <span className="flex items-center space-x-2">
+                    <span>Proteínas</span>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">g</span>
+                  </span>
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.proteinas}
-                  onChange={(e) => setFormData({ ...formData, proteinas: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 15.5"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.proteinas}
+                    onChange={(e) => setFormData({ ...formData, proteinas: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
+                    placeholder="Ex: 15.5"
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Carboidratos (g)
+              <div className="group">
+                <label className="block text-sm font-semibold text-slate-700 mb-3 group-focus-within:text-orange-600 transition-colors duration-300">
+                  <span className="flex items-center space-x-2">
+                    <span>Carboidratos</span>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">g</span>
+                  </span>
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.carboidratos}
-                  onChange={(e) => setFormData({ ...formData, carboidratos: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Ex: 30.2"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.carboidratos}
+                    onChange={(e) => setFormData({ ...formData, carboidratos: e.target.value })}
+                    className="w-full px-4 py-3 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:bg-white hover:shadow-md hover:scale-[1.01] placeholder-slate-400"
+                    placeholder="Ex: 30.2"
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
               </div>
 
               <div>
@@ -567,16 +644,23 @@ export default function InsumosPage() {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="group px-6 py-3 text-slate-700 bg-slate-200/80 backdrop-blur-sm rounded-xl hover:bg-slate-300/80 transition-all duration-300 hover:shadow-md hover:scale-[1.02] border border-slate-300/60"
             >
-              Cancelar
+              <span className="font-medium">Cancelar</span>
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="group px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/50 hover:scale-[1.02] backdrop-blur-sm border border-orange-400/20"
             >
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span className="font-medium">Salvando...</span>
+                </div>
+              ) : (
+                <span className="font-medium">Salvar</span>
+              )}
             </button>
           </div>
         </form>

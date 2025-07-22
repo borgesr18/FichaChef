@@ -212,28 +212,30 @@ export default function ProdutosPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <ShoppingCart className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Produtos Prontos</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <ShoppingCart className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Produtos Prontos</h1>
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Novo Produto
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-colors duration-200 group-focus-within:text-orange-500" />
               <input
                 type="text"
                 placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="pl-12 pr-4 py-3 w-full border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-slate-50/50 hover:bg-white focus:bg-white"
               />
             </div>
           </div>
@@ -268,8 +270,20 @@ export default function ProdutosPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProdutos.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                      Nenhum produto cadastrado. Clique em &quot;Novo Produto&quot; para começar.
+                    <td colSpan={7} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4 animate-pulse">
+                        <div className="p-4 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full">
+                          <ShoppingCart className="h-12 w-12 text-orange-500 animate-bounce" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-slate-600 font-medium text-lg">
+                            Nenhum produto cadastrado.
+                          </p>
+                          <p className="text-slate-500 text-sm animate-pulse">
+                            Clique em &quot;Novo Produto&quot; para começar.
+                          </p>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -286,44 +300,46 @@ export default function ProdutosPage() {
                     const pesoTotal = produto.produtoFichas.reduce((total, f) => total + f.quantidadeGramas, 0)
 
                     return (
-                      <tr key={produto.id}>
+                      <tr key={produto.id} className="hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-transparent transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:-translate-y-0.5 cursor-pointer group">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{produto.nome}</div>
+                          <div className="text-sm font-medium text-slate-900 group-hover:text-orange-700 transition-colors duration-200">{produto.nome}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
+                          <div className="text-sm text-slate-700 group-hover:text-slate-800 transition-colors duration-200">
                             {produto.produtoFichas.map((f, index) => (
-                              <div key={index} className="mb-1">
+                              <div key={index} className="mb-1 p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">
                                 {f.fichaTecnica.nome} ({f.quantidadeGramas}g)
                               </div>
                             ))}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">
                           {pesoTotal}g
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 group-hover:text-green-700 transition-colors duration-200">
                           R$ {custoTotal.toFixed(2)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">
                           {produto.margemLucro}%
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors duration-200">
                           R$ {produto.precoVenda.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleOpenModal(produto)}
-                            className="text-indigo-600 hover:text-indigo-900 mr-3"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(produto.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleOpenModal(produto)}
+                              className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(produto.id)}
+                              className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )

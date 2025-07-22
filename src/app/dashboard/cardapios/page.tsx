@@ -348,30 +348,32 @@ export default function CardapiosPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Calendar className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Planejamento de Cardápios</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <Calendar className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Planejamento de Cardápios</h1>
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Novo Cardápio
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
             <div className="flex items-center space-x-4">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-colors duration-200 group-focus-within:text-orange-500" />
                   <input
                     type="text"
                     placeholder="Buscar cardápios..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="pl-12 pr-4 py-3 w-full border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-slate-50/50 hover:bg-white focus:bg-white"
                   />
                 </div>
               </div>
@@ -409,85 +411,109 @@ export default function CardapiosPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredMenus.map((menu) => {
+                {filteredMenus.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4 animate-pulse">
+                        <div className="p-4 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full">
+                          <Calendar className="h-12 w-12 text-orange-500 animate-bounce" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-slate-600 font-medium text-lg">
+                            {searchTerm ? 'Nenhum cardápio encontrado.' : 'Nenhum cardápio cadastrado.'}
+                          </p>
+                          {!searchTerm && (
+                            <p className="text-slate-500 text-sm animate-pulse">
+                              Clique em &quot;Novo Cardápio&quot; para começar.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMenus.map((menu) => {
                   const custoTotal = calculateMenuCost(menu.itens)
                   
                   return (
-                    <tr key={menu.id}>
+                    <tr key={menu.id} className="hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-transparent transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:-translate-y-0.5 cursor-pointer group">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{menu.nome}</div>
+                          <div className="text-sm font-medium text-slate-900 group-hover:text-orange-700 transition-colors duration-200">{menu.nome}</div>
                           {menu.descricao && (
-                            <div className="text-sm text-gray-500">{menu.descricao}</div>
+                            <div className="text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">{menu.descricao}</div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 group-hover:from-orange-100 group-hover:to-orange-200 group-hover:text-orange-800 transition-all duration-200 shadow-sm">
                           {tipoLabels[menu.tipo as keyof typeof tipoLabels]}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 group-hover:text-slate-800 transition-colors duration-200">
                         {menu.itens.length} produtos
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 group-hover:text-green-700 transition-colors duration-200">
                         R$ {custoTotal.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-6 py-4 text-sm text-slate-600 group-hover:text-slate-700 transition-colors duration-200">
                         {(() => {
                           const nutrition = calculateMenuNutritionalTotal(menu.itens)
                           const hasNutritionalData = nutrition.calorias > 0 || nutrition.proteinas > 0
                           
                           if (!hasNutritionalData) {
-                            return <span className="text-gray-400 text-xs">Sem dados nutricionais</span>
+                            return <span className="text-slate-400 text-xs group-hover:text-slate-500 transition-colors duration-200">Sem dados nutricionais</span>
                           }
                           
                           return (
                             <div className="space-y-1 text-xs">
-                              <div>Calorias: {formatNutritionalValue(nutrition.calorias, 'kcal')}</div>
-                              <div>Proteínas: {formatNutritionalValue(nutrition.proteinas, 'g')}</div>
-                              <div>Carboidratos: {formatNutritionalValue(nutrition.carboidratos, 'g')}</div>
-                              <div>Gorduras: {formatNutritionalValue(nutrition.gorduras, 'g')}</div>
+                              <div className="p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">Calorias: {formatNutritionalValue(nutrition.calorias, 'kcal')}</div>
+                              <div className="p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">Proteínas: {formatNutritionalValue(nutrition.proteinas, 'g')}</div>
+                              <div className="p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">Carboidratos: {formatNutritionalValue(nutrition.carboidratos, 'g')}</div>
+                              <div className="p-1 rounded bg-slate-50 group-hover:bg-orange-50 transition-colors duration-200">Gorduras: {formatNutritionalValue(nutrition.gorduras, 'g')}</div>
                             </div>
                           )
                         })()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 group-hover:text-slate-800 transition-colors duration-200">
                         {menu.periodos.length} períodos
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium shadow-sm transition-all duration-200 ${
                           menu.ativo  
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 group-hover:from-green-200 group-hover:to-green-300' 
+                            : 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 group-hover:from-red-200 group-hover:to-red-300'
                         }`}>
                           {menu.ativo ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenPeriodoModal(menu)}
-                          className="text-green-600 hover:text-green-900 mr-3"
-                          title="Planejar Período"
-                        >
-                          <Clock className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenModal(menu)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(menu.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleOpenPeriodoModal(menu)}
+                            className="p-2 text-green-600 hover:text-white hover:bg-green-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                            title="Planejar Período"
+                          >
+                            <Clock className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenModal(menu)}
+                            className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(menu.id)}
+                            className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
-                })}
+                  })
+                )}
               </tbody>
             </table>
           </div>
