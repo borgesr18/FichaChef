@@ -24,6 +24,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [currentDateTime, setCurrentDateTime] = useState(new Date())
 
   useEffect(() => {
     if (user) {
@@ -32,6 +33,13 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
       return () => clearInterval(interval)
     }
   }, [user])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const fetchNotificacoes = async () => {
     try {
@@ -70,7 +78,16 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            FichaChef – Sistema de Fichas Técnicas
+            {currentDateTime.toLocaleDateString('pt-BR', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })} - {currentDateTime.toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })}
           </h1>
           
           {onGlobalSearch && (
