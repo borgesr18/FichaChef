@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <WorkflowProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
         <Header 
           onGlobalSearch={() => setGlobalSearchOpen(true)}

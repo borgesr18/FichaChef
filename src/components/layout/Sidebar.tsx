@@ -85,10 +85,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* Mobile menu button */}
       <button
         onClick={onToggle}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-900 text-white rounded-md"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
         aria-label="Toggle menu"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       {/* Overlay for mobile */}
@@ -101,45 +101,56 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gray-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto
+        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
-        <div className="p-6">
-          <h1 className="text-xl font-bold">FichaChef</h1>
+        <div className="p-6 border-b border-slate-700/50">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">FichaChef</h1>
+          <p className="text-xs text-slate-400 mt-1">Sistema de Gestão Gastronômica</p>
         </div>
         
-        <nav className="mt-6">
+        <nav className="mt-2 px-3">
           {loading ? (
-            <div className="px-6 py-3 text-sm text-gray-400">
-              Carregando menu...
+            <div className="px-3 py-3 text-sm text-slate-400 animate-pulse">
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 bg-slate-600 rounded animate-pulse"></div>
+                <div className="w-24 h-4 bg-slate-600 rounded animate-pulse"></div>
+              </div>
             </div>
           ) : (
-            filteredMenuItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => {
-                    // Close mobile menu when clicking a link
-                    if (window.innerWidth < 1024) {
-                      onToggle()
-                    }
-                  }}
-                  className={`flex items-center px-6 py-3 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                  }`}
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.label}
-                </Link>
-              )
-            })
+            <div className="space-y-1">
+              {filteredMenuItems.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => {
+                      // Close mobile menu when clicking a link
+                      if (window.innerWidth < 1024) {
+                        onToggle()
+                      }
+                    }}
+                    className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 transform scale-[1.02]'
+                        : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-[1.01] hover:shadow-md'
+                    }`}
+                  >
+                    <Icon className={`mr-3 h-5 w-5 transition-colors ${
+                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-orange-400'
+                    }`} />
+                    <span className="font-medium">{item.label}</span>
+                    {isActive && (
+                      <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
           )}
         </nav>
       </div>

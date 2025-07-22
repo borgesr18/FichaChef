@@ -65,7 +65,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-gray-600">Carregando dashboard...</p>
+            <p className="text-slate-600 font-medium">Carregando dashboard...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -75,127 +75,142 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Visão geral do sistema FichaChef</p>
+        <div className="mb-8">
+          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Dashboard</h1>
+          <p className="text-slate-600 mt-2 text-lg font-medium">Visão geral do sistema FichaChef</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-            {error}
+          <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-700 px-6 py-4 rounded-xl shadow-md">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <span className="font-medium">{error}</span>
+            </div>
           </div>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <Package className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Insumos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.insumos}</p>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Insumos</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.insumos}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <FileText className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Fichas Técnicas</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.fichasTecnicas}</p>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Fichas Técnicas</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.fichasTecnicas}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Factory className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                <Factory className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Produções</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.producoes}</p>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Produções</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.producoes}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <ShoppingCart className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                <ShoppingCart className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Produtos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.produtos}</p>
+                <p className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Produtos</p>
+                <p className="text-3xl font-bold text-slate-800">{stats.produtos}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Quick Actions */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Ações Rápidas</h3>
-            <div className="space-y-3">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
+              <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full mr-3"></div>
+              Ações Rápidas
+            </h3>
+            <div className="space-y-4">
               <a
                 href="/dashboard/insumos"
-                className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                className="group flex items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
               >
-                <Package className="h-5 w-5 text-blue-600 mr-3" />
-                <span className="text-sm font-medium text-gray-900">Cadastrar Insumo</span>
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md group-hover:shadow-lg transition-shadow">
+                  <Package className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-800 ml-4">Cadastrar Insumo</span>
               </a>
               <a
                 href="/dashboard/fichas-tecnicas"
-                className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                className="group flex items-center p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl hover:from-emerald-100 hover:to-emerald-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
               >
-                <FileText className="h-5 w-5 text-green-600 mr-3" />
-                <span className="text-sm font-medium text-gray-900">Nova Ficha Técnica</span>
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-md group-hover:shadow-lg transition-shadow">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-800 ml-4">Nova Ficha Técnica</span>
               </a>
               <a
                 href="/dashboard/producao"
-                className="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+                className="group flex items-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
               >
-                <Factory className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-sm font-medium text-gray-900">Registrar Produção</span>
+                <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md group-hover:shadow-lg transition-shadow">
+                  <Factory className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-slate-800 ml-4">Registrar Produção</span>
               </a>
             </div>
           </div>
 
           {/* Status */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Status do Sistema</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
+              <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full mr-3"></div>
+              Status do Sistema
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200/50">
                 <div className="flex items-center">
-                  <div className="h-2 w-2 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-sm text-gray-900">Sistema Online</span>
+                  <div className="h-3 w-3 bg-emerald-500 rounded-full mr-3 animate-pulse shadow-lg shadow-emerald-500/50"></div>
+                  <span className="text-sm font-semibold text-slate-800">Sistema Online</span>
                 </div>
-                <span className="text-xs text-green-600 font-medium">Ativo</span>
+                <span className="text-xs text-emerald-700 font-bold bg-emerald-200 px-3 py-1 rounded-full">Ativo</span>
               </div>
               
               {stats.insumos === 0 && (
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl border border-amber-200/50">
                   <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 mr-3" />
-                    <span className="text-sm text-gray-900">Nenhum insumo cadastrado</span>
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
+                    <span className="text-sm font-semibold text-slate-800">Nenhum insumo cadastrado</span>
                   </div>
-                  <span className="text-xs text-yellow-600 font-medium">Atenção</span>
+                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-1 rounded-full">Atenção</span>
                 </div>
               )}
               
               {stats.fichasTecnicas === 0 && (
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl border border-amber-200/50">
                   <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 mr-3" />
-                    <span className="text-sm text-gray-900">Nenhuma ficha técnica criada</span>
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
+                    <span className="text-sm font-semibold text-slate-800">Nenhuma ficha técnica criada</span>
                   </div>
-                  <span className="text-xs text-yellow-600 font-medium">Atenção</span>
+                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-1 rounded-full">Atenção</span>
                 </div>
               )}
             </div>
@@ -203,13 +218,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Chart Placeholder */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Resumo de Atividades</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
+            <div className="w-2 h-8 bg-gradient-to-b from-slate-500 to-slate-600 rounded-full mr-3"></div>
+            Resumo de Atividades
+          </h3>
+          <div className="h-64 flex items-center justify-center">
             <div className="text-center">
-              <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm">Gráficos serão exibidos quando houver mais dados</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <div className="p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl mb-4 inline-block">
+                <BarChart3 className="h-16 w-16 text-slate-500" />
+              </div>
+              <p className="text-lg font-semibold text-slate-700 mb-2">Gráficos serão exibidos quando houver mais dados</p>
+              <p className="text-sm text-slate-500 bg-slate-100 px-4 py-2 rounded-xl inline-block">
                 Comece cadastrando insumos e criando fichas técnicas
               </p>
             </div>
