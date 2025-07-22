@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -17,20 +18,22 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 
   const where = menuId ? { userId: user.id, menuId } : { userId: user.id }
 
-  const periodos = await prisma.menuPeriodo.findMany({
-    where,
-    include: {
-      menu: {
-        include: {
-          itens: {
-            include: {
-              produto: true
+  const periodos = await withDatabaseRetry(async () => {
+    return await prisma.menuPeriodo.findMany({
+      where,
+      include: {
+        menu: {
+          include: {
+            itens: {
+              include: {
+                produto: true
+              }
             }
           }
         }
-      }
-    },
-    orderBy: { dataInicio: 'desc' },
+      },
+      orderBy: { dataInicio: 'desc' },
+    })
   })
 
   return createSuccessResponse(periodos)
@@ -52,22 +55,24 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const periodo = await prisma.menuPeriodo.create({
-    data: {
-      ...data,
-      userId: user.id,
-    },
-    include: {
-      menu: {
-        include: {
-          itens: {
-            include: {
-              produto: true
+  const periodo = await withDatabaseRetry(async () => {
+    return await prisma.menuPeriodo.create({
+      data: {
+        ...data,
+        userId: user.id,
+      },
+      include: {
+        menu: {
+          include: {
+            itens: {
+              include: {
+                produto: true
+              }
             }
           }
         }
       }
-    }
+    })
   })
 
   await logUserAction(user.id, 'create', 'cardapios', periodo.id, 'MenuPeriodo', data, request)

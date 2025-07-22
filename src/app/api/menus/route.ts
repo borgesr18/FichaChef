@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -11,20 +12,22 @@ import { menuSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('cardapios', 'read')
 
-  const menus = await prisma.menu.findMany({
-    where: { userId: user.id },
-    include: {
-      itens: {
-        include: {
-          produto: {
-            include: {
-              produtoFichas: {
-                include: {
-                  fichaTecnica: {
-                    include: {
-                      ingredientes: {
-                        include: {
-                          insumo: true
+  const menus = await withDatabaseRetry(async () => {
+    return await prisma.menu.findMany({
+      where: { userId: user.id },
+      include: {
+        itens: {
+          include: {
+            produto: {
+              include: {
+                produtoFichas: {
+                  include: {
+                    fichaTecnica: {
+                      include: {
+                        ingredientes: {
+                          include: {
+                            insumo: true
+                          }
                         }
                       }
                     }
@@ -33,11 +36,11 @@ export const GET = withErrorHandler(async function GET() {
               }
             }
           }
-        }
+        },
+        periodos: true
       },
-      periodos: true
-    },
-    orderBy: { nome: 'asc' },
+      orderBy: { nome: 'asc' },
+    })
   })
 
   return createSuccessResponse(menus)
@@ -55,33 +58,35 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const menu = await prisma.menu.create({
-    data: {
-      nome: data.nome,
-      descricao: data.descricao,
-      tipo: data.tipo,
-      ativo: data.ativo,
-      userId: user.id,
-      itens: {
-        create: data.itens.map(item => ({
-          produtoId: item.produtoId,
-          quantidade: item.quantidade,
-          observacoes: item.observacoes
-        }))
-      }
-    },
-    include: {
-      itens: {
-        include: {
-          produto: {
-            include: {
-              produtoFichas: {
-                include: {
-                  fichaTecnica: {
-                    include: {
-                      ingredientes: {
-                        include: {
-                          insumo: true
+  const menu = await withDatabaseRetry(async () => {
+    return await prisma.menu.create({
+      data: {
+        nome: data.nome,
+        descricao: data.descricao,
+        tipo: data.tipo,
+        ativo: data.ativo,
+        userId: user.id,
+        itens: {
+          create: data.itens.map(item => ({
+            produtoId: item.produtoId,
+            quantidade: item.quantidade,
+            observacoes: item.observacoes
+          }))
+        }
+      },
+      include: {
+        itens: {
+          include: {
+            produto: {
+              include: {
+                produtoFichas: {
+                  include: {
+                    fichaTecnica: {
+                      include: {
+                        ingredientes: {
+                          include: {
+                            insumo: true
+                          }
                         }
                       }
                     }
@@ -90,10 +95,10 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
               }
             }
           }
-        }
-      },
-      periodos: true
-    }
+        },
+        periodos: true
+      }
+    })
   })
 
   const { logUserAction } = await import('@/lib/permissions')

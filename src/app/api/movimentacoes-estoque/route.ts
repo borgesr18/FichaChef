@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -12,12 +13,14 @@ import { movimentacaoEstoqueSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('estoque', 'read')
 
-  const movimentacoes = await prisma.movimentacaoEstoque.findMany({
-    where: { userId: user.id },
-    include: {
-      insumo: true,
-    },
-    orderBy: { createdAt: 'desc' },
+  const movimentacoes = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoEstoque.findMany({
+      where: { userId: user.id },
+      include: {
+        insumo: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    })
   })
 
   return createSuccessResponse(movimentacoes)
@@ -35,14 +38,16 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const movimentacao = await prisma.movimentacaoEstoque.create({
-    data: {
-      ...data,
-      userId: user.id,
-    },
-    include: {
-      insumo: true,
-    },
+  const movimentacao = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoEstoque.create({
+      data: {
+        ...data,
+        userId: user.id,
+      },
+      include: {
+        insumo: true,
+      },
+    })
   })
 
   await logUserAction(

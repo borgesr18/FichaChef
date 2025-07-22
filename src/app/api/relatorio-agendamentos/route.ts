@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
@@ -21,10 +22,12 @@ export async function GET() {
   try {
     const user = await authenticateWithPermission('relatorios', 'read')
 
-    const agendamentos = await prisma.relatorioAgendamento.findMany({
-      where: { userId: user.id },
-      include: { template: true },
-      orderBy: { createdAt: 'desc' }
+    const agendamentos = await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.findMany({
+        where: { userId: user.id },
+        include: { template: true },
+        orderBy: { createdAt: 'desc' }
+      })
     })
 
     return NextResponse.json(agendamentos)
@@ -43,13 +46,15 @@ export async function POST(request: NextRequest) {
 
     const proximaExecucao = calculateNextExecution(validatedData)
 
-    const agendamento = await prisma.relatorioAgendamento.create({
-      data: {
-        ...validatedData,
-        proximaExecucao,
-        userId: user.id
-      },
-      include: { template: true }
+    const agendamento = await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.create({
+        data: {
+          ...validatedData,
+          proximaExecucao,
+          userId: user.id
+        },
+        include: { template: true }
+      })
     })
 
     await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, request)

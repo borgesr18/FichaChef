@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import { authenticateUserWithProfile, createUnauthorizedResponse, createSuccessResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
@@ -33,8 +34,10 @@ export const GET = withErrorHandler(async function GET() {
     })
   }
 
-  const perfil = await prisma.perfilUsuario.findUnique({
-    where: { userId: user.id }
+  const perfil = await withDatabaseRetry(async () => {
+    return await prisma.perfilUsuario.findUnique({
+      where: { userId: user.id }
+    })
   })
 
   return createSuccessResponse(perfil)
@@ -53,9 +56,11 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
     delete validatedData.role
   }
 
-  const perfil = await prisma.perfilUsuario.update({
-    where: { userId: user.id },
-    data: validatedData
+  const perfil = await withDatabaseRetry(async () => {
+    return await prisma.perfilUsuario.update({
+      where: { userId: user.id },
+      data: validatedData
+    })
   })
 
   return createSuccessResponse(perfil)

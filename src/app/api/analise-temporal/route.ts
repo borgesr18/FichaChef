@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -47,17 +48,19 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   if (insumoId) where.insumoId = insumoId
   if (fornecedorId) where.fornecedorId = fornecedorId
 
-  const priceHistory = await prisma.fornecedorPreco.findMany({
-    where,
-    include: {
-      insumo: {
-        select: { id: true, nome: true }
+  const priceHistory = await withDatabaseRetry(async () => {
+    return await prisma.fornecedorPreco.findMany({
+      where,
+      include: {
+        insumo: {
+          select: { id: true, nome: true }
+        },
+        fornecedor: {
+          select: { id: true, nome: true }
+        }
       },
-      fornecedor: {
-        select: { id: true, nome: true }
-      }
-    },
-    orderBy: { dataVigencia: 'asc' }
+      orderBy: { dataVigencia: 'asc' }
+    })
   })
 
   if (priceHistory.length === 0) {
@@ -142,47 +145,51 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const type = searchParams.get('type')
 
   if (type === 'insumos') {
-    const insumosWithPrices = await prisma.insumo.findMany({
-      where: {
-        userId: user.id,
-        fornecedorPrecos: {
-          some: {}
-        }
-      },
-      select: {
-        id: true,
-        nome: true,
-        _count: {
-          select: {
-            fornecedorPrecos: true
+    const insumosWithPrices = await withDatabaseRetry(async () => {
+      return await prisma.insumo.findMany({
+        where: {
+          userId: user.id,
+          fornecedorPrecos: {
+            some: {}
           }
-        }
-      },
-      orderBy: { nome: 'asc' }
+        },
+        select: {
+          id: true,
+          nome: true,
+          _count: {
+            select: {
+              fornecedorPrecos: true
+            }
+          }
+        },
+        orderBy: { nome: 'asc' }
+      })
     })
 
     return createSuccessResponse(insumosWithPrices)
   }
 
   if (type === 'fornecedores') {
-    const fornecedoresWithPrices = await prisma.fornecedor.findMany({
-      where: {
-        userId: user.id,
-        ativo: true,
-        precos: {
-          some: {}
-        }
-      },
-      select: {
-        id: true,
-        nome: true,
-        _count: {
-          select: {
-            precos: true
+    const fornecedoresWithPrices = await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.findMany({
+        where: {
+          userId: user.id,
+          ativo: true,
+          precos: {
+            some: {}
           }
-        }
-      },
-      orderBy: { nome: 'asc' }
+        },
+        select: {
+          id: true,
+          nome: true,
+          _count: {
+            select: {
+              precos: true
+            }
+          }
+        },
+        orderBy: { nome: 'asc' }
+      })
     })
 
     return createSuccessResponse(fornecedoresWithPrices)

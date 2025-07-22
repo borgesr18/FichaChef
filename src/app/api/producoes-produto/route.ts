@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDatabaseRetry } from '@/lib/database-utils'
 import {
   authenticateWithPermission,
   createValidationErrorResponse,
@@ -12,12 +13,14 @@ import { producaoProdutoSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('producao', 'read')
 
-  const producoes = await prisma.producaoProduto.findMany({
-    where: { userId: user.id },
-    include: {
-      produto: true,
-    },
-    orderBy: { dataProducao: 'desc' },
+  const producoes = await withDatabaseRetry(async () => {
+    return await prisma.producaoProduto.findMany({
+      where: { userId: user.id },
+      include: {
+        produto: true,
+      },
+      orderBy: { dataProducao: 'desc' },
+    })
   })
 
   return createSuccessResponse(producoes)
@@ -42,14 +45,16 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const producao = await prisma.producaoProduto.create({
-    data: {
-      ...data,
-      userId: user.id,
-    },
-    include: {
-      produto: true,
-    },
+  const producao = await withDatabaseRetry(async () => {
+    return await prisma.producaoProduto.create({
+      data: {
+        ...data,
+        userId: user.id,
+      },
+      include: {
+        produto: true,
+      },
+    })
   })
 
   await logUserAction(user.id, 'create', 'producao', producao.id, 'producao_produto', data, request)
