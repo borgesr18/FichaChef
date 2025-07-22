@@ -110,6 +110,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    title=""
                     onClick={() => {
                       // Close mobile menu when clicking a link
                       if (window.innerWidth < 1024) {
