@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import ModernChart from '@/components/ui/ModernChart'
+import NotificationSystem, { useNotifications } from '@/components/ui/NotificationSystem'
 import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
 
 interface DashboardStats {
@@ -21,6 +23,7 @@ export default function DashboardPage() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -42,12 +45,23 @@ export default function DashboardPage() {
           produtosRes.ok ? produtosRes.json() : []
         ])
 
-        setStats({
+        const newStats = {
           insumos: Array.isArray(insumos) ? insumos.length : 0,
           fichasTecnicas: Array.isArray(fichas) ? fichas.length : 0,
           producoes: Array.isArray(producoes) ? producoes.length : 0,
           produtos: Array.isArray(produtos) ? produtos.length : 0
-        })
+        }
+        
+        setStats(newStats)
+        
+        if (newStats.insumos > 0 || newStats.fichasTecnicas > 0) {
+          addNotification({
+            type: 'success',
+            title: 'Dashboard Atualizado',
+            message: 'Dados carregados com sucesso!',
+            duration: 3000
+          })
+        }
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
         setError('Erro ao carregar estatísticas')
@@ -57,7 +71,7 @@ export default function DashboardPage() {
     }
 
     fetchStats()
-  }, [])
+  }, [addNotification])
 
   if (loading) {
     return (
@@ -217,25 +231,59 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Chart Placeholder */}
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
-          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
-            <div className="w-2 h-8 bg-gradient-to-b from-slate-500 to-slate-600 rounded-full mr-3"></div>
-            Resumo de Atividades
-          </h3>
-          <div className="h-64 flex items-center justify-center">
-            <div className="text-center">
-              <div className="p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl mb-4 inline-block">
-                <BarChart3 className="h-16 w-16 text-slate-500" />
+        {/* Modern Charts Section */}
+        {(stats.insumos > 0 || stats.fichasTecnicas > 0 || stats.producoes > 0 || stats.produtos > 0) ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <ModernChart
+              title="Estatísticas do Sistema"
+              type="bar"
+              data={[
+                { label: 'Insumos', value: stats.insumos, trend: 'up' },
+                { label: 'Fichas Técnicas', value: stats.fichasTecnicas, trend: 'up' },
+                { label: 'Produções', value: stats.producoes, trend: 'stable' },
+                { label: 'Produtos', value: stats.produtos, trend: 'up' }
+              ]}
+              showTrend={true}
+              height={300}
+            />
+            
+            <ModernChart
+              title="Distribuição por Categoria"
+              type="donut"
+              data={[
+                { label: 'Insumos', value: stats.insumos },
+                { label: 'Fichas Técnicas', value: stats.fichasTecnicas },
+                { label: 'Produções', value: stats.producoes },
+                { label: 'Produtos', value: stats.produtos }
+              ]}
+              height={300}
+            />
+          </div>
+        ) : (
+          <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
+              <div className="w-2 h-8 bg-gradient-to-b from-slate-500 to-slate-600 rounded-full mr-3"></div>
+              Resumo de Atividades
+            </h3>
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center">
+                <div className="p-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl mb-4 inline-block">
+                  <BarChart3 className="h-16 w-16 text-slate-500" />
+                </div>
+                <p className="text-lg font-semibold text-slate-700 mb-2">Gráficos serão exibidos quando houver mais dados</p>
+                <p className="text-sm text-slate-500 bg-slate-100 px-4 py-2 rounded-xl inline-block">
+                  Comece cadastrando insumos e criando fichas técnicas
+                </p>
               </div>
-              <p className="text-lg font-semibold text-slate-700 mb-2">Gráficos serão exibidos quando houver mais dados</p>
-              <p className="text-sm text-slate-500 bg-slate-100 px-4 py-2 rounded-xl inline-block">
-                Comece cadastrando insumos e criando fichas técnicas
-              </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
+      <NotificationSystem
+        notifications={notifications}
+        onRemove={removeNotification}
+        position="top-right"
+      />
     </DashboardLayout>
   )
 }
