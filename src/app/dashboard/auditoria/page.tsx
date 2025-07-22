@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { FileText } from 'lucide-react'
 
@@ -25,7 +25,7 @@ export default function AuditoriaPage() {
   const [filtroModulo, setFiltroModulo] = useState('')
   const [filtroAcao, setFiltroAcao] = useState('')
 
-  const fetchAcoes = async () => {
+  const fetchAcoes = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (filtroModulo) params.append('modulo', filtroModulo)
@@ -41,11 +41,11 @@ export default function AuditoriaPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filtroModulo, filtroAcao])
 
   useEffect(() => {
     fetchAcoes()
-  }, [filtroModulo, filtroAcao, fetchAcoes])
+  }, [fetchAcoes])
 
   const getAcaoColor = (acao: string) => {
     switch (acao) {
