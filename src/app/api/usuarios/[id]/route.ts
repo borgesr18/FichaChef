@@ -4,6 +4,7 @@ import { authenticateWithPermission, createSuccessResponse, createErrorResponse 
 import { withErrorHandler } from '@/lib/api-helpers'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { z } from 'zod'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const updateUserSchema = z.object({
   role: z.enum(['chef', 'cozinheiro', 'gerente']).optional(),
@@ -41,12 +42,12 @@ export const DELETE = withErrorHandler(async function DELETE(
   const { id } = await params
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  const isDevMode = !supabaseUrl || !supabaseKey || 
-                    supabaseUrl === '' || supabaseKey === '' ||
+  const isDevMode = !supabaseUrl || !supabaseServiceKey || 
+                    supabaseUrl === '' || supabaseServiceKey === '' ||
                     supabaseUrl.includes('placeholder') || 
-                    supabaseKey.includes('placeholder')
+                    supabaseServiceKey.includes('placeholder')
 
   try {
     await withConnectionHealthCheck(async () => {
@@ -58,8 +59,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     })
 
     if (!isDevMode) {
-      const { supabase } = await import('@/lib/supabase')
-      await supabase.auth.admin.deleteUser(id)
+      await supabaseAdmin.auth.admin.deleteUser(id)
     }
 
     return createSuccessResponse({

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const inviteUserSchema = z.object({
   email: z.string().email('Email inválido')
@@ -15,12 +15,12 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const { email } = inviteUserSchema.parse(body)
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  const isDevMode = !supabaseUrl || !supabaseKey || 
-                    supabaseUrl === '' || supabaseKey === '' ||
+  const isDevMode = !supabaseUrl || !supabaseServiceKey || 
+                    supabaseUrl === '' || supabaseServiceKey === '' ||
                     supabaseUrl.includes('placeholder') || 
-                    supabaseKey.includes('placeholder')
+                    supabaseServiceKey.includes('placeholder')
 
   if (isDevMode) {
     return createSuccessResponse({
@@ -29,7 +29,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   }
 
   try {
-    const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
+    const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`
     })
 
