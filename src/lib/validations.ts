@@ -10,6 +10,12 @@ export const insumoSchema = z.object({
   unidadeCompraId: z.string().min(1, 'Unidade de compra é obrigatória'),
   pesoLiquidoGramas: z.number().positive('Peso deve ser positivo'),
   precoUnidade: z.number().positive('Preço deve ser positivo'),
+  calorias: z.number().min(0, 'Calorias devem ser positivas').optional(),
+  proteinas: z.number().min(0, 'Proteínas devem ser positivas').optional(),
+  carboidratos: z.number().min(0, 'Carboidratos devem ser positivos').optional(),
+  gorduras: z.number().min(0, 'Gorduras devem ser positivas').optional(),
+  fibras: z.number().min(0, 'Fibras devem ser positivas').optional(),
+  sodio: z.number().min(0, 'Sódio deve ser positivo').optional(),
 })
 
 export type InsumoInput = z.infer<typeof insumoSchema>
