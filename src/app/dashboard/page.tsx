@@ -31,16 +31,21 @@ export default function DashboardPage() {
         setLoading(true)
         setError('')
         
-        // Fetch stats from APIs
+        // Fetch stats from APIs with timeout
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
         const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.all([
-          fetch('/api/insumos'),
-          fetch('/api/fichas-tecnicas'),
-          fetch('/api/producao'),
-          fetch('/api/produtos')
+          fetch('/api/insumos', { signal: controller.signal }),
+          fetch('/api/fichas-tecnicas', { signal: controller.signal }),
+          fetch('/api/producao', { signal: controller.signal }),
+          fetch('/api/produtos', { signal: controller.signal })
         ])
+        
+        clearTimeout(timeoutId)
 
         if (!insumosRes.ok || !fichasRes.ok || !producoesRes.ok || !produtosRes.ok) {
-          throw new Error('One or more API requests failed')
+          throw new Error(`API requests failed: ${insumosRes.status}, ${fichasRes.status}, ${producoesRes.status}, ${produtosRes.status}`)
         }
 
         const [insumos, fichas, producoes, produtos] = await Promise.all([
@@ -58,7 +63,7 @@ export default function DashboardPage() {
         }
         
         setStats(newStats)
-        setError('') // Clear any previous errors on successful load
+        setError('')
         
         if (newStats.insumos > 0 || newStats.fichasTecnicas > 0) {
           addNotification({
