@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import ModernTable from '@/components/ui/ModernTable'
 import { Bell, Plus, Search, Settings, AlertTriangle, Package, ShoppingCart } from 'lucide-react'
 
 interface ConfiguracaoAlerta {
@@ -202,23 +205,25 @@ export default function AlertasPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Bell className="h-6 w-6 text-gray-600 mr-2" />
-            <h1 className="text-2xl font-bold text-gray-900">Configuração de Alertas</h1>
+            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
+              <Bell className="h-6 w-6 text-orange-600" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configuração de Alertas</h1>
           </div>
           <div className="flex space-x-3">
             <button 
               onClick={processarAlertas}
               disabled={loading}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center disabled:opacity-50"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group disabled:opacity-50"
             >
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
               Processar Alertas
             </button>
             <button 
               onClick={handleOpenModal}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
               Nova Configuração
             </button>
           </div>
@@ -246,74 +251,51 @@ export default function AlertasPage() {
           </nav>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-all duration-200 group-focus-within:text-orange-500 group-focus-within:scale-110" />
               <input
                 type="text"
                 placeholder="Buscar configurações..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 pr-4 py-3 w-full border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Item
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Configuração
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredConfiguracoes.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                      Nenhuma configuração encontrada. Clique em &quot;Nova Configuração&quot; para começar.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredConfiguracoes.map((config) => (
-                    <tr key={config.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getItemName(config.itemId, config.itemTipo)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {config.itemTipo === 'insumo' ? 'Insumo' : 'Produto'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {activeTab === 'estoque_baixo' && `Limite: ${config.limiteEstoqueBaixo}`}
-                        {activeTab === 'validade_proxima' && `${config.diasAntesVencimento} dias`}
-                        {activeTab === 'custo_alto' && `Margem: ${config.margemCustoMaxima}%`}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          config.ativo 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {config.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+          <ModernTable
+            columns={[
+              { key: 'itemName', label: 'Item', sortable: true },
+              { key: 'itemTipo', label: 'Tipo', sortable: true,
+                render: (value) => value === 'insumo' ? 'Insumo' : 'Produto' },
+              { key: 'configuracao', label: 'Configuração', sortable: true },
+              { key: 'ativo', label: 'Status', align: 'center',
+                render: (value) => (
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    value 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {value ? 'Ativo' : 'Inativo'}
+                  </span>
                 )}
-              </tbody>
-            </table>
-          </div>
+            ]}
+            data={filteredConfiguracoes.map(config => ({
+              id: config.id,
+              itemName: getItemName(config.itemId, config.itemTipo),
+              itemTipo: config.itemTipo,
+              configuracao: activeTab === 'estoque_baixo' ? `Limite: ${config.limiteEstoqueBaixo}` :
+                          activeTab === 'validade_proxima' ? `${config.diasAntesVencimento} dias` :
+                          `Margem: ${config.margemCustoMaxima}%`,
+              ativo: config.ativo
+            }))}
+            searchable={false}
+            pagination={true}
+            pageSize={10}
+            loading={loading}
+          />
         </div>
       </div>
 
@@ -331,85 +313,58 @@ export default function AlertasPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Item *
-              </label>
-              <select
-                value={formData.itemTipo}
-                onChange={(e) => setFormData({ ...formData, itemTipo: e.target.value, itemId: '' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="insumo">Insumo</option>
-                <option value="produto">Produto</option>
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label="Tipo de Item"
+              value={formData.itemTipo}
+              onChange={(value) => setFormData({ ...formData, itemTipo: value, itemId: '' })}
+              options={[
+                { value: 'insumo', label: 'Insumo' },
+                { value: 'produto', label: 'Produto' }
+              ]}
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {formData.itemTipo === 'insumo' ? 'Insumo' : 'Produto'} *
-              </label>
-              <select
-                value={formData.itemId}
-                onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Selecione um item</option>
-                {currentItems.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FloatingLabelSelect
+              label={formData.itemTipo === 'insumo' ? 'Insumo' : 'Produto'}
+              value={formData.itemId}
+              onChange={(value) => setFormData({ ...formData, itemId: value })}
+              options={[
+                { value: '', label: 'Selecione um item' },
+                ...currentItems.map(item => ({ value: item.id, label: item.nome }))
+              ]}
+              required
+            />
 
             {activeTab === 'estoque_baixo' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Limite de Estoque Baixo *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.limiteEstoqueBaixo}
-                  onChange={(e) => setFormData({ ...formData, limiteEstoqueBaixo: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Limite de Estoque Baixo"
+                type="number"
+                step="0.01"
+                value={formData.limiteEstoqueBaixo}
+                onChange={(value) => setFormData({ ...formData, limiteEstoqueBaixo: value })}
+                required
+              />
             )}
 
             {activeTab === 'validade_proxima' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dias Antes do Vencimento *
-                </label>
-                <input
-                  type="number"
-                  value={formData.diasAntesVencimento}
-                  onChange={(e) => setFormData({ ...formData, diasAntesVencimento: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Dias Antes do Vencimento"
+                type="number"
+                value={formData.diasAntesVencimento}
+                onChange={(value) => setFormData({ ...formData, diasAntesVencimento: value })}
+                required
+              />
             )}
 
             {activeTab === 'custo_alto' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Margem Mínima (%) *
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.margemCustoMaxima}
-                  onChange={(e) => setFormData({ ...formData, margemCustoMaxima: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
+              <FloatingLabelInput
+                label="Margem Mínima (%)"
+                type="number"
+                step="0.1"
+                value={formData.margemCustoMaxima}
+                onChange={(value) => setFormData({ ...formData, margemCustoMaxima: value })}
+                required
+              />
             )}
 
             <div className="md:col-span-2">
@@ -429,14 +384,14 @@ export default function AlertasPage() {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="px-6 py-3 text-slate-700 bg-slate-200 rounded-xl hover:bg-slate-300 transition-all duration-200 hover:scale-105"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </button>

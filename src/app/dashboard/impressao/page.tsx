@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Printer, ChevronDown } from 'lucide-react'
+import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
+import { Printer } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
 
@@ -39,7 +40,6 @@ export default function ImpressaoPage() {
   const [fichas, setFichas] = useState<FichaTecnica[]>([])
   const [selectedFichaId, setSelectedFichaId] = useState('')
   const [selectedFicha, setSelectedFicha] = useState<FichaTecnica | null>(null)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -124,10 +124,6 @@ export default function ImpressaoPage() {
     window.print()
   }
 
-  const handleSelectFicha = (ficha: FichaTecnica) => {
-    setSelectedFichaId(ficha.id)
-    setIsDropdownOpen(false)
-  }
 
   if (loading) {
     return (
@@ -149,52 +145,31 @@ export default function ImpressaoPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Impressão de Fichas Técnicas</h1>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 no-print">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6 no-print">
           <div className="max-w-md">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Selecionar Ficha Técnica
-              </label>
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-left flex items-center justify-between focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <span className={selectedFicha ? 'text-gray-900' : 'text-gray-500'}>
-                    {selectedFicha ? selectedFicha.nome : 'Selecione uma ficha técnica...'}
-                  </span>
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
-                </button>
-                
-                {isDropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {fichas.length === 0 ? (
-                      <div className="px-3 py-2 text-gray-500 text-sm">
-                        Nenhuma ficha técnica cadastrada
-                      </div>
-                    ) : (
-                      fichas.map((ficha) => (
-                        <button
-                          key={ficha.id}
-                          onClick={() => handleSelectFicha(ficha)}
-                          className="w-full px-3 py-2 text-left hover:bg-gray-100 text-sm"
-                        >
-                          <div className="font-medium">{ficha.nome}</div>
-                          <div className="text-xs text-gray-500">
-                            {ficha.categoria.nome} • {ficha.pesoFinalGramas}g • {ficha.numeroPorcoes} porções
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <FloatingLabelSelect
+              label="Selecionar Ficha Técnica"
+              value={selectedFichaId}
+              onChange={(value) => {
+                setSelectedFichaId(value)
+                const ficha = fichas.find(f => f.id === value)
+                if (ficha) {
+                  setSelectedFicha(ficha)
+                }
+              }}
+              options={[
+                { value: '', label: 'Selecione uma ficha técnica...' },
+                ...fichas.map(ficha => ({
+                  value: ficha.id,
+                  label: `${ficha.nome} - ${ficha.categoria.nome} • ${ficha.pesoFinalGramas}g • ${ficha.numeroPorcoes} porções`
+                }))
+              ]}
+            />
 
             <button
               onClick={handlePrint}
               disabled={!selectedFicha}
-              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
+              className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
             >
               <Printer className="h-4 w-4 mr-2" />
               Imprimir Ficha Técnica
