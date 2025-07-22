@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 import { z } from 'zod'
@@ -22,11 +22,13 @@ export async function GET() {
   try {
     const user = await authenticateWithPermission('relatorios', 'read')
 
-    const agendamentos = await withDatabaseRetry(async () => {
-      return await prisma.relatorioAgendamento.findMany({
-        where: { userId: user.id },
-        include: { template: true },
-        orderBy: { createdAt: 'desc' }
+    const agendamentos = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.relatorioAgendamento.findMany({
+          where: { userId: user.id },
+          include: { template: true },
+          orderBy: { createdAt: 'desc' }
+        })
       })
     })
 
@@ -46,14 +48,16 @@ export async function POST(request: NextRequest) {
 
     const proximaExecucao = calculateNextExecution(validatedData)
 
-    const agendamento = await withDatabaseRetry(async () => {
-      return await prisma.relatorioAgendamento.create({
-        data: {
-          ...validatedData,
-          proximaExecucao,
-          userId: user.id
-        },
-        include: { template: true }
+    const agendamento = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.relatorioAgendamento.create({
+          data: {
+            ...validatedData,
+            proximaExecucao,
+            userId: user.id
+          },
+          include: { template: true }
+        })
       })
     })
 

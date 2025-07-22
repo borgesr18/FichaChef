@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
   authenticateWithPermission, 
   createValidationErrorResponse, 
@@ -12,18 +12,20 @@ import { fichaTecnicaSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('fichas-tecnicas', 'read')
 
-  const fichas = await withDatabaseRetry(async () => {
-    return await prisma.fichaTecnica.findMany({
-      where: { userId: user.id },
-      include: {
-        categoria: true,
-        ingredientes: {
-          include: {
-            insumo: true,
+  const fichas = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.findMany({
+        where: { userId: user.id },
+        include: {
+          categoria: true,
+          ingredientes: {
+            include: {
+              insumo: true,
+            },
           },
         },
-      },
-      orderBy: { nome: 'asc' },
+        orderBy: { nome: 'asc' },
+      })
     })
   })
 
@@ -52,33 +54,35 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     ingredientes
   } = parsedBody.data
 
-  const novaFicha = await withDatabaseRetry(async () => {
-    return await prisma.fichaTecnica.create({
-      data: {
-        nome,
-        categoriaId,
-        pesoFinalGramas,
-        numeroPorcoes,
-        tempoPreparo,
-        temperaturaForno,
-        modoPreparo,
-        nivelDificuldade,
-        userId: user.id,
-        ingredientes: {
-          create: ingredientes?.map(ing => ({
-            insumoId: ing.insumoId,
-            quantidadeGramas: ing.quantidadeGramas,
-          })),
-        },
-      },
-      include: {
-        categoria: true,
-        ingredientes: {
-          include: {
-            insumo: true,
+  const novaFicha = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.create({
+        data: {
+          nome,
+          categoriaId,
+          pesoFinalGramas,
+          numeroPorcoes,
+          tempoPreparo,
+          temperaturaForno,
+          modoPreparo,
+          nivelDificuldade,
+          userId: user.id,
+          ingredientes: {
+            create: ingredientes?.map(ing => ({
+              insumoId: ing.insumoId,
+              quantidadeGramas: ing.quantidadeGramas,
+            })),
           },
         },
-      },
+        include: {
+          categoria: true,
+          ingredientes: {
+            include: {
+              insumo: true,
+            },
+          },
+        },
+      })
     })
   })
 

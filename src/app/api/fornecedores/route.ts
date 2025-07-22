@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -12,15 +12,17 @@ import { withErrorHandler } from '@/lib/api-helpers'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('fornecedores', 'read')
 
-  const fornecedores = await withDatabaseRetry(async () => {
-    return await prisma.fornecedor.findMany({
-      where: { userId: user.id },
-      include: {
-        _count: {
-          select: { insumos: true, precos: true }
-        }
-      },
-      orderBy: { nome: 'asc' },
+  const fornecedores = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.findMany({
+        where: { userId: user.id },
+        include: {
+          _count: {
+            select: { insumos: true, precos: true }
+          }
+        },
+        orderBy: { nome: 'asc' },
+      })
     })
   })
 
@@ -39,17 +41,19 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const fornecedor = await withDatabaseRetry(async () => {
-    return await prisma.fornecedor.create({
-      data: {
-        ...data,
-        userId: user.id,
-      },
-      include: {
-        _count: {
-          select: { insumos: true, precos: true }
-        }
-      },
+  const fornecedor = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.create({
+        data: {
+          ...data,
+          userId: user.id,
+        },
+        include: {
+          _count: {
+            select: { insumos: true, precos: true }
+          }
+        },
+      })
     })
   })
 

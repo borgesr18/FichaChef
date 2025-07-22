@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
@@ -30,14 +30,16 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   if (isDevMode) {
     const mockUserId = `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
-    const newUser = await withDatabaseRetry(async () => {
-      return await prisma.perfilUsuario.create({
-        data: {
-          userId: mockUserId,
-          email: validatedData.email,
-          nome: validatedData.nome,
-          role: validatedData.role
-        }
+    const newUser = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.perfilUsuario.create({
+          data: {
+            userId: mockUserId,
+            email: validatedData.email,
+            nome: validatedData.nome,
+            role: validatedData.role
+          }
+        })
       })
     })
 
@@ -62,14 +64,16 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return createErrorResponse('Falha ao criar usuário no Supabase', 500)
     }
 
-    const newUser = await withDatabaseRetry(async () => {
-      return await prisma.perfilUsuario.create({
-        data: {
-          userId: authUser.user.id,
-          email: validatedData.email,
-          nome: validatedData.nome,
-          role: validatedData.role
-        }
+    const newUser = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.perfilUsuario.create({
+          data: {
+            userId: authUser.user.id,
+            email: validatedData.email,
+            nome: validatedData.nome,
+            role: validatedData.role
+          }
+        })
       })
     })
 

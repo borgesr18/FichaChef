@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -13,15 +13,17 @@ import { withErrorHandler } from '@/lib/api-helpers'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('insumos', 'read')
 
-  const insumos = await withDatabaseRetry(async () => {
-    return await prisma.insumo.findMany({
-      where: { userId: user.id },
-      include: {
-        categoria: true,
-        unidadeCompra: true,
-        fornecedorRel: true,
-      },
-      orderBy: { nome: 'asc' },
+  const insumos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.insumo.findMany({
+        where: { userId: user.id },
+        include: {
+          categoria: true,
+          unidadeCompra: true,
+          fornecedorRel: true,
+        },
+        orderBy: { nome: 'asc' },
+      })
     })
   })
 
@@ -40,17 +42,19 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const data = parsedBody.data
 
-  const insumo = await withDatabaseRetry(async () => {
-    return await prisma.insumo.create({
-      data: {
-        ...data,
-        userId: user.id,
-      },
-      include: {
-        categoria: true,
-        unidadeCompra: true,
-        fornecedorRel: true,
-      },
+  const insumo = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.insumo.create({
+        data: {
+          ...data,
+          userId: user.id,
+        },
+        include: {
+          categoria: true,
+          unidadeCompra: true,
+          fornecedorRel: true,
+        },
+      })
     })
   })
 

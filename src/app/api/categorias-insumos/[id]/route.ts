@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -18,16 +18,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       }, { status: 400 })
     }
 
-    const categoria = await withDatabaseRetry(async () => {
-      return await prisma.categoriaInsumo.update({
-        where: { 
-          id,
-          userId: user.id
-        },
-        data: {
-          nome,
-          descricao
-        }
+    const categoria = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.categoriaInsumo.update({
+          where: { 
+            id,
+            userId: user.id
+          },
+          data: {
+            nome,
+            descricao
+          }
+        })
       })
     })
 
@@ -45,12 +47,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const user = await authenticateWithPermission('insumos', 'admin')
 
-    await withDatabaseRetry(async () => {
-      return await prisma.categoriaInsumo.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.categoriaInsumo.delete({
+          where: { 
+            id,
+            userId: user.id
+          }
+        })
       })
     })
 

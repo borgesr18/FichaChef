@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
   authenticateWithPermission, 
   createSuccessResponse 
@@ -12,9 +12,11 @@ export const POST = withErrorHandler(async function POST(request) {
 
   const alertasGerados = []
 
-  const configEstoque = await withDatabaseRetry(async () => {
-    return await prisma.configuracaoAlerta.findMany({
-      where: { userId: user.id, tipo: 'estoque_baixo', ativo: true }
+  const configEstoque = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.configuracaoAlerta.findMany({
+        where: { userId: user.id, tipo: 'estoque_baixo', ativo: true }
+      })
     })
   })
 
@@ -24,33 +26,37 @@ export const POST = withErrorHandler(async function POST(request) {
     if (saldoAtual <= (config.limiteEstoqueBaixo || 0)) {
       const itemNome = await obterNomeItem(config.itemId, config.itemTipo)
       
-      const notificacaoExistente = await withDatabaseRetry(async () => {
-        return await prisma.notificacao.findFirst({
-          where: {
-            userId: user.id,
-            tipo: 'estoque_baixo',
-            itemId: config.itemId,
-            lida: false,
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-          }
+      const notificacaoExistente = await withConnectionHealthCheck(async () => {
+        return await withDatabaseRetry(async () => {
+          return await prisma.notificacao.findFirst({
+            where: {
+              userId: user.id,
+              tipo: 'estoque_baixo',
+              itemId: config.itemId,
+              lida: false,
+              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+            }
+          })
         })
       })
 
       if (!notificacaoExistente) {
-        const notificacao = await withDatabaseRetry(async () => {
-          return await prisma.notificacao.create({
-            data: {
-              tipo: 'estoque_baixo',
-              titulo: 'Estoque Baixo',
-              mensagem: `${itemNome} está com estoque baixo (${saldoAtual} unidades)`,
-              itemTipo: config.itemTipo,
-              itemId: config.itemId,
-              itemNome,
-              prioridade: saldoAtual <= 0 ? 'critica' : 'alta',
-              valorAtual: saldoAtual,
-              valorLimite: config.limiteEstoqueBaixo,
-              userId: user.id
-            }
+        const notificacao = await withConnectionHealthCheck(async () => {
+          return await withDatabaseRetry(async () => {
+            return await prisma.notificacao.create({
+              data: {
+                tipo: 'estoque_baixo',
+                titulo: 'Estoque Baixo',
+                mensagem: `${itemNome} está com estoque baixo (${saldoAtual} unidades)`,
+                itemTipo: config.itemTipo,
+                itemId: config.itemId,
+                itemNome,
+                prioridade: saldoAtual <= 0 ? 'critica' : 'alta',
+                valorAtual: saldoAtual,
+                valorLimite: config.limiteEstoqueBaixo,
+                userId: user.id
+              }
+            })
           })
         })
         alertasGerados.push(notificacao)
@@ -58,9 +64,11 @@ export const POST = withErrorHandler(async function POST(request) {
     }
   }
 
-  const configValidade = await withDatabaseRetry(async () => {
-    return await prisma.configuracaoAlerta.findMany({
-      where: { userId: user.id, tipo: 'validade_proxima', ativo: true }
+  const configValidade = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.configuracaoAlerta.findMany({
+        where: { userId: user.id, tipo: 'validade_proxima', ativo: true }
+      })
     })
   })
 

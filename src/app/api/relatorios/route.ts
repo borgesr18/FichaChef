@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
 
@@ -76,37 +76,41 @@ export async function GET(request: NextRequest) {
 }
 
 async function generateCostReport(userId: string) {
-  const produtos = await withDatabaseRetry(async () => {
-    return await prisma.produto.findMany({
-      where: { userId },
-      include: {
-        produtoFichas: {
-          include: {
-            fichaTecnica: {
-              include: {
-                ingredientes: {
-                  include: {
-                    insumo: true
+  const produtos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.produto.findMany({
+        where: { userId },
+        include: {
+          produtoFichas: {
+            include: {
+              fichaTecnica: {
+                include: {
+                  ingredientes: {
+                    include: {
+                      insumo: true
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
+      })
     })
   })
 
-  const fichasTecnicas = await withDatabaseRetry(async () => {
-    return await prisma.fichaTecnica.findMany({
-      where: { userId },
-      include: {
-        ingredientes: {
-          include: {
-            insumo: true
+  const fichasTecnicas = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fichaTecnica.findMany({
+        where: { userId },
+        include: {
+          ingredientes: {
+            include: {
+              insumo: true
+            }
           }
         }
-      }
+      })
     })
   })
 
@@ -167,22 +171,26 @@ async function generateProductionReport(userId: string) {
   const whereClause: Record<string, unknown> = { userId }
 
   const [producoesFichas, producoesProdutos] = await Promise.all([
-    withDatabaseRetry(async () => {
-      return await prisma.producao.findMany({
-        where: whereClause,
-        include: {
-          fichaTecnica: true
-        },
-        orderBy: { dataProducao: 'desc' }
+    withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.producao.findMany({
+          where: whereClause,
+          include: {
+            fichaTecnica: true
+          },
+          orderBy: { dataProducao: 'desc' }
+        })
       })
     }),
-    withDatabaseRetry(async () => {
-      return await prisma.producaoProduto.findMany({
-        where: whereClause,
-        include: {
-          produto: true
-        },
-        orderBy: { dataProducao: 'desc' }
+    withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.producaoProduto.findMany({
+          where: whereClause,
+          include: {
+            produto: true
+          },
+          orderBy: { dataProducao: 'desc' }
+        })
       })
     })
   ])
@@ -242,22 +250,26 @@ async function generateInventoryReport(userId: string) {
   const whereClause: Record<string, unknown> = { userId }
 
   const [movimentacoesInsumos, movimentacoesProdutos] = await Promise.all([
-    withDatabaseRetry(async () => {
-      return await prisma.movimentacaoEstoque.findMany({
-        where: whereClause,
-        include: {
-          insumo: true
-        },
-        orderBy: { createdAt: 'desc' }
+    withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.movimentacaoEstoque.findMany({
+          where: whereClause,
+          include: {
+            insumo: true
+          },
+          orderBy: { createdAt: 'desc' }
+        })
       })
     }),
-    withDatabaseRetry(async () => {
-      return await prisma.movimentacaoProduto.findMany({
-        where: whereClause,
-        include: {
-          produto: true
-        },
-        orderBy: { createdAt: 'desc' }
+    withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.movimentacaoProduto.findMany({
+          where: whereClause,
+          include: {
+            produto: true
+          },
+          orderBy: { createdAt: 'desc' }
+        })
       })
     })
   ])

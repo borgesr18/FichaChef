@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
@@ -29,9 +29,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const data = validationResult.data
 
     // Verificar se o insumo existe e pertence ao usuário
-    const existingInsumo = await withDatabaseRetry(async () => {
-      return await prisma.insumo.findFirst({
-        where: { id, userId: user.id }
+    const existingInsumo = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.insumo.findFirst({
+          where: { id, userId: user.id }
+        })
       })
     })
 
@@ -39,14 +41,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return createNotFoundResponse('Insumo')
     }
 
-    const insumo = await withDatabaseRetry(async () => {
-      return await prisma.insumo.update({
-        where: { id },
-        data,
-        include: {
-          categoria: true,
-          unidadeCompra: true
-        }
+    const insumo = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.insumo.update({
+          where: { id },
+          data,
+          include: {
+            categoria: true,
+            unidadeCompra: true
+          }
+        })
       })
     })
 
@@ -65,9 +69,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const user = await authenticateWithPermission('insumos', 'admin')
 
     // Verificar se o insumo existe e pertence ao usuário
-    const existingInsumo = await withDatabaseRetry(async () => {
-      return await prisma.insumo.findFirst({
-        where: { id, userId: user.id }
+    const existingInsumo = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.insumo.findFirst({
+          where: { id, userId: user.id }
+        })
       })
     })
 
@@ -75,9 +81,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return createNotFoundResponse('Insumo')
     }
 
-    await withDatabaseRetry(async () => {
-      return await prisma.insumo.delete({
-        where: { id }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.insumo.delete({
+          where: { id }
+        })
       })
     })
 

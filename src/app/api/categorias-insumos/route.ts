@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
   authenticateWithPermission, 
   createValidationErrorResponse, 
@@ -13,10 +13,12 @@ import { categoriaSchema } from '@/lib/validations'
 export const GET = withErrorHandler(async function GET() {
   const user = await authenticateWithPermission('insumos', 'read')
 
-  const categorias = await withDatabaseRetry(async () => {
-    return await prisma.categoriaInsumo.findMany({
-      where: { userId: user.id },
-      orderBy: { nome: 'asc' },
+  const categorias = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.categoriaInsumo.findMany({
+        where: { userId: user.id },
+        orderBy: { nome: 'asc' },
+      })
     })
   })
 
@@ -35,13 +37,15 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const { nome, descricao } = parsedBody.data
 
-  const categoria = await withDatabaseRetry(async () => {
-    return await prisma.categoriaInsumo.create({
-      data: {
-        nome,
-        descricao,
-        userId: user.id,
-      },
+  const categoria = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.categoriaInsumo.create({
+        data: {
+          nome,
+          descricao,
+          userId: user.id,
+        },
+      })
     })
   })
 

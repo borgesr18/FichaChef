@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
-import { withDatabaseRetry } from '@/lib/database-utils'
+import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { z } from 'zod'
 
 const updateUserSchema = z.object({
@@ -21,10 +21,12 @@ export const PUT = withErrorHandler(async function PUT(
   const body = await request.json()
   const validatedData = updateUserSchema.parse(body)
 
-  const updatedUser = await withDatabaseRetry(async () => {
-    return await prisma.perfilUsuario.update({
-      where: { userId: id },
-      data: validatedData
+  const updatedUser = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.perfilUsuario.update({
+        where: { userId: id },
+        data: validatedData
+      })
     })
   })
 
@@ -47,9 +49,11 @@ export const DELETE = withErrorHandler(async function DELETE(
                     supabaseKey.includes('placeholder')
 
   try {
-    await withDatabaseRetry(async () => {
-      return await prisma.perfilUsuario.delete({
-        where: { userId: id }
+    await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.perfilUsuario.delete({
+          where: { userId: id }
+        })
       })
     })
 
