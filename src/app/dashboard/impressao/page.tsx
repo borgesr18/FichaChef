@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Printer, ChevronDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
+import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
 
 interface FichaTecnica {
   id: string
@@ -24,6 +25,12 @@ interface FichaTecnica {
       nome: string
       precoUnidade: number
       pesoLiquidoGramas: number
+      calorias?: number
+      proteinas?: number
+      carboidratos?: number
+      gorduras?: number
+      fibras?: number
+      sodio?: number
     }
   }[]
 }
@@ -84,6 +91,33 @@ export default function ImpressaoPage() {
 
   const calculatePesoPorPorcao = (ficha: FichaTecnica): number => {
     return ficha.pesoFinalGramas / ficha.numeroPorcoes
+  }
+
+  const calculateNutritionalTotal = (ficha: FichaTecnica) => {
+    return calculateTotalNutrition(ficha.ingredientes.map(ing => ({
+      quantidadeGramas: ing.quantidadeGramas,
+      insumo: {
+        id: ing.insumoId,
+        nome: ing.insumo.nome,
+        pesoLiquidoGramas: ing.insumo.pesoLiquidoGramas,
+        calorias: ing.insumo.calorias || 0,
+        proteinas: ing.insumo.proteinas || 0,
+        carboidratos: ing.insumo.carboidratos || 0,
+        gorduras: ing.insumo.gorduras || 0,
+        fibras: ing.insumo.fibras || 0,
+        sodio: ing.insumo.sodio || 0
+      }
+    })))
+  }
+
+  const calculateNutritionalPerPortion = (ficha: FichaTecnica) => {
+    const totalNutrition = calculateNutritionalTotal(ficha)
+    return calculateNutritionPerPortion(totalNutrition, ficha.numeroPorcoes)
+  }
+
+  const calculateNutritionalPer100g = (ficha: FichaTecnica) => {
+    const totalNutrition = calculateNutritionalTotal(ficha)
+    return calculateNutritionPer100g(totalNutrition, ficha.pesoFinalGramas)
   }
 
   const handlePrint = () => {
@@ -235,6 +269,82 @@ export default function ImpressaoPage() {
                 </div>
               </div>
             </div>
+
+            {(() => {
+              const totalNutrition = calculateNutritionalTotal(selectedFicha)
+              const hasNutritionalData = totalNutrition.calorias > 0 || totalNutrition.proteinas > 0
+              
+              if (!hasNutritionalData) return null
+              
+              const nutritionPerPortion = calculateNutritionalPerPortion(selectedFicha)
+              const nutritionPer100g = calculateNutritionalPer100g(selectedFicha)
+              
+              return (
+                <div className="mb-6 print-section">
+                  <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Nutricionais</h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h5 className="font-medium text-gray-800 mb-2">Por Porção ({calculatePesoPorPorcao(selectedFicha).toFixed(1)}g)</h5>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Calorias:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.calorias, 'kcal')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Proteínas:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.proteinas, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Carboidratos:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.carboidratos, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Gorduras:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.gorduras, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Fibras:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.fibras, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Sódio:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.sodio, 'mg')}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-gray-800 mb-2">Por 100g</h5>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Calorias:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.calorias, 'kcal')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Proteínas:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.proteinas, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Carboidratos:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.carboidratos, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Gorduras:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.gorduras, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Fibras:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.fibras, 'g')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Sódio:</span>
+                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.sodio, 'mg')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
 
             <div className="mb-6 print-section">
               <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes para Produção</h4>

@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { Calendar, Plus, Search, Edit, Trash2, X, Clock } from 'lucide-react'
 import { calculateMenuCost } from '@/lib/utils'
+import { calculateTotalNutrition, formatNutritionalValue } from '@/lib/nutritional-utils'
 
 interface Produto {
   id: string
@@ -19,6 +20,12 @@ interface Produto {
         insumo: {
           precoUnidade: number
           pesoLiquidoGramas: number
+          calorias?: number
+          proteinas?: number
+          carboidratos?: number
+          gorduras?: number
+          fibras?: number
+          sodio?: number
         }
       }[]
     }
@@ -186,6 +193,57 @@ export default function CardapiosPage() {
     }, 0)
   }
 
+  const calculateMenuNutritionalTotal = (menuItens: { quantidade: number; observacoes?: string; produto: Produto }[]) => {
+    return menuItens.reduce((total, menuItem) => {
+      const produto = menuItem.produto
+      if (produto && menuItem.quantidade) {
+        const produtoNutrition = produto.produtoFichas.reduce((produtoTotal, produtoFicha) => {
+          const fichaNutrition = calculateTotalNutrition(produtoFicha.fichaTecnica.ingredientes.map(ing => ({
+            quantidadeGramas: ing.quantidadeGramas,
+            insumo: {
+              id: 'insumo-' + Math.random(),
+              nome: 'Insumo',
+              pesoLiquidoGramas: ing.insumo.pesoLiquidoGramas,
+              calorias: ing.insumo.calorias || 0,
+              proteinas: ing.insumo.proteinas || 0,
+              carboidratos: ing.insumo.carboidratos || 0,
+              gorduras: ing.insumo.gorduras || 0,
+              fibras: ing.insumo.fibras || 0,
+              sodio: ing.insumo.sodio || 0
+            }
+          })))
+          const nutritionPerGramaFicha = {
+            calorias: fichaNutrition.calorias / produtoFicha.fichaTecnica.pesoFinalGramas,
+            proteinas: fichaNutrition.proteinas / produtoFicha.fichaTecnica.pesoFinalGramas,
+            carboidratos: fichaNutrition.carboidratos / produtoFicha.fichaTecnica.pesoFinalGramas,
+            gorduras: fichaNutrition.gorduras / produtoFicha.fichaTecnica.pesoFinalGramas,
+            fibras: fichaNutrition.fibras / produtoFicha.fichaTecnica.pesoFinalGramas,
+            sodio: fichaNutrition.sodio / produtoFicha.fichaTecnica.pesoFinalGramas
+          }
+          return {
+            calorias: produtoTotal.calorias + (nutritionPerGramaFicha.calorias * produtoFicha.quantidadeGramas),
+            proteinas: produtoTotal.proteinas + (nutritionPerGramaFicha.proteinas * produtoFicha.quantidadeGramas),
+            carboidratos: produtoTotal.carboidratos + (nutritionPerGramaFicha.carboidratos * produtoFicha.quantidadeGramas),
+            gorduras: produtoTotal.gorduras + (nutritionPerGramaFicha.gorduras * produtoFicha.quantidadeGramas),
+            fibras: produtoTotal.fibras + (nutritionPerGramaFicha.fibras * produtoFicha.quantidadeGramas),
+            sodio: produtoTotal.sodio + (nutritionPerGramaFicha.sodio * produtoFicha.quantidadeGramas)
+          }
+        }, { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0, sodio: 0 })
+        
+        const quantidade = typeof menuItem.quantidade === 'string' ? parseFloat(menuItem.quantidade) || 0 : menuItem.quantidade
+        return {
+          calorias: total.calorias + (produtoNutrition.calorias * quantidade),
+          proteinas: total.proteinas + (produtoNutrition.proteinas * quantidade),
+          carboidratos: total.carboidratos + (produtoNutrition.carboidratos * quantidade),
+          gorduras: total.gorduras + (produtoNutrition.gorduras * quantidade),
+          fibras: total.fibras + (produtoNutrition.fibras * quantidade),
+          sodio: total.sodio + (produtoNutrition.sodio * quantidade)
+        }
+      }
+      return total
+    }, { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0, fibras: 0, sodio: 0 })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -337,6 +395,9 @@ export default function CardapiosPage() {
                     Custo Total
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Informações Nutricionais
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Períodos
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -371,6 +432,25 @@ export default function CardapiosPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         R$ {custoTotal.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {(() => {
+                          const nutrition = calculateMenuNutritionalTotal(menu.itens)
+                          const hasNutritionalData = nutrition.calorias > 0 || nutrition.proteinas > 0
+                          
+                          if (!hasNutritionalData) {
+                            return <span className="text-gray-400 text-xs">Sem dados nutricionais</span>
+                          }
+                          
+                          return (
+                            <div className="space-y-1 text-xs">
+                              <div>Calorias: {formatNutritionalValue(nutrition.calorias, 'kcal')}</div>
+                              <div>Proteínas: {formatNutritionalValue(nutrition.proteinas, 'g')}</div>
+                              <div>Carboidratos: {formatNutritionalValue(nutrition.carboidratos, 'g')}</div>
+                              <div>Gorduras: {formatNutritionalValue(nutrition.gorduras, 'g')}</div>
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {menu.periodos.length} períodos

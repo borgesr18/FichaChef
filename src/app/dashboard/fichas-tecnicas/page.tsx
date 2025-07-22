@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { FileText, Plus, Search, Edit, Trash2, X, Calculator } from 'lucide-react'
 import { convertFormDataToNumbers } from '@/lib/form-utils'
+import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
 
 interface FichaTecnica {
   id: string
@@ -25,6 +26,12 @@ interface FichaTecnica {
       nome: string
       precoUnidade: number
       pesoLiquidoGramas: number
+      calorias?: number
+      proteinas?: number
+      carboidratos?: number
+      gorduras?: number
+      fibras?: number
+      sodio?: number
     }
   }[]
 }
@@ -39,6 +46,12 @@ interface Insumo {
   nome: string
   precoUnidade: number
   pesoLiquidoGramas: number
+  calorias?: number
+  proteinas?: number
+  carboidratos?: number
+  gorduras?: number
+  fibras?: number
+  sodio?: number
 }
 
 interface Ingrediente {
@@ -192,6 +205,26 @@ export default function FichasTecnicasPage() {
       }
       return total
     }, 0)
+  }
+
+  const calculateNutritionalTotal = () => {
+    return calculateTotalNutrition(ingredientes.map(ing => {
+      const insumo = insumos.find(i => i.id === ing.insumoId)
+      return {
+        quantidadeGramas: ing.quantidadeGramas || 0,
+        insumo: insumo || { 
+          id: '', 
+          nome: '', 
+          pesoLiquidoGramas: 1,
+          calorias: 0,
+          proteinas: 0,
+          carboidratos: 0,
+          gorduras: 0,
+          fibras: 0,
+          sodio: 0
+        }
+      }
+    }).filter(ing => ing.insumo.id))
   }
 
   const handleOpenScalingModal = (ficha: FichaTecnica) => {
@@ -606,6 +639,44 @@ export default function FichasTecnicasPage() {
                 <p className="text-sm font-medium text-gray-700">
                   Custo Total Estimado: R$ {calculateCustoTotal().toFixed(2)}
                 </p>
+                
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Informações Nutricionais:</p>
+                  {(() => {
+                    const totalNutrition = calculateNutritionalTotal()
+                    const hasNutritionalData = totalNutrition.calorias > 0 || totalNutrition.proteinas > 0
+                    
+                    if (!hasNutritionalData) {
+                      return <p className="text-xs text-gray-500">Adicione informações nutricionais aos insumos para ver os cálculos</p>
+                    }
+                    
+                    const nutritionPerPortion = calculateNutritionPerPortion(totalNutrition, parseInt(formData.numeroPorcoes) || 1)
+                    const nutritionPer100g = calculateNutritionPer100g(totalNutrition, parseFloat(formData.pesoFinalGramas) || 1)
+                    
+                    return (
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <p className="font-medium text-gray-600 mb-1">Por Porção:</p>
+                          <p>Calorias: {formatNutritionalValue(nutritionPerPortion.calorias, 'kcal')}</p>
+                          <p>Proteínas: {formatNutritionalValue(nutritionPerPortion.proteinas, 'g')}</p>
+                          <p>Carboidratos: {formatNutritionalValue(nutritionPerPortion.carboidratos, 'g')}</p>
+                          <p>Gorduras: {formatNutritionalValue(nutritionPerPortion.gorduras, 'g')}</p>
+                          <p>Fibras: {formatNutritionalValue(nutritionPerPortion.fibras, 'g')}</p>
+                          <p>Sódio: {formatNutritionalValue(nutritionPerPortion.sodio, 'mg')}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-600 mb-1">Por 100g:</p>
+                          <p>Calorias: {formatNutritionalValue(nutritionPer100g.calorias, 'kcal')}</p>
+                          <p>Proteínas: {formatNutritionalValue(nutritionPer100g.proteinas, 'g')}</p>
+                          <p>Carboidratos: {formatNutritionalValue(nutritionPer100g.carboidratos, 'g')}</p>
+                          <p>Gorduras: {formatNutritionalValue(nutritionPer100g.gorduras, 'g')}</p>
+                          <p>Fibras: {formatNutritionalValue(nutritionPer100g.fibras, 'g')}</p>
+                          <p>Sódio: {formatNutritionalValue(nutritionPer100g.sodio, 'mg')}</p>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
               </div>
             )}
           </div>

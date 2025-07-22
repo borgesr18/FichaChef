@@ -16,6 +16,12 @@ interface Insumo {
   unidadeCompraId: string
   pesoLiquidoGramas: number
   precoUnidade: number
+  calorias?: number
+  proteinas?: number
+  carboidratos?: number
+  gorduras?: number
+  fibras?: number
+  sodio?: number
   categoria: { nome: string }
   unidadeCompra: { nome: string; simbolo: string }
   fornecedorRel?: { nome: string }
@@ -57,7 +63,13 @@ export default function InsumosPage() {
     categoriaId: '',
     unidadeCompraId: '',
     pesoLiquidoGramas: '',
-    precoUnidade: ''
+    precoUnidade: '',
+    calorias: '',
+    proteinas: '',
+    carboidratos: '',
+    gorduras: '',
+    fibras: '',
+    sodio: ''
   })
 
   useEffect(() => {
@@ -126,7 +138,13 @@ export default function InsumosPage() {
         categoriaId: insumo.categoriaId,
         unidadeCompraId: insumo.unidadeCompraId,
         pesoLiquidoGramas: insumo.pesoLiquidoGramas.toString(),
-        precoUnidade: insumo.precoUnidade.toString()
+        precoUnidade: insumo.precoUnidade.toString(),
+        calorias: insumo.calorias?.toString() || '',
+        proteinas: insumo.proteinas?.toString() || '',
+        carboidratos: insumo.carboidratos?.toString() || '',
+        gorduras: insumo.gorduras?.toString() || '',
+        fibras: insumo.fibras?.toString() || '',
+        sodio: insumo.sodio?.toString() || ''
       })
     } else {
       setFormData({
@@ -137,7 +155,13 @@ export default function InsumosPage() {
         categoriaId: '',
         unidadeCompraId: '',
         pesoLiquidoGramas: '',
-        precoUnidade: ''
+        precoUnidade: '',
+        calorias: '',
+        proteinas: '',
+        carboidratos: '',
+        gorduras: '',
+        fibras: '',
+        sodio: ''
       })
     }
     setIsModalOpen(true)
@@ -159,7 +183,16 @@ export default function InsumosPage() {
       const url = editingInsumo ? `/api/insumos/${editingInsumo.id}` : '/api/insumos'
       const method = editingInsumo ? 'PUT' : 'POST'
 
-      const convertedData = convertFormDataToNumbers(formData, ['pesoLiquidoGramas', 'precoUnidade'])
+      const convertedData = convertFormDataToNumbers(formData, [
+        'pesoLiquidoGramas', 
+        'precoUnidade',
+        'calorias',
+        'proteinas', 
+        'carboidratos',
+        'gorduras',
+        'fibras',
+        'sodio'
+      ])
 
       const response = await fetch(url, {
         method,
@@ -436,6 +469,97 @@ export default function InsumosPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 required
               />
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Informações Nutricionais (por 100g) - Opcional
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Calorias (kcal)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.calorias}
+                  onChange={(e) => setFormData({ ...formData, calorias: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 250"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Proteínas (g)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.proteinas}
+                  onChange={(e) => setFormData({ ...formData, proteinas: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 15.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Carboidratos (g)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.carboidratos}
+                  onChange={(e) => setFormData({ ...formData, carboidratos: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 30.2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Gorduras (g)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.gorduras}
+                  onChange={(e) => setFormData({ ...formData, gorduras: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 8.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fibras (g)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.fibras}
+                  onChange={(e) => setFormData({ ...formData, fibras: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 2.1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sódio (mg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.sodio}
+                  onChange={(e) => setFormData({ ...formData, sodio: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ex: 150"
+                />
+              </div>
             </div>
           </div>
 
