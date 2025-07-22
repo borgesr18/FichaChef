@@ -79,7 +79,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
     <header className="fixed top-0 left-64 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
             {currentDateTime.toLocaleDateString('pt-BR', {
               weekday: 'long',
               year: 'numeric',
