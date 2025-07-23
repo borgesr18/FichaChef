@@ -32,30 +32,42 @@ export async function GET(request: NextRequest) {
 
     let reportData = {}
 
-    switch (reportType) {
-      case 'custos':
-        reportData = await generateCostReport(user.id)
-        break
-      case 'producao':
-        reportData = await generateProductionReport(user.id)
-        break
-      case 'estoque':
-        reportData = await generateInventoryReport(user.id)
-        break
-      case 'fichas':
-        reportData = await generateRecipeReport(user.id)
-        break
-      case 'rentabilidade':
-        reportData = await generateProfitabilityReport(user.id)
-        break
-      case 'abc-insumos':
-        reportData = await generateAbcInsumosReport(user.id)
-        break
-      case 'desperdicio':
-        reportData = await generateWasteReport(user.id)
-        break
-      default:
-        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+    try {
+      switch (reportType) {
+        case 'custos':
+          reportData = await generateCostReport(user.id)
+          break
+        case 'producao':
+          reportData = await generateProductionReport(user.id)
+          break
+        case 'estoque':
+          reportData = await generateInventoryReport(user.id)
+          break
+        case 'fichas':
+          reportData = await generateRecipeReport(user.id)
+          break
+        case 'rentabilidade':
+          reportData = await generateProfitabilityReport(user.id)
+          break
+        case 'abc-insumos':
+          reportData = await generateAbcInsumosReport(user.id)
+          break
+        case 'desperdicio':
+          reportData = await generateWasteReport(user.id)
+          break
+        default:
+          return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
+      }
+    } catch (reportError) {
+      console.error(`Error generating ${reportType} report:`, reportError)
+      
+      reportData = {
+        type: reportType,
+        data: {},
+        summary: {
+          message: 'Nenhum dado disponível para este relatório no momento'
+        }
+      }
     }
 
     await logUserAction(
@@ -71,7 +83,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(reportData)
   } catch (error) {
     console.error('Error generating report:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      type: 'error',
+      data: {},
+      summary: {
+        message: 'Erro ao gerar relatório. Tente novamente.'
+      }
+    }, { status: 500 })
   }
 }
 

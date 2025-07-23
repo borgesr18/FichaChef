@@ -47,8 +47,16 @@ export default function ProfileDashboard() {
     fetchDashboardStats()
   }, [])
 
-  const handleRefresh = () => {
-    window.location.reload()
+  const handleRefresh = async () => {
+    try {
+      const response = await fetch('/api/dashboard-stats')
+      if (response.ok) {
+        const stats = await response.json()
+        setDashboardStats(stats)
+      }
+    } catch (error) {
+      console.error('Error refreshing dashboard stats:', error)
+    }
   }
 
   const getDashboardContent = () => {
