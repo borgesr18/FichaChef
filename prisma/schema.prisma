@@ -72,6 +72,8 @@ model Insumo {
   gorduras             Float?                @map("gorduras_por_100g")
   fibras               Float?                @map("fibras_por_100g")
   sodio                Float?                @map("sodio_por_100g")
+  codigoTaco           Int?                  @map("codigo_taco")
+  fonteDados           String                @default("manual") @map("fonte_dados")
   userId               String                @map("user_id")
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
@@ -81,6 +83,7 @@ model Insumo {
   fornecedorRel        Fornecedor?           @relation(fields: [fornecedorId], references: [id])
   movimentacoesEstoque MovimentacaoEstoque[]
   fornecedorPrecos     FornecedorPreco[]
+  tacoAlimento         TacoAlimento?         @relation(fields: [codigoTaco], references: [id])
 
   @@map("insumos")
 }
@@ -357,6 +360,41 @@ model RelatorioAgendamento {
   execucoes       RelatorioExecucao[]
 
   @@map("relatorio_agendamentos")
+}
+
+model TacoAlimento {
+  id                    Int      @id
+  description           String
+  category              String
+  humidityPercents      Float?   @map("humidity_percents")
+  energyKcal            Float?   @map("energy_kcal")
+  energyKj              Float?   @map("energy_kj")
+  proteinG              Float?   @map("protein_g")
+  lipidG                Float?   @map("lipid_g")
+  cholesterolMg         Float?   @map("cholesterol_mg")
+  carbohydrateG         Float?   @map("carbohydrate_g")
+  fiberG                Float?   @map("fiber_g")
+  ashesG                Float?   @map("ashes_g")
+  calciumMg             Float?   @map("calcium_mg")
+  magnesiumMg           Float?   @map("magnesium_mg")
+  manganeseMg           Float?   @map("manganese_mg")
+  phosphorusMg          Float?   @map("phosphorus_mg")
+  ironMg                Float?   @map("iron_mg")
+  sodiumMg              Float?   @map("sodium_mg")
+  potassiumMg           Float?   @map("potassium_mg")
+  copperMg              Float?   @map("copper_mg")
+  zincMg                Float?   @map("zinc_mg")
+  retinolMcg            Float?   @map("retinol_mcg")
+  thiamineMg            Float?   @map("thiamine_mg")
+  riboflavinMg          Float?   @map("riboflavin_mg")
+  pyridoxineMg          Float?   @map("pyridoxine_mg")
+  niacinMg              Float?   @map("niacin_mg")
+  vitaminCMg            Float?   @map("vitaminC_mg")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  insumos               Insumo[]
+
+  @@map("taco_alimentos")
 }
 
 model RelatorioExecucao {

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
+import TacoSearchModal from '@/components/ui/TacoSearchModal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
@@ -26,6 +27,8 @@ interface Insumo {
   gorduras?: number
   fibras?: number
   sodio?: number
+  codigoTaco?: number
+  fonteDados?: string
   categoria: { nome: string }
   unidadeCompra: { nome: string; simbolo: string }
   fornecedorRel?: { nome: string }
@@ -59,6 +62,7 @@ export default function InsumosPage() {
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isTacoModalOpen, setIsTacoModalOpen] = useState(false)
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -74,7 +78,9 @@ export default function InsumosPage() {
     carboidratos: '',
     gorduras: '',
     fibras: '',
-    sodio: ''
+    sodio: '',
+    codigoTaco: '',
+    fonteDados: 'manual'
   })
 
   useEffect(() => {
@@ -149,7 +155,9 @@ export default function InsumosPage() {
         carboidratos: insumo.carboidratos?.toString() || '',
         gorduras: insumo.gorduras?.toString() || '',
         fibras: insumo.fibras?.toString() || '',
-        sodio: insumo.sodio?.toString() || ''
+        sodio: insumo.sodio?.toString() || '',
+        codigoTaco: insumo.codigoTaco?.toString() || '',
+        fonteDados: insumo.fonteDados || 'manual'
       })
     } else {
       setFormData({
@@ -166,7 +174,9 @@ export default function InsumosPage() {
         carboidratos: '',
         gorduras: '',
         fibras: '',
-        sodio: ''
+        sodio: '',
+        codigoTaco: '',
+        fonteDados: 'manual'
       })
     }
     setIsModalOpen(true)
@@ -235,6 +245,20 @@ export default function InsumosPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleTacoSelect = (alimento: { id: number; energyKcal?: number; proteinG?: number; carbohydrateG?: number; lipidG?: number; fiberG?: number; sodiumMg?: number }) => {
+    setFormData(prev => ({
+      ...prev,
+      calorias: alimento.energyKcal?.toString() || '',
+      proteinas: alimento.proteinG?.toString() || '',
+      carboidratos: alimento.carbohydrateG?.toString() || '',
+      gorduras: alimento.lipidG?.toString() || '',
+      fibras: alimento.fiberG?.toString() || '',
+      sodio: alimento.sodiumMg?.toString() || '',
+      codigoTaco: alimento.id.toString(),
+      fonteDados: 'taco'
+    }))
   }
 
   const handleDelete = async (id: string) => {
@@ -415,10 +439,20 @@ export default function InsumosPage() {
           </div>
 
           <div className="mt-8 pt-8 border-t border-slate-200/60">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
-              <h3 className="text-lg font-bold text-slate-800">Informações Nutricionais (por 100g)</h3>
-              <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Opcional</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
+                <h3 className="text-lg font-bold text-slate-800">Informações Nutricionais (por 100g)</h3>
+                <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Opcional</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTacoModalOpen(true)}
+                className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 flex items-center space-x-2"
+              >
+                <Search className="h-4 w-4" />
+                <span>Buscar TACO</span>
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -497,6 +531,12 @@ export default function InsumosPage() {
           </div>
         </form>
       </Modal>
+
+      <TacoSearchModal
+        isOpen={isTacoModalOpen}
+        onClose={() => setIsTacoModalOpen(false)}
+        onSelect={handleTacoSelect}
+      />
     </DashboardLayout>
   )
 }

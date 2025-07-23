@@ -16,6 +16,8 @@ export const insumoSchema = z.object({
   gorduras: z.number().min(0, 'Gorduras devem ser positivas').optional(),
   fibras: z.number().min(0, 'Fibras devem ser positivas').optional(),
   sodio: z.number().min(0, 'Sódio deve ser positivo').optional(),
+  codigoTaco: z.number().int().positive().optional(),
+  fonteDados: z.enum(['taco', 'manual']).default('manual'),
 })
 
 export type InsumoInput = z.infer<typeof insumoSchema>
