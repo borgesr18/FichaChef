@@ -203,28 +203,30 @@ export default function AlertasPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center">
             <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
               <Bell className="h-6 w-6 text-orange-600" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configuração de Alertas</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configuração de Alertas</h1>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button 
               onClick={processarAlertas}
               disabled={loading}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-green-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group disabled:opacity-50"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl hover:from-green-600 hover:to-green-700 flex items-center justify-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group disabled:opacity-50"
             >
-              <Settings className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-              Processar Alertas
+              <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+              <span className="hidden sm:inline">Processar Alertas</span>
+              <span className="sm:hidden">Processar</span>
             </button>
             <button 
               onClick={handleOpenModal}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center justify-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
             >
-              <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-              Nova Configuração
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+              <span className="hidden sm:inline">Nova Configuração</span>
+              <span className="sm:hidden">Nova</span>
             </button>
           </div>
         </div>

@@ -117,3 +117,20 @@ body {
 .animate-shrink {
   animation: shrink linear forwards;
 }
+
+/* Mobile header spacing */
+@media (max-width: 640px) {
+  .mobile-header-spacing {
+    margin-left: 3rem; /* Space for hamburger button */
+  }
+  
+  .mobile-button-text {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .mobile-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}

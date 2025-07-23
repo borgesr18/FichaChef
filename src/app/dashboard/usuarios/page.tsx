@@ -198,27 +198,29 @@ export default function UsuariosPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center">
             <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
               <Users className="h-6 w-6 text-orange-600" />
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Gerenciamento de Usuários</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Gerenciamento de Usuários</h1>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-slate-300 text-sm font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02] transform"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 border border-slate-300 text-sm font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all duration-200 hover:scale-[1.02] transform"
             >
               <Mail className="h-4 w-4 mr-2" />
-              Convidar Usuário
+              <span className="hidden sm:inline">Convidar Usuário</span>
+              <span className="sm:hidden">Convidar</span>
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200 hover:scale-[1.02] transform"
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all duration-200 hover:scale-[1.02] transform"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Criar Usuário
+              <span className="hidden sm:inline">Criar Usuário</span>
+              <span className="sm:hidden">Criar</span>
             </button>
           </div>
         </div>
