@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { ChevronUp, ChevronDown, Search, Filter } from 'lucide-react'
+import { BatchOperation } from '@/lib/batch-operations'
 
 interface Column {
   key: string
@@ -22,6 +23,9 @@ interface ModernTableProps {
   className?: string
   onRowClick?: (row: Record<string, unknown>) => void
   loading?: boolean
+  selectable?: boolean
+  batchOperations?: BatchOperation[]
+  onBatchOperation?: (operation: BatchOperation, selectedIds: string[]) => void
 }
 
 export default function ModernTable({
@@ -33,7 +37,7 @@ export default function ModernTable({
   pageSize = 10,
   className = '',
   onRowClick,
-  loading = false
+  loading = false,
 }: ModernTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortColumn, setSortColumn] = useState<string | null>(null)
