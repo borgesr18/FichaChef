@@ -152,10 +152,47 @@ export default function RelatoriosPage() {
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Dados Detalhados</h3>
-          <div className="text-sm text-gray-600">
-            <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded overflow-auto max-h-96">
-              {JSON.stringify(reportData.data, null, 2)}
-            </pre>
+          <div className="space-y-4">
+            {reportData.data && typeof reportData.data === 'object' && Object.keys(reportData.data).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(reportData.data).map(([key, value]) => (
+                  <div key={key} className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2 capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </h4>
+                    <div className="text-sm text-gray-600">
+                      {Array.isArray(value) ? (
+                        value.length > 0 ? (
+                          <ul className="space-y-1">
+                            {value.slice(0, 5).map((item, index) => (
+                              <li key={index} className="flex justify-between">
+                                <span>{typeof item === 'object' ? item.nome || item.id : item}</span>
+                                {typeof item === 'object' && item.valor && (
+                                  <span className="font-medium">{formatCurrency(item.valor)}</span>
+                                )}
+                              </li>
+                            ))}
+                            {value.length > 5 && (
+                              <li className="text-gray-500 italic">... e mais {value.length - 5} itens</li>
+                            )}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500 italic">Nenhum dado disponível</p>
+                        )
+                      ) : typeof value === 'number' ? (
+                        <p className="text-lg font-semibold">{formatCurrency(value)}</p>
+                      ) : (
+                        <p>{String(value)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Nenhum dado detalhado disponível para este relatório</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

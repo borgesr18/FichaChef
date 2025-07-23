@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useProfileInterface } from '@/hooks/useProfileInterface'
+import { formatCurrency } from '@/lib/utils'
 import MobileOptimizedCard from './MobileOptimizedCard'
 import MobileOptimizedButton from './MobileOptimizedButton'
 import { 
@@ -20,6 +21,43 @@ import {
 
 export default function ProfileDashboard() {
   const { config, userRole, getColorClasses } = useProfileInterface()
+  const [dashboardStats, setDashboardStats] = useState({
+    totalUsers: 0,
+    performanceChange: 0,
+    revenue: 0,
+    stockItems: 0,
+    profitMargin: 0,
+    activeAlerts: 0,
+    favoriteRecipes: 0,
+    avgPrepTime: 0
+  })
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard-stats')
+        if (response.ok) {
+          const stats = await response.json()
+          setDashboardStats(stats)
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      }
+    }
+    fetchDashboardStats()
+  }, [])
+
+  const handleRefresh = async () => {
+    try {
+      const response = await fetch('/api/dashboard-stats')
+      if (response.ok) {
+        const stats = await response.json()
+        setDashboardStats(stats)
+      }
+    } catch (error) {
+      console.error('Error refreshing dashboard stats:', error)
+    }
+  }
 
   const getDashboardContent = () => {
     switch (config?.dashboardLayout) {
@@ -35,7 +73,9 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Visão Executiva</h3>
                   <p className="text-sm text-gray-600">KPIs e métricas principais</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-orange-600">R$ 12.5k</span>
+                    <span className="text-2xl font-bold text-orange-600">
+                      {formatCurrency(dashboardStats.revenue)}
+                    </span>
                     <span className="text-sm text-gray-500 ml-2">este mês</span>
                   </div>
                 </div>
@@ -51,7 +91,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Equipe</h3>
                   <p className="text-sm text-gray-600">Gestão de usuários</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-blue-600">8</span>
+                    <span className="text-2xl font-bold text-blue-600">{dashboardStats.totalUsers}</span>
                     <span className="text-sm text-gray-500 ml-2">usuários ativos</span>
                   </div>
                 </div>
@@ -67,7 +107,9 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Performance</h3>
                   <p className="text-sm text-gray-600">Análise de resultados</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-green-600">+15%</span>
+                    <span className="text-2xl font-bold text-green-600">
+                      {dashboardStats.performanceChange > 0 ? '+' : ''}{dashboardStats.performanceChange}%
+                    </span>
                     <span className="text-sm text-gray-500 ml-2">vs mês anterior</span>
                   </div>
                 </div>
@@ -105,7 +147,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Estoque</h3>
                   <p className="text-sm text-gray-600">Controle de inventário</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-amber-600">156</span>
+                    <span className="text-2xl font-bold text-amber-600">{dashboardStats.stockItems}</span>
                     <span className="text-sm text-gray-500 ml-2">itens em estoque</span>
                   </div>
                 </div>
@@ -121,7 +163,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Margem de Lucro</h3>
                   <p className="text-sm text-gray-600">Análise de rentabilidade</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-purple-600">32%</span>
+                    <span className="text-2xl font-bold text-purple-600">{dashboardStats.profitMargin}%</span>
                     <span className="text-sm text-gray-500 ml-2">margem média</span>
                   </div>
                 </div>
@@ -137,7 +179,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Alertas</h3>
                   <p className="text-sm text-gray-600">Itens que precisam de atenção</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-red-600">3</span>
+                    <span className="text-2xl font-bold text-red-600">{dashboardStats.activeAlerts}</span>
                     <span className="text-sm text-gray-500 ml-2">alertas ativos</span>
                   </div>
                 </div>
@@ -192,7 +234,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-medium text-sm text-gray-900">Receitas Favoritas</h3>
                   <p className="text-xs text-gray-600">Acesso rápido</p>
                   <div className="mt-1">
-                    <span className="text-lg font-bold text-blue-600">12</span>
+                    <span className="text-lg font-bold text-blue-600">{dashboardStats.favoriteRecipes}</span>
                     <span className="text-xs text-gray-500 ml-1">favoritas</span>
                   </div>
                 </div>
@@ -208,7 +250,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-medium text-sm text-gray-900">Tempo de Preparo</h3>
                   <p className="text-xs text-gray-600">Média hoje</p>
                   <div className="mt-1">
-                    <span className="text-lg font-bold text-purple-600">25min</span>
+                    <span className="text-lg font-bold text-purple-600">{dashboardStats.avgPrepTime}min</span>
                     <span className="text-xs text-gray-500 ml-1">por prato</span>
                   </div>
                 </div>
@@ -246,7 +288,12 @@ export default function ProfileDashboard() {
           </p>
         </div>
         <div className="flex gap-2 mobile-full-width mobile-stack">
-          <MobileOptimizedButton size="sm" variant="outline" className="mobile-full-width">
+          <MobileOptimizedButton 
+            size="sm" 
+            variant="outline" 
+            className="mobile-full-width"
+            onClick={handleRefresh}
+          >
             Atualizar
           </MobileOptimizedButton>
         </div>

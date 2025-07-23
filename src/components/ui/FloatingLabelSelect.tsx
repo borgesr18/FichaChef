@@ -87,8 +87,8 @@ export default function FloatingLabelSelect({
           className={`
             absolute left-4 transition-all duration-300 ease-out cursor-pointer pointer-events-none
             ${isFloating
-              ? 'top-2 text-xs font-semibold'
-              : 'top-1/2 -translate-y-1/2 text-base'
+              ? 'top-2 text-xs font-semibold bg-white px-2 rounded z-50'
+              : 'top-1/2 -translate-y-1/2 text-base z-30'
             }
             ${error
               ? 'text-red-500'
