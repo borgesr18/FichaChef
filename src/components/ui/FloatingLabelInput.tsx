@@ -97,6 +97,7 @@ export default function FloatingLabelInput({
                 ? 'text-blue-600'
                 : 'text-slate-500'
             }
+            ${type === 'date' || type === 'datetime-local' ? 'z-10' : ''}
           `}
           onClick={() => inputRef.current?.focus()}
         >
