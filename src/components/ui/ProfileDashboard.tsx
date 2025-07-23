@@ -139,7 +139,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Estoque</h3>
                   <p className="text-sm text-gray-600">Controle de inventário</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-amber-600">156</span>
+                    <span className="text-2xl font-bold text-amber-600">{dashboardStats.stockItems}</span>
                     <span className="text-sm text-gray-500 ml-2">itens em estoque</span>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Margem de Lucro</h3>
                   <p className="text-sm text-gray-600">Análise de rentabilidade</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-purple-600">32%</span>
+                    <span className="text-2xl font-bold text-purple-600">{dashboardStats.profitMargin}%</span>
                     <span className="text-sm text-gray-500 ml-2">margem média</span>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-semibold text-gray-900">Alertas</h3>
                   <p className="text-sm text-gray-600">Itens que precisam de atenção</p>
                   <div className="mt-2">
-                    <span className="text-2xl font-bold text-red-600">3</span>
+                    <span className="text-2xl font-bold text-red-600">{dashboardStats.activeAlerts}</span>
                     <span className="text-sm text-gray-500 ml-2">alertas ativos</span>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-medium text-sm text-gray-900">Receitas Favoritas</h3>
                   <p className="text-xs text-gray-600">Acesso rápido</p>
                   <div className="mt-1">
-                    <span className="text-lg font-bold text-blue-600">12</span>
+                    <span className="text-lg font-bold text-blue-600">{dashboardStats.favoriteRecipes}</span>
                     <span className="text-xs text-gray-500 ml-1">favoritas</span>
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function ProfileDashboard() {
                   <h3 className="font-medium text-sm text-gray-900">Tempo de Preparo</h3>
                   <p className="text-xs text-gray-600">Média hoje</p>
                   <div className="mt-1">
-                    <span className="text-lg font-bold text-purple-600">25min</span>
+                    <span className="text-lg font-bold text-purple-600">{dashboardStats.avgPrepTime}min</span>
                     <span className="text-xs text-gray-500 ml-1">por prato</span>
                   </div>
                 </div>
