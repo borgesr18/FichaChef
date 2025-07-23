@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ModernChart from '@/components/ui/ModernChart'
+import ProfileDashboard from '@/components/ui/ProfileDashboard'
 import NotificationSystem, { useNotifications } from '@/components/ui/NotificationSystem'
 import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
 import { withRequestDeduplication } from '@/lib/request-cache'
@@ -114,9 +115,11 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 mobile-p-2">
+        <ProfileDashboard />
+        
         <div className="mb-8">
-          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Dashboard</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mobile-text-sm">Dashboard</h1>
           <p className="text-slate-600 mt-2 text-lg font-medium">Visão geral do sistema FichaChef</p>
         </div>
 
@@ -130,7 +133,7 @@ export default function DashboardPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mobile-grid-1 mobile-gap-2">
           <div className="group bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
             <div className="flex items-center">
               <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
@@ -181,7 +184,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mobile-grid-1 mobile-gap-2">
           {/* Quick Actions */}
           <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-slate-200/60">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center">
@@ -259,7 +262,7 @@ export default function DashboardPage() {
 
         {/* Modern Charts Section */}
         {(stats.insumos > 0 || stats.fichasTecnicas > 0 || stats.producoes > 0 || stats.produtos > 0) ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mobile-grid-1 mobile-gap-2">
             <ModernChart
               title="Estatísticas do Sistema"
               type="bar"

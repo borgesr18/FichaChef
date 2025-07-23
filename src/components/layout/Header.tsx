@@ -76,10 +76,10 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   const notificacaoNaoLidas = notificacoes.filter(n => !n.lida)
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300">
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4">
-          <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+          <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent hidden md:block">
             {currentDateTime.toLocaleDateString('pt-BR', {
               weekday: 'long',
               year: 'numeric',
@@ -90,6 +90,9 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
               minute: '2-digit',
               second: '2-digit'
             })}
+          </h1>
+          <h1 className="text-sm font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent md:hidden">
+            FichaChef
           </h1>
           
           {onGlobalSearch && (
@@ -104,11 +107,11 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
           )}
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
           {onGlobalSearch && (
             <button
               onClick={onGlobalSearch}
-              className="lg:hidden p-2 text-slate-600 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/30 hover:scale-110 backdrop-blur-sm"
+              className="lg:hidden p-2 text-slate-600 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/30 hover:scale-110 backdrop-blur-sm touch-target"
               title="Busca Global"
             >
               <Search className="h-5 w-5 transition-transform duration-200" />
@@ -118,7 +121,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
           {onToggleWorkflow && (
             <button
               onClick={onToggleWorkflow}
-              className="p-2 text-slate-600 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/30 hover:text-orange-500 hover:scale-110 backdrop-blur-sm"
+              className="p-2 text-slate-600 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/30 hover:text-orange-500 hover:scale-110 backdrop-blur-sm touch-target"
               title="Favoritos e Recentes"
             >
               <Star className="h-5 w-5 transition-all duration-200 hover:rotate-12" />
@@ -130,7 +133,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2 text-slate-600 hover:text-slate-800 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/30 hover:scale-110 backdrop-blur-sm"
+                  className="relative p-2 text-slate-600 hover:text-slate-800 hover:bg-white/80 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/30 hover:scale-110 backdrop-blur-sm touch-target"
                 >
                   <Bell className={`h-5 w-5 transition-all duration-200 ${showNotifications ? 'rotate-12 text-orange-500' : ''}`} />
                   {notificacaoNaoLidas.length > 0 && (
@@ -205,13 +208,13 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
                 <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-slate-700">{user.email}</span>
+                <span className="text-sm font-medium text-slate-700 hidden md:inline">{user.email}</span>
               </div>
             </>
           )}
           <button
             onClick={handleLogout}
-            className="group flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 hover:text-red-600 hover:bg-red-50/80 rounded-xl transition-all duration-300 border border-slate-200/60 hover:border-red-200/80 hover:shadow-lg hover:shadow-red-200/30 hover:scale-[1.02] backdrop-blur-sm"
+            className="group flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 hover:text-red-600 hover:bg-red-50/80 rounded-xl transition-all duration-300 border border-slate-200/60 hover:border-red-200/80 hover:shadow-lg hover:shadow-red-200/30 hover:scale-[1.02] backdrop-blur-sm touch-target"
           >
             <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:rotate-12" />
             <span className="font-medium">Sair</span>

@@ -26,11 +26,25 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FichaChef"
+  },
   openGraph: {
     title: "FichaChef - Sistema de Gestão Gastronômica",
     description: "Sistema completo para gestão de fichas técnicas, controle de estoque e cálculo de custos para cozinhas profissionais",
     type: "website",
     locale: "pt_BR",
+    images: [
+      {
+        url: "/icons/icon.svg",
+        width: 512,
+        height: 512,
+        alt: "FichaChef Logo"
+      }
+    ]
   },
   robots: {
     index: false,
@@ -41,7 +55,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ea580c' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' }
+  ],
+  colorScheme: 'light dark',
+  viewportFit: 'cover'
 };
 
 export default function RootLayout({
@@ -51,6 +72,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="FichaChef" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#ea580c" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+        <link rel="mask-icon" href="/icons/icon.svg" color="#ea580c" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
