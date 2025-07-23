@@ -85,10 +85,10 @@ export default function FloatingLabelSelect({
         
         <label
           className={`
-            absolute left-4 transition-all duration-300 ease-out cursor-pointer pointer-events-none z-30
+            absolute left-4 transition-all duration-300 ease-out cursor-pointer pointer-events-none
             ${isFloating
-              ? 'top-2 text-xs font-semibold bg-white/90 px-2 rounded shadow-sm'
-              : 'top-1/2 -translate-y-1/2 text-base'
+              ? 'top-2 text-xs font-semibold bg-white px-2 rounded z-50'
+              : 'top-1/2 -translate-y-1/2 text-base z-30'
             }
             ${error
               ? 'text-red-500'
