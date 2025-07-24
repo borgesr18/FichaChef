@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
@@ -231,13 +231,15 @@ export default function EstoquePage() {
            mov.motivo.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
+  const today = useMemo(() => new Date().toDateString(), [])
+
   const entradasHoje = currentMovimentacoes.filter(mov => 
     mov.tipo === 'entrada' && 
-    new Date(mov.createdAt).toDateString() === new Date().toDateString()
+    new Date(mov.createdAt).toDateString() === today
   ).length
   const saidasHoje = currentMovimentacoes.filter(mov => 
     mov.tipo === 'saida' && 
-    new Date(mov.createdAt).toDateString() === new Date().toDateString()
+    new Date(mov.createdAt).toDateString() === today
   ).length
 
   return (

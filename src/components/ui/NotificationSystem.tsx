@@ -169,11 +169,13 @@ export default function NotificationSystem({
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [idCounter, setIdCounter] = useState(0)
 
   const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9)
+    const id = `notification-${Date.now()}-${idCounter}`
+    setIdCounter(prev => prev + 1)
     setNotifications(prev => [...prev, { ...notification, id }])
-  }, [])
+  }, [idCounter])
 
   const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id))
