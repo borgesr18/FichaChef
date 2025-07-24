@@ -37,7 +37,7 @@ export default function FloatingLabelInput({
   const inputRef = useRef<HTMLInputElement>(null)
   
   const hasValue = value && value.length > 0
-  const isFloating = isFocused || hasValue
+  const isFloating = isFocused || hasValue || type === 'date' || type === 'datetime-local'
   
   const handleFocus = () => {
     setIsFocused(true)
