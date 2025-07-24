@@ -37,16 +37,35 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       setIsInstalled(isStandalone || isIOSStandalone)
     }
 
+    const checkDismissedStatus = () => {
+      const dismissed = localStorage.getItem('pwa-install-dismissed')
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed)
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000)
+        return dismissedTime > sevenDaysAgo
+      }
+      return false
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('PWA: beforeinstallprompt event fired')
       e.preventDefault()
-      setInstallPrompt(e as BeforeInstallPromptEvent)
+      const promptEvent = e as BeforeInstallPromptEvent
+      setInstallPrompt(promptEvent)
       setIsInstallable(true)
+      console.log('PWA: Install prompt stored, isInstallable set to true')
       
-      setTimeout(() => {
-        if (!isInstalled) {
-          setShowInstallPrompt(true)
-        }
-      }, 30000)
+      if (!isInstalled && !checkDismissedStatus()) {
+        console.log('PWA: Scheduling install prompt to show in 10 seconds')
+        setTimeout(() => {
+          if (!isInstalled) {
+            console.log('PWA: Showing install prompt')
+            setShowInstallPrompt(true)
+          }
+        }, 10000)
+      } else {
+        console.log('PWA: Not showing prompt - installed:', isInstalled, 'dismissed:', checkDismissedStatus())
+      }
     }
 
     const handleAppInstalled = () => {
@@ -54,6 +73,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       setIsInstallable(false)
       setShowInstallPrompt(false)
       setInstallPrompt(null)
+      localStorage.removeItem('pwa-install-dismissed')
     }
 
     const handleOnline = () => setIsOnline(true)
@@ -76,11 +96,16 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   }, [isInstalled])
 
   const installApp = async () => {
-    if (!installPrompt) return
+    if (!installPrompt) {
+      console.error('No install prompt available')
+      return
+    }
 
     try {
+      console.log('Attempting to show install prompt')
       await installPrompt.prompt()
       const choiceResult = await installPrompt.userChoice
+      console.log('User choice:', choiceResult.outcome)
       if (choiceResult.outcome === 'accepted') {
         setIsInstalled(true)
         setIsInstallable(false)
