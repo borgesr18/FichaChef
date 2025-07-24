@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { generatePDF, generateExcel } from '@/lib/export-utils'
+import { withErrorHandler } from '@/lib/api-helpers'
 
 interface ProcessingResult {
   agendamentoId: string
@@ -10,9 +11,8 @@ interface ProcessingResult {
   erro?: string
 }
 
-export async function POST() {
-  try {
-    const now = new Date()
+export const POST = withErrorHandler(async function POST() {
+  const now = new Date()
     
     const agendamentosVencidos = await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
@@ -34,11 +34,17 @@ export async function POST() {
 
     for (const agendamento of agendamentosVencidos) {
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000)
+
         const reportResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/relatorios?type=${agendamento.tipo}`, {
           headers: {
             'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`
-          }
+          },
+          signal: controller.signal
         })
+
+        clearTimeout(timeoutId)
 
         if (!reportResponse.ok) {
           throw new Error('Failed to generate report data')
@@ -122,16 +128,11 @@ export async function POST() {
       }
     }
 
-    return NextResponse.json({
-      processados: results.length,
-      resultados: results
-    })
-
-  } catch (error) {
-    console.error('Error processing scheduled reports:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    processados: results.length,
+    resultados: results
+  })
+})
 
 function calculateNextExecution(agendamento: { horario: string; frequencia: string }): Date {
   const [hours, minutes] = agendamento.horario.split(':').map(Number)

@@ -76,12 +76,22 @@ function calculateNextExecution(data: { horario: string; frequencia: string; dia
   }
   
   if (data.frequencia === 'semanal' && data.diasSemana) {
-    const diasArray = JSON.parse(data.diasSemana)
+    let diasArray: number[]
+    try {
+      diasArray = JSON.parse(data.diasSemana)
+      if (!Array.isArray(diasArray)) {
+        throw new Error('diasSemana deve ser um array')
+      }
+    } catch (error) {
+      console.error('Erro ao fazer parse de diasSemana:', error)
+      throw new Error('Formato inválido para diasSemana')
+    }
+    
     const currentDay = nextExecution.getDay()
     let nextDay = diasArray.find((day: number) => day > currentDay)
     
     if (!nextDay) {
-      nextDay = diasArray[0]
+      nextDay = diasArray[0] || 0
       nextExecution.setDate(nextExecution.getDate() + (7 - currentDay + nextDay))
     } else {
       nextExecution.setDate(nextExecution.getDate() + (nextDay - currentDay))
