@@ -34,8 +34,7 @@ export default function FloatingLabelSelect({
   const [isFocused, setIsFocused] = useState(false)
   const selectRef = useRef<HTMLSelectElement>(null)
   
-  const hasValue = value && value.length > 0
-  const isFloating = isFocused || hasValue
+  const isFloating = true
   
   const handleFocus = () => {
     setIsFocused(true)
