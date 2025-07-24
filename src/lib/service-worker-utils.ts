@@ -97,7 +97,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
 
       return this.registration
     } catch (error) {
-      logger.error('Service Worker registration failed', error)
+      logger.error('Service Worker registration failed', error as Error)
       return null
     }
   }
@@ -119,7 +119,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
       }
       return result
     } catch (error) {
-      logger.error('Service Worker unregistration failed', error)
+      logger.error('Service Worker unregistration failed', error as Error)
       return false
     }
   }
@@ -137,7 +137,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
       await this.registration.update()
       logger.info('Service Worker update check completed')
     } catch (error) {
-      logger.error('Service Worker update failed', error)
+      logger.error('Service Worker update failed', error as Error)
     }
   }
 
@@ -153,7 +153,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
     try {
       cacheStatus = await this.getCacheStatus() || undefined
     } catch (error) {
-      logger.warn('Failed to get cache status', error)
+      logger.warn('Failed to get cache status', error as Record<string, unknown>)
     }
 
     return {
@@ -178,7 +178,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
       this.registration.active.postMessage({ type: 'CLEAR_CACHE' })
       logger.info('Cache clear request sent to Service Worker')
     } catch (error) {
-      logger.error('Failed to clear Service Worker cache', error)
+      logger.error('Failed to clear Service Worker cache', error as Error)
     }
   }
 
@@ -234,7 +234,7 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
       this.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
       logger.info('Skip waiting message sent to Service Worker')
     } catch (error) {
-      logger.error('Failed to send skip waiting message', error)
+      logger.error('Failed to send skip waiting message', error as Error)
     }
   }
 }
@@ -365,11 +365,11 @@ export function useOnlineStatus() {
  * Utilitário para instalar PWA
  */
 export function usePWAInstall() {
-  const [installPrompt, setInstallPrompt] = useState<any>(null)
+  const [installPrompt, setInstallPrompt] = useState<Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> } | null>(null)
   const [isInstallable, setIsInstallable] = useState(false)
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (event: any) => {
+    const handleBeforeInstallPrompt = (event: Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> }) => {
       event.preventDefault()
       setInstallPrompt(event)
       setIsInstallable(true)
@@ -392,19 +392,20 @@ export function usePWAInstall() {
   }, [])
 
   const install = async () => {
-    if (!installPrompt) return false
+    if (!installPrompt || !installPrompt.prompt) return false
 
     try {
-      const result = await installPrompt.prompt()
-      logger.info('PWA install prompt result', { outcome: result.outcome })
+      await installPrompt.prompt()
+      const userChoice = await installPrompt.userChoice
+      logger.info('PWA install prompt result', { outcome: userChoice?.outcome })
       
-      if (result.outcome === 'accepted') {
+      if (userChoice?.outcome === 'accepted') {
         setInstallPrompt(null)
         setIsInstallable(false)
         return true
       }
     } catch (error) {
-      logger.error('PWA install failed', error)
+      logger.error('PWA install failed', error as Error)
     }
 
     return false

@@ -9,7 +9,7 @@ interface LogEntry {
   level: 'debug' | 'info' | 'warn' | 'error'
   message: string
   timestamp: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   error?: string
   userId?: string
   sessionId?: string
@@ -21,14 +21,15 @@ interface LogEntry {
 /**
  * Valida entrada de log
  */
-function validateLogEntry(data: any): data is LogEntry {
+function validateLogEntry(data: unknown): data is LogEntry {
   if (!data || typeof data !== 'object') {
     return false
   }
 
-  const { level, message, timestamp } = data
+  const record = data as Record<string, unknown>
+  const { level, message, timestamp } = record
 
-  if (!level || !['debug', 'info', 'warn', 'error'].includes(level)) {
+  if (!level || typeof level !== 'string' || !['debug', 'info', 'warn', 'error'].includes(level)) {
     return false
   }
 
@@ -49,12 +50,13 @@ function validateLogEntry(data: any): data is LogEntry {
 function sanitizeLogEntry(entry: LogEntry): LogEntry {
   const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization']
   
-  const sanitizeObject = (obj: any): any => {
+  const sanitizeObject = (obj: unknown): Record<string, unknown> => {
     if (!obj || typeof obj !== 'object') {
-      return obj
+      return obj as Record<string, unknown>
     }
 
-    const sanitized = { ...obj }
+    const record = obj as Record<string, unknown>
+    const sanitized = { ...record }
     
     for (const key in sanitized) {
       if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
@@ -69,7 +71,7 @@ function sanitizeLogEntry(entry: LogEntry): LogEntry {
 
   return {
     ...entry,
-    context: entry.context ? sanitizeObject(entry.context) : undefined
+    context: entry.context ? sanitizeObject(entry.context) as Record<string, unknown> : undefined
   }
 }
 
@@ -107,7 +109,7 @@ async function processLog(entry: LogEntry, request: NextRequest): Promise<void> 
     context: {
       ...sanitizedEntry.context,
       userAgent: request.headers.get('user-agent'),
-      ip: request.ip || request.headers.get('x-forwarded-for'),
+      ip: request.headers.get('x-forwarded-for'),
       referer: request.headers.get('referer'),
       receivedAt: new Date().toISOString()
     }
@@ -167,7 +169,7 @@ async function persistLog(entry: LogEntry): Promise<void> {
     // Por enquanto, apenas log local
     logger.debug('Log persisted to database', { logId: entry.requestId })
   } catch (error) {
-    logger.error('Failed to persist log to database', error)
+    logger.error('Failed to persist log to database', error as Error)
   }
 }
 
@@ -200,7 +202,7 @@ async function sendToMonitoringServices(entry: LogEntry): Promise<void> {
     
     logger.debug('Log sent to monitoring services', { logId: entry.requestId })
   } catch (error) {
-    logger.error('Failed to send log to monitoring services', error)
+    logger.error('Failed to send log to monitoring services', error as Error)
   }
 }
 
@@ -237,7 +239,7 @@ function checkLogRateLimit(ip: string, maxLogs = 100, windowMs = 60000): boolean
  */
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
     
     // Rate limiting
     if (!checkLogRateLimit(ip, 100, 60000)) {
@@ -273,7 +275,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
   } catch (error) {
-    logger.error('Failed to process log entries', error)
+    logger.error('Failed to process log entries', error as Error)
     
     return NextResponse.json(
       { 
@@ -308,7 +310,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats)
   } catch (error) {
-    logger.error('Failed to get log statistics', error)
+    logger.error('Failed to get log statistics', error as Error)
     
     return NextResponse.json(
       { error: 'Internal server error' },
