@@ -119,12 +119,12 @@ export default function WorkflowPanel({ isOpen, onClose }: WorkflowPanelProps) {
                   >
                     <div className="font-medium text-sm text-gray-900">{item.title}</div>
                     <div className="text-xs text-gray-500">
-                      {item.module} • {new Date(item.lastAccessed).toLocaleDateString('pt-BR', {
+                      {item.module} • {typeof window !== 'undefined' ? new Date(item.lastAccessed).toLocaleDateString('pt-BR', {
                         day: '2-digit',
                         month: '2-digit',
                         hour: '2-digit',
                         minute: '2-digit'
-                      })}
+                      }) : item.lastAccessed}
                     </div>
                   </div>
                 ))}

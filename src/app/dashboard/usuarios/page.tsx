@@ -282,7 +282,7 @@ export default function UsuariosPage() {
                     )
                   }},
                 { key: 'createdAt', label: 'Criado em', sortable: true,
-                  render: (value) => new Date(value as string).toLocaleDateString('pt-BR') },
+                  render: (value) => typeof window !== 'undefined' ? new Date(value as string).toLocaleDateString('pt-BR') : String(value) },
                 { key: 'actions', label: 'Ações', align: 'center',
                   render: (_, row) => {
                     const usuario = row as unknown as Usuario

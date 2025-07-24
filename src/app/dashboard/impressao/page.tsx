@@ -183,7 +183,7 @@ export default function ImpressaoPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">FichaChef</h1>
               <p className="text-lg text-gray-600">Sistema de Fichas Técnicas</p>
               <div className="mt-2 text-sm text-gray-500">
-                Data de Impressão: {new Date().toLocaleDateString('pt-BR')}
+                Data de Impressão: {typeof window !== 'undefined' ? new Date().toLocaleDateString('pt-BR') : ''}
               </div>
             </div>
 

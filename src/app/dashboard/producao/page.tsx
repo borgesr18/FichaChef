@@ -331,10 +331,10 @@ export default function ProducaoPage() {
                         }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(producao.dataProducao).toLocaleDateString('pt-BR')}
+                        {typeof window !== 'undefined' ? new Date(producao.dataProducao).toLocaleDateString('pt-BR') : producao.dataProducao}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(producao.dataValidade).toLocaleDateString('pt-BR')}
+                        {typeof window !== 'undefined' ? new Date(producao.dataValidade).toLocaleDateString('pt-BR') : producao.dataValidade}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {producao.quantidadeProduzida}

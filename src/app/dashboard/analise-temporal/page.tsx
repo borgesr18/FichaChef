@@ -363,7 +363,7 @@ export default function AnaliseTemporalPage() {
                         {analysis.projections.slice(0, 3).map((projection, index) => (
                           <div key={index} className="flex justify-between">
                             <span className="text-gray-600">
-                              {new Date(projection.date).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}:
+                              {typeof window !== 'undefined' ? new Date(projection.date).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : projection.date}:
                             </span>
                             <span className="font-medium">
                               {formatCurrency(projection.projectedPrice)}

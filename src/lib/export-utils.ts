@@ -52,7 +52,13 @@ export function generatePDF(reportData: ReportData, template?: ExportTemplate | 
   doc.text(reportTitles[reportData.type as keyof typeof reportTitles] || 'Relatório', 20, 50)
   
   doc.setFontSize(10)
-  doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 60)
+  const currentDate = new Date().toLocaleDateString('pt-BR', { 
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit', 
+    day: '2-digit'
+  })
+  doc.text(`Gerado em: ${currentDate}`, 20, 60)
   
   let yPosition = 80
   doc.setFontSize(14)
@@ -257,7 +263,12 @@ export function generateExcel(reportData: ReportData): Blob {
         'Quantidade': p.quantidade || p.saldo,
         'Valor Perda': formatCurrency(p.valorPerda as number),
         'Motivo': p.motivoPerda,
-        'Data Vencimento': p.dataVencimento ? new Date(p.dataVencimento as string).toLocaleDateString('pt-BR') : ''
+        'Data Vencimento': p.dataVencimento ? new Date(p.dataVencimento as string).toLocaleDateString('pt-BR', { 
+          timeZone: 'America/Sao_Paulo',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit'
+        }) : ''
       }))
       const perdasSheet = XLSX.utils.json_to_sheet(perdasFormatted)
       XLSX.utils.book_append_sheet(workbook, perdasSheet, 'Perdas e Desperdícios')

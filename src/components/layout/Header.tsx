@@ -25,7 +25,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
-  const [currentDateTime, setCurrentDateTime] = useState(new Date())
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null)
 
   const fetchNotificacoes = useCallback(async () => {
     try {
@@ -49,6 +49,8 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   }, [user, fetchNotificacoes])
 
   useEffect(() => {
+    setCurrentDateTime(new Date())
+    
     const timer = setInterval(() => {
       setCurrentDateTime(new Date())
     }, 1000)
@@ -80,16 +82,22 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4 ml-12 lg:ml-0">
           <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent hidden md:block">
-            {currentDateTime.toLocaleDateString('pt-BR', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })} - {currentDateTime.toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-            })}
+            {currentDateTime ? (
+              <>
+                {currentDateTime.toLocaleDateString('pt-BR', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })} - {currentDateTime.toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+              </>
+            ) : (
+              'FichaChef'
+            )}
           </h1>
           <h1 className="text-sm font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent md:hidden">
             FichaChef
@@ -182,7 +190,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
                                 <p className="text-sm font-medium text-gray-900">{notificacao.titulo}</p>
                                 <p className="text-xs text-gray-600 mt-1">{notificacao.mensagem}</p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {new Date(notificacao.createdAt).toLocaleDateString('pt-BR')}
+                                  {typeof window !== 'undefined' ? new Date(notificacao.createdAt).toLocaleDateString('pt-BR') : notificacao.createdAt}
                                 </p>
                               </div>
                             </div>

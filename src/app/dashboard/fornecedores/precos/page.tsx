@@ -247,7 +247,7 @@ export default function FornecedorPrecosPage() {
                               {formatCurrency(preco.preco)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(preco.dataVigencia).toLocaleDateString('pt-BR')}
+                              {typeof window !== 'undefined' ? new Date(preco.dataVigencia).toLocaleDateString('pt-BR') : preco.dataVigencia}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

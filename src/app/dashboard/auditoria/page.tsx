@@ -109,7 +109,7 @@ export default function AuditoriaPage() {
                   key: 'createdAt', 
                   label: 'Data/Hora', 
                   sortable: true,
-                  render: (value: unknown) => new Date(value as string).toLocaleString('pt-BR')
+                  render: (value: unknown) => typeof window !== 'undefined' ? new Date(value as string).toLocaleString('pt-BR') : String(value)
                 },
                 { 
                   key: 'usuario', 

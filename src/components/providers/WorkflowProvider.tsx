@@ -85,6 +85,8 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
   }
 
   const addRecentItem = (item: Omit<RecentItem, 'lastAccessed'>) => {
+    if (typeof window === 'undefined') return
+    
     const recentItem: RecentItem = {
       ...item,
       lastAccessed: new Date().toISOString()

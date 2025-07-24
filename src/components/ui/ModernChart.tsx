@@ -77,14 +77,14 @@ export default function ModernChart({
                 >
                   <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                    {item.value.toLocaleString()}
+                    {typeof window !== 'undefined' ? item.value.toLocaleString() : item.value}
                   </div>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-slate-700 mb-1">{item.label}</p>
                 <div className="flex items-center justify-center space-x-1">
-                  <span className="text-xs text-slate-500">{item.value.toLocaleString()}</span>
+                  <span className="text-xs text-slate-500">{typeof window !== 'undefined' ? item.value.toLocaleString() : item.value}</span>
                   {showTrend && getTrendIcon(item.trend)}
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function ModernChart({
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-2xl font-bold text-slate-800">{total.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-slate-800">{typeof window !== 'undefined' ? total.toLocaleString() : total}</p>
                 <p className="text-sm text-slate-500">Total</p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function ModernChart({
                 <div>
                   <p className="text-sm font-semibold text-slate-700">{item.label}</p>
                   <p className="text-xs text-slate-500">
-                    {item.value.toLocaleString()} ({((item.value / total) * 100).toFixed(1)}%)
+                    {typeof window !== 'undefined' ? item.value.toLocaleString() : item.value} ({((item.value / total) * 100).toFixed(1)}%)
                   </p>
                 </div>
               </div>

@@ -364,7 +364,7 @@ export default function EstoquePage() {
               { key: 'quantidade', label: 'Quantidade', sortable: true, align: 'right' },
               { key: 'motivo', label: 'Motivo', sortable: true },
               { key: 'createdAt', label: 'Data', sortable: true,
-                render: (value) => new Date(value as string).toLocaleDateString('pt-BR') },
+                render: (value) => typeof window !== 'undefined' ? new Date(value as string).toLocaleDateString('pt-BR') : String(value) },
               { key: 'actions', label: 'Ações', align: 'center',
                 render: (_, row) => (
                   <div className="flex items-center justify-center space-x-2">

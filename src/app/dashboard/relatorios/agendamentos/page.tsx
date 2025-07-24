@@ -254,7 +254,7 @@ export default function AgendamentosPage() {
                       </div>
                     </div>
                     <div className="mt-2 text-sm text-gray-500">
-                      Próxima execução: {new Date(agendamento.proximaExecucao).toLocaleString('pt-BR')}
+                      Próxima execução: {typeof window !== 'undefined' ? new Date(agendamento.proximaExecucao).toLocaleString('pt-BR') : agendamento.proximaExecucao}
                     </div>
                   </div>
                 </div>
