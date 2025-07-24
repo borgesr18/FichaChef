@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
 const agendamentoSchema = z.object({
@@ -18,60 +19,47 @@ const agendamentoSchema = z.object({
   ativo: z.boolean().optional()
 })
 
-export async function GET() {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'read')
+export const GET = withErrorHandler(async function GET() {
+  const user = await authenticateWithPermission('relatorios', 'read')
 
-    const agendamentos = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioAgendamento.findMany({
-          where: { userId: user.id },
-          include: { template: true },
-          orderBy: { createdAt: 'desc' }
-        })
+  const agendamentos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.findMany({
+        where: { userId: user.id },
+        include: { template: true },
+        orderBy: { createdAt: 'desc' }
       })
     })
+  })
 
-    return NextResponse.json(agendamentos)
-  } catch (error) {
-    console.error('Error fetching schedules:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(agendamentos)
+})
 
-export async function POST(request: NextRequest) {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'write')
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const user = await authenticateWithPermission('relatorios', 'write')
 
-    const body = await request.json()
-    const validatedData = agendamentoSchema.parse(body)
+  const body = await request.json()
+  const validatedData = agendamentoSchema.parse(body)
 
-    const proximaExecucao = calculateNextExecution(validatedData)
+  const proximaExecucao = calculateNextExecution(validatedData)
 
-    const agendamento = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioAgendamento.create({
-          data: {
-            ...validatedData,
-            proximaExecucao,
-            userId: user.id
-          },
-          include: { template: true }
-        })
+  const agendamento = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioAgendamento.create({
+        data: {
+          ...validatedData,
+          proximaExecucao,
+          userId: user.id
+        },
+        include: { template: true }
       })
     })
+  })
 
-    await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, request)
+  await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, request)
 
-    return NextResponse.json(agendamento, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
-    }
-    console.error('Error creating schedule:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(agendamento, { status: 201 })
+})
 
 function calculateNextExecution(data: { horario: string; frequencia: string; diasSemana?: string; diaMes?: number }): Date {
   const now = new Date()

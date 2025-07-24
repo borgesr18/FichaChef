@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
 const templateSchema = z.object({
@@ -27,69 +28,56 @@ const templateSchema = z.object({
   padrao: z.boolean().optional()
 })
 
-export async function GET(request: NextRequest) {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'read')
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const user = await authenticateWithPermission('relatorios', 'read')
 
-    const { searchParams } = new URL(request.url)
-    const tipo = searchParams.get('tipo')
+  const { searchParams } = new URL(request.url)
+  const tipo = searchParams.get('tipo')
 
-    const templates = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioTemplate.findMany({
-          where: {
-            userId: user.id,
-            ...(tipo && { tipo })
-          },
-          orderBy: [
-            { padrao: 'desc' },
-            { createdAt: 'desc' }
-          ]
-        })
+  const templates = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.findMany({
+        where: {
+          userId: user.id,
+          ...(tipo && { tipo })
+        },
+        orderBy: [
+          { padrao: 'desc' },
+          { createdAt: 'desc' }
+        ]
       })
     })
+  })
 
-    return NextResponse.json(templates)
-  } catch (error) {
-    console.error('Error fetching templates:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(templates)
+})
 
-export async function POST(request: NextRequest) {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'write')
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const user = await authenticateWithPermission('relatorios', 'write')
 
-    const body = await request.json()
-    const validatedData = templateSchema.parse(body)
+  const body = await request.json()
+  const validatedData = templateSchema.parse(body)
 
-    const template = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioTemplate.create({
-          data: {
-            ...validatedData,
-            userId: user.id
-          }
-        })
+  const template = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.create({
+        data: {
+          ...validatedData,
+          userId: user.id
+        }
       })
     })
+  })
 
-    await logUserAction(
-      user.id,
-      'create',
-      'relatorio-templates',
-      template.id,
-      'template',
-      { nome: template.nome, tipo: template.tipo },
-      request
-    )
+  await logUserAction(
+    user.id,
+    'create',
+    'relatorio-templates',
+    template.id,
+    'template',
+    { nome: template.nome, tipo: template.tipo },
+    request
+  )
 
-    return NextResponse.json(template, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
-    }
-    console.error('Error creating template:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(template, { status: 201 })
+})

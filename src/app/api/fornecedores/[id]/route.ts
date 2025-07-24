@@ -4,89 +4,79 @@ import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-uti
 import { fornecedorSchema } from '@/lib/validations'
 import { 
   authenticateWithPermission, 
-  createValidationErrorResponse, 
-  createServerErrorResponse,
+  createValidationErrorResponse,
   createSuccessResponse,
   createNotFoundResponse
 } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  try {
-    const user = await authenticateWithPermission('fornecedores', 'write')
+  const user = await authenticateWithPermission('fornecedores', 'write')
 
-    const body = await request.json()
-    const validationResult = fornecedorSchema.safeParse(body)
-    
-    if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => err.message).join(', ')
-      return createValidationErrorResponse(errors)
-    }
+  const body = await request.json()
+  const validationResult = fornecedorSchema.safeParse(body)
+  
+  if (!validationResult.success) {
+    const errors = validationResult.error.errors.map(err => err.message).join(', ')
+    return createValidationErrorResponse(errors)
+  }
 
-    const data = validationResult.data
+  const data = validationResult.data
 
-    const existingFornecedor = await withDatabaseRetry(async () => {
-      return await prisma.fornecedor.findFirst({
-        where: { id, userId: user.id }
-      })
+  const existingFornecedor = await withDatabaseRetry(async () => {
+    return await prisma.fornecedor.findFirst({
+      where: { id, userId: user.id }
     })
+  })
 
-    if (!existingFornecedor) {
-      return createNotFoundResponse('Fornecedor')
-    }
+  if (!existingFornecedor) {
+    return createNotFoundResponse('Fornecedor')
+  }
 
-    const fornecedor = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.fornecedor.update({
-          where: { id },
-          data,
-          include: {
-            _count: {
-              select: { insumos: true, precos: true }
-            }
+  const fornecedor = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.update({
+        where: { id },
+        data,
+        include: {
+          _count: {
+            select: { insumos: true, precos: true }
           }
-        })
+        }
       })
     })
+  })
 
-    await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, request)
+  await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, request)
 
-    return createSuccessResponse(fornecedor)
-  } catch (error) {
-    console.error('Error updating fornecedor:', error)
-    return createServerErrorResponse()
-  }
-}
+  return createSuccessResponse(fornecedor)
+})
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  try {
-    const user = await authenticateWithPermission('fornecedores', 'admin')
+  const user = await authenticateWithPermission('fornecedores', 'admin')
 
-    const existingFornecedor = await withDatabaseRetry(async () => {
-      return await prisma.fornecedor.findFirst({
-        where: { id, userId: user.id }
-      })
+  const existingFornecedor = await withDatabaseRetry(async () => {
+    return await prisma.fornecedor.findFirst({
+      where: { id, userId: user.id }
     })
+  })
 
-    if (!existingFornecedor) {
-      return createNotFoundResponse('Fornecedor')
-    }
-
-    await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.fornecedor.delete({
-          where: { id }
-        })
-      })
-    })
-
-    await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, request)
-
-    return createSuccessResponse({ message: 'Fornecedor deletado com sucesso' })
-  } catch (error) {
-    console.error('Error deleting fornecedor:', error)
-    return createServerErrorResponse()
+  if (!existingFornecedor) {
+    return createNotFoundResponse('Fornecedor')
   }
-}
+
+  await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.fornecedor.delete({
+        where: { id }
+      })
+    })
+  })
+
+  await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, request)
+
+  return createSuccessResponse({ message: 'Fornecedor deletado com sucesso' })
+})

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 
 interface ProducaoItem {
   id: string
@@ -23,75 +24,64 @@ interface EstoqueItem {
   valorEstoque: number
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const user = await authenticateWithPermission('relatorios', 'read')
+
+  const { searchParams } = new URL(request.url)
+  const reportType = searchParams.get('type') || 'custos'
+
+  let reportData = {}
+
   try {
-    const user = await authenticateWithPermission('relatorios', 'read')
-
-    const { searchParams } = new URL(request.url)
-    const reportType = searchParams.get('type') || 'custos'
-
-    let reportData = {}
-
-    try {
-      switch (reportType) {
-        case 'custos':
-          reportData = await generateCostReport(user.id)
-          break
-        case 'producao':
-          reportData = await generateProductionReport(user.id)
-          break
-        case 'estoque':
-          reportData = await generateInventoryReport(user.id)
-          break
-        case 'fichas':
-          reportData = await generateRecipeReport(user.id)
-          break
-        case 'rentabilidade':
-          reportData = await generateProfitabilityReport(user.id)
-          break
-        case 'abc-insumos':
-          reportData = await generateAbcInsumosReport(user.id)
-          break
-        case 'desperdicio':
-          reportData = await generateWasteReport(user.id)
-          break
-        default:
-          return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
-      }
-    } catch (reportError) {
-      console.error(`Error generating ${reportType} report:`, reportError)
-      
-      reportData = {
-        type: reportType,
-        data: {},
-        summary: {
-          message: 'Nenhum dado disponível para este relatório no momento'
-        }
-      }
+    switch (reportType) {
+      case 'custos':
+        reportData = await generateCostReport(user.id)
+        break
+      case 'producao':
+        reportData = await generateProductionReport(user.id)
+        break
+      case 'estoque':
+        reportData = await generateInventoryReport(user.id)
+        break
+      case 'fichas':
+        reportData = await generateRecipeReport(user.id)
+        break
+      case 'rentabilidade':
+        reportData = await generateProfitabilityReport(user.id)
+        break
+      case 'abc-insumos':
+        reportData = await generateAbcInsumosReport(user.id)
+        break
+      case 'desperdicio':
+        reportData = await generateWasteReport(user.id)
+        break
+      default:
+        return NextResponse.json({ error: 'Invalid report type' }, { status: 400 })
     }
-
-    await logUserAction(
-      user.id,
-      'view',
-      'relatorios',
-      undefined,
-      reportType,
-      { reportType },
-      request
-    )
-
-    return NextResponse.json(reportData)
-  } catch (error) {
-    console.error('Error generating report:', error)
-    return NextResponse.json({ 
-      type: 'error',
+  } catch (reportError) {
+    console.error(`Error generating ${reportType} report:`, reportError)
+    
+    reportData = {
+      type: reportType,
       data: {},
       summary: {
-        message: 'Erro ao gerar relatório. Tente novamente.'
+        message: 'Nenhum dado disponível para este relatório no momento'
       }
-    }, { status: 500 })
+    }
   }
-}
+
+  await logUserAction(
+    user.id,
+    'view',
+    'relatorios',
+    undefined,
+    reportType,
+    { reportType },
+    request
+  )
+
+  return NextResponse.json(reportData)
+})
 
 async function generateCostReport(userId: string) {
   const produtos = await withConnectionHealthCheck(async () => {
