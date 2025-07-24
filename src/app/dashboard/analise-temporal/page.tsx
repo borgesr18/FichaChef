@@ -76,13 +76,22 @@ export default function AnaliseTemporalPage() {
   const [filters, setFilters] = useState({
     insumoId: '',
     fornecedorId: '',
-    dataInicio: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    dataFim: new Date().toISOString().split('T')[0],
+    dataInicio: '',
+    dataFim: '',
     periodo: 'monthly' as 'monthly' | 'quarterly' | 'yearly',
     mesesProjecao: 6
   })
 
   useEffect(() => {
+    const now = new Date()
+    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    const dataInicio = oneYearAgo.toISOString().split('T')[0] as string
+    const dataFim = now.toISOString().split('T')[0] as string
+    setFilters(prev => ({
+      ...prev,
+      dataInicio,
+      dataFim
+    }))
     fetchOptions()
   }, [])
 
