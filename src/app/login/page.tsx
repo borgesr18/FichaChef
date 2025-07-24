@@ -21,17 +21,23 @@ export default function LoginPage() {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       
-      console.log('Environment check:', {
+      console.log('🔍 Environment check:', {
         hasUrl: !!supabaseUrl,
         hasKey: !!supabaseKey,
         urlValue: supabaseUrl ? 'SET' : 'NOT SET',
-        keyValue: supabaseKey ? 'SET' : 'NOT SET'
+        keyValue: supabaseKey ? 'SET' : 'NOT SET',
+        hostname: window.location.hostname,
+        isProduction: window.location.hostname === 'ficha-chef.vercel.app'
       })
       
       const isDev = !supabaseUrl || !supabaseKey || 
                    supabaseUrl === '' || supabaseKey === '' ||
                    supabaseUrl.includes('placeholder') || 
                    supabaseKey.includes('placeholder')
+      
+      if (isDev && window.location.hostname === 'ficha-chef.vercel.app') {
+        console.error('🚨 PRODUÇÃO: Variáveis de ambiente não configuradas no Vercel!')
+      }
       
       setIsDevMode(isDev)
     }
