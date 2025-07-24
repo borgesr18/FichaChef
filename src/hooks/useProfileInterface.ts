@@ -23,7 +23,7 @@ const profileConfigs: Record<string, ProfileConfig> = {
     accentColor: 'amber',
     showAdvancedFeatures: true,
     defaultView: '/dashboard',
-    quickActions: ['usuarios', 'relatorios', 'configuracoes', 'auditoria'],
+    quickActions: ['dashboard', 'insumos', 'fichas-tecnicas', 'produtos', 'fornecedores', 'estoque', 'producao', 'impressao'],
     hiddenModules: [],
     compactMode: false,
     showNotifications: true,
