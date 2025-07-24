@@ -7,8 +7,30 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "analyze": "ANALYZE=true npm run build",
+    "build:debug": "DEBUG=1 next build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "verify-deployment": "node scripts/verify-deployment.js",
-    "postinstall": "prisma generate"
+    "health-check": "node scripts/health-check.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate",
+    "clean": "rm -rf .next out dist",
+    "clean:cache": "rm -rf .next/cache",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "prepare": "husky install || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -35,12 +57,45 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/jest": "^29.5.12",
+    "@playwright/test": "^1.40.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.2.0",
     "prettier": "^3.3.3",
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack-bundle-analyzer": "^4.10.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

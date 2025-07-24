@@ -1,49 +1,64 @@
 # FichaChef - Sistema de Gestão Gastronômica
 
-Sistema completo para gestão de fichas técnicas, controle de estoque e cálculo de custos para cozinhas profissionais.
+> **Versão 2.0** - Sistema robusto com correções de CSP, autenticação e Service Worker
 
-## 🚀 Funcionalidades
+## 🚀 Sobre o Projeto
 
-### Core Features
-- ✅ **Cadastro de Insumos**: Gestão completa de ingredientes com preços, fornecedores e unidades
-- ✅ **Fichas Técnicas**: Criação de receitas com cálculo automático de custos
-- ✅ **Controle de Estoque**: Movimentações de entrada e saída
-- ✅ **Gestão de Produção**: Registro e controle de produções
-- ✅ **Cálculo de Preços**: Análise de custos e margem de lucro
-- ✅ **Dashboard Dinâmico**: Visão geral em tempo real
-- ✅ **Sistema de Categorias**: Organização de insumos e receitas
-- ✅ **Relatórios**: Exportação de dados e análises
+FichaChef é um sistema completo de gestão gastronômica desenvolvido para restaurantes e cozinhas industriais. O sistema oferece controle de insumos, criação de fichas técnicas, gestão de produção e análise de custos.
 
-### Características Técnicas
-- 🔒 **Segurança**: Autenticação robusta e isolamento de dados por usuário
-- 📱 **Responsivo**: Interface adaptada para desktop, tablet e mobile
-- ⚡ **Performance**: Otimizado para uso em ambientes profissionais
-- 🎨 **UX/UI**: Interface intuitiva e profissional
-- 🔄 **Real-time**: Atualizações dinâmicas de dados
+## ✨ Principais Funcionalidades
 
-## 🛠️ Stack Tecnológica
+- 📋 **Cadastro de Insumos** - Gestão completa de produtos e ingredientes
+- 📝 **Fichas Técnicas** - Criação e gestão de receitas com cálculo automático de custos
+- 🏭 **Controle de Produção** - Planejamento e acompanhamento da produção
+- 📊 **Dashboard Analytics** - Relatórios e análises de performance
+- 👥 **Gestão de Usuários** - Controle de acesso e permissões
+- 📱 **PWA** - Funciona offline com Service Worker
 
-- **Frontend**: Next.js 15 + React 19 + TypeScript
-- **Backend**: Next.js API Routes
-- **Banco de Dados**: PostgreSQL + Prisma ORM
+## 🔧 Correções Implementadas (v2.0)
+
+### ✅ Content Security Policy (CSP)
+- Configuração dinâmica baseada no ambiente
+- Suporte completo ao Vercel Live e ferramentas de desenvolvimento
+- Headers de segurança aprimorados
+
+### ✅ Sistema de Autenticação
+- Middleware robusto com verificação de tokens Supabase
+- Rate limiting para segurança
+- Gestão inteligente de sessões
+
+### ✅ Service Worker
+- Cache inteligente com TTL configurável
+- Tratamento robusto de erros de rede
+- Suporte offline melhorado
+
+### ✅ Sistema de Logging
+- Logs estruturados com níveis configuráveis
+- API centralizada para coleta de logs
+- Integração com serviços de monitoramento
+
+## 🛠️ Tecnologias
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
 - **Autenticação**: Supabase Auth
-- **Estilização**: Tailwind CSS
-- **Validação**: Zod
-- **Ícones**: Lucide React
-- **Deploy**: Vercel
+- **Banco de Dados**: PostgreSQL com Prisma ORM
+- **PWA**: Service Worker customizado
+- **Testes**: Jest, Playwright
+- **Linting**: ESLint, Prettier
 
 ## 📋 Pré-requisitos
 
-- Node.js 18+ 
-- npm ou yarn
-- Conta no Supabase (para banco e autenticação)
+- Node.js >= 18.0.0
+- npm >= 8.0.0
+- PostgreSQL (ou Supabase)
 
-## 🚀 Instalação
+## 🚀 Instalação e Configuração
 
 ### 1. Clone o repositório
 ```bash
-git clone https://github.com/seu-usuario/fichachef.git
-cd fichachef
+git clone <repository-url>
+cd FichaChef-main
 ```
 
 ### 2. Instale as dependências
@@ -52,184 +67,254 @@ npm install
 ```
 
 ### 3. Configure as variáveis de ambiente
-```bash
-cp .env.example .env
-```
-
-Edite o arquivo `.env` com suas credenciais:
+Crie um arquivo `.env.local` na raiz do projeto:
 
 ```env
-# Database
-DATABASE_URL="postgresql://usuario:senha@host:5432/database"
-DIRECT_URL="postgresql://usuario:senha@host:5432/database"
-
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL="https://seu-projeto.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="sua-chave-anonima"
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# NextAuth
-NEXTAUTH_SECRET="seu-secret-super-seguro"
-NEXTAUTH_URL="http://localhost:3000"
+# Database
+DATABASE_URL=your_database_url
+
+# App URLs (opcional)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
 
 # Environment
-NODE_ENV="development"
+NODE_ENV=development
 ```
 
 ### 4. Configure o banco de dados
 ```bash
-# Gerar o cliente Prisma
-npx prisma generate
+# Gerar cliente Prisma
+npm run db:generate
 
 # Executar migrações
-npx prisma migrate dev
+npm run db:migrate
 
-# (Opcional) Executar RLS no Supabase
-psql -h seu-host -U usuario -d database -f rls_config.sql
+# (Opcional) Popular banco com dados de exemplo
+npm run db:seed
 ```
 
-### 5. Execute o projeto
+### 5. Execute o health check
+```bash
+npm run health-check
+```
+
+### 6. Inicie o servidor de desenvolvimento
 ```bash
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000)
+A aplicação estará disponível em `http://localhost:3000`
 
-## 🔧 Scripts Disponíveis
+## 📝 Scripts Disponíveis
 
+### Desenvolvimento
 ```bash
-npm run dev          # Executa em modo desenvolvimento
+npm run dev          # Inicia servidor de desenvolvimento
 npm run build        # Build para produção
-npm run start        # Executa build de produção
-npm run lint         # Executa linting
+npm run start        # Inicia servidor de produção
+npm run health-check # Verifica saúde do sistema
+```
+
+### Qualidade de Código
+```bash
+npm run lint         # Executa ESLint
+npm run lint:fix     # Corrige problemas do ESLint
+npm run format       # Formata código com Prettier
 npm run type-check   # Verifica tipos TypeScript
 ```
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── app/                    # App Router (Next.js 15)
-│   ├── api/               # API Routes
-│   │   ├── insumos/       # CRUD de insumos
-│   │   ├── fichas-tecnicas/ # CRUD de fichas técnicas
-│   │   └── ...            # Outras APIs
-│   ├── dashboard/         # Páginas do dashboard
-│   ├── login/             # Página de login
-│   ├── layout.tsx         # Layout raiz
-│   └── page.tsx           # Página inicial
-├── components/            # Componentes React
-│   ├── layout/           # Componentes de layout
-│   └── ui/               # Componentes de UI
-├── lib/                  # Utilitários e configurações
-│   ├── prisma.ts         # Cliente Prisma
-│   ├── supabase.ts       # Cliente Supabase
-│   ├── validations.ts    # Schemas Zod
-│   └── auth.ts           # Utilitários de autenticação
-└── styles/               # Estilos globais
+### Testes
+```bash
+npm test             # Executa testes unitários
+npm run test:watch   # Executa testes em modo watch
+npm run test:coverage # Executa testes com cobertura
+npm run test:e2e     # Executa testes E2E
 ```
 
-## 🔐 Segurança
+### Banco de Dados
+```bash
+npm run db:generate  # Gera cliente Prisma
+npm run db:push      # Aplica mudanças no schema
+npm run db:migrate   # Executa migrações
+npm run db:studio    # Abre Prisma Studio
+npm run db:seed      # Popula banco com dados
+```
 
-### Medidas Implementadas
-- ✅ Headers de segurança (CSP, X-Frame-Options, etc.)
-- ✅ Validação robusta com Zod
-- ✅ Autenticação via Supabase
-- ✅ Row Level Security (RLS) no banco
-- ✅ Sanitização de dados
-- ✅ Rate limiting (recomendado para produção)
+### Análise e Debug
+```bash
+npm run analyze      # Analisa bundle webpack
+npm run build:debug  # Build com debug habilitado
+npm run clean        # Limpa arquivos de build
+```
 
-### Configuração de Produção
-1. **Regenere todas as credenciais**
-2. **Configure HTTPS**
-3. **Ative rate limiting**
-4. **Configure backup do banco**
-5. **Monitore logs de segurança**
+## 🔒 Segurança
 
-## 📱 Responsividade
+### Content Security Policy
+O sistema implementa CSP dinâmico que:
+- Permite recursos necessários em desenvolvimento
+- Restringe acesso em produção
+- Suporta Vercel Live e ferramentas de desenvolvimento
 
-O sistema é totalmente responsivo com breakpoints:
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px  
-- **Desktop**: > 1024px
+### Autenticação
+- Tokens JWT via Supabase
+- Rate limiting para prevenir ataques
+- Middleware de verificação em todas as rotas protegidas
+- Gestão automática de sessões
 
-### Características Mobile
-- Menu lateral colapsável
-- Cards adaptáveis
-- Touch-friendly
-- Performance otimizada
+### Logging e Monitoramento
+- Logs estruturados com sanitização de dados sensíveis
+- API centralizada para coleta de logs
+- Integração com serviços de monitoramento externos
 
-## 🚀 Deploy
+## 📱 PWA (Progressive Web App)
 
-### Vercel (Recomendado)
-1. Conecte seu repositório no Vercel
-2. Configure as variáveis de ambiente (veja [DEPLOYMENT.md](DEPLOYMENT.md))
-3. Deploy automático
-
-**⚠️ Importante**: Se o sistema mostrar "Modo Desenvolvimento" em produção, consulte o [guia de deployment](DEPLOYMENT.md) para configurar as variáveis de ambiente corretamente.
-
-### Outras Plataformas
-- **Netlify**: Suporte completo
-- **Railway**: Ideal para full-stack
-- **DigitalOcean**: App Platform
+O FichaChef funciona como PWA com:
+- Service Worker para cache inteligente
+- Funcionalidade offline
+- Instalação no dispositivo
+- Notificações push (futuro)
 
 ## 🧪 Testes
 
+### Testes Unitários
 ```bash
-# Executar testes (quando implementados)
-npm run test
+npm test
+```
 
-# Testes E2E (quando implementados)  
+### Testes E2E
+```bash
 npm run test:e2e
+```
+
+### Cobertura de Testes
+```bash
+npm run test:coverage
 ```
 
 ## 📊 Monitoramento
 
-### Métricas Recomendadas
-- Performance (Core Web Vitals)
-- Erros de aplicação
-- Uso de recursos
-- Tempo de resposta das APIs
+### Health Check
+Execute regularmente para verificar a saúde do sistema:
+```bash
+npm run health-check
+```
 
-### Ferramentas Sugeridas
-- Vercel Analytics
-- Sentry (erros)
-- LogRocket (sessões)
+### Logs
+Os logs são coletados automaticamente e podem ser visualizados:
+- Console do navegador (desenvolvimento)
+- API `/api/logs` (produção)
+- Serviços de monitoramento externos
+
+## 🚀 Deploy
+
+### Vercel (Recomendado)
+1. Conecte o repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático a cada push
+
+### Docker
+```bash
+# Build da imagem
+docker build -t fichachef .
+
+# Executar container
+docker run -p 3000:3000 fichachef
+```
+
+### Manual
+```bash
+# Build para produção
+npm run build
+
+# Iniciar servidor
+npm start
+```
+
+## 🔧 Configuração Avançada
+
+### Webpack
+Configurações personalizadas em `next.config.ts`:
+- Otimizações para produção
+- Análise de bundle
+- Aliases para imports
+
+### ESLint
+Regras configuradas em `.eslintrc.json`:
+- Padrões Next.js
+- TypeScript strict
+- Import ordering
+
+### Prettier
+Formatação configurada em `.prettierrc.json`:
+- Padrões consistentes
+- Integração com ESLint
+
+## 📚 Estrutura do Projeto
+
+```
+FichaChef-main/
+├── src/
+│   ├── app/                 # App Router (Next.js 13+)
+│   │   ├── api/            # API Routes
+│   │   ├── dashboard/      # Dashboard pages
+│   │   └── login/          # Auth pages
+│   ├── components/         # React components
+│   ├── hooks/             # Custom hooks
+│   └── lib/               # Utilities and configs
+├── public/                # Static assets
+├── prisma/               # Database schema
+├── scripts/              # Build and utility scripts
+└── tests/                # Test files
+```
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 🆘 Suporte
 
-- **Documentação**: [Wiki do projeto](https://github.com/seu-usuario/fichachef/wiki)
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/fichachef/issues)
-- **Discussões**: [GitHub Discussions](https://github.com/seu-usuario/fichachef/discussions)
+### Problemas Comuns
 
-## 🔄 Changelog
+#### Erro de CSP
+Se encontrar erros de Content Security Policy:
+1. Verifique se está usando a versão mais recente
+2. Execute `npm run health-check`
+3. Verifique as configurações em `next.config.ts`
 
-### v1.0.0 (Atual)
-- ✅ Sistema base implementado
-- ✅ Autenticação e segurança
-- ✅ CRUD completo de insumos
-- ✅ Dashboard responsivo
-- ✅ Validação robusta
-- ✅ Interface mobile-friendly
+#### Erro de Autenticação
+Se APIs retornarem 401:
+1. Verifique as variáveis de ambiente do Supabase
+2. Confirme se o middleware está funcionando
+3. Execute `npm run health-check`
 
-### Próximas Versões
-- 🔄 Fichas técnicas completas
-- 🔄 Sistema de relatórios
-- 🔄 Exportação de dados
-- 🔄 Notificações
-- 🔄 PWA features
+#### Service Worker
+Se o Service Worker não funcionar:
+1. Limpe o cache do navegador
+2. Verifique se `public/sw.js` existe
+3. Abra DevTools > Application > Service Workers
+
+### Logs e Debug
+- Use `npm run health-check` para diagnóstico
+- Verifique logs no console do navegador
+- API de logs disponível em `/api/logs`
+
+### Contato
+- Issues: Use o sistema de issues do GitHub
+- Documentação: Consulte este README e o CHANGELOG.md
 
 ---
 
-**Desenvolvido com ❤️ para cozinhas profissionais**
+**Desenvolvido com ❤️ para a comunidade gastronômica**
+
