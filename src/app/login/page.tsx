@@ -21,6 +21,13 @@ export default function LoginPage() {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       
+      console.log('Environment check:', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+        urlValue: supabaseUrl ? 'SET' : 'NOT SET',
+        keyValue: supabaseKey ? 'SET' : 'NOT SET'
+      })
+      
       const isDev = !supabaseUrl || !supabaseKey || 
                    supabaseUrl === '' || supabaseKey === '' ||
                    supabaseUrl.includes('placeholder') || 
@@ -88,7 +95,7 @@ export default function LoginPage() {
                     Modo Desenvolvimento
                   </h3>
                   <p className="mt-1 text-sm text-amber-700">
-                    Supabase não configurado. Clique no botão abaixo para acessar o sistema com dados de exemplo.
+                    Variáveis de ambiente do Supabase não configuradas. Em produção, configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no painel do Vercel.
                   </p>
                   <button
                     onClick={handleDevLogin}

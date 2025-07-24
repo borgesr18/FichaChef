@@ -162,8 +162,10 @@ O sistema é totalmente responsivo com breakpoints:
 
 ### Vercel (Recomendado)
 1. Conecte seu repositório no Vercel
-2. Configure as variáveis de ambiente
+2. Configure as variáveis de ambiente (veja [DEPLOYMENT.md](DEPLOYMENT.md))
 3. Deploy automático
+
+**⚠️ Importante**: Se o sistema mostrar "Modo Desenvolvimento" em produção, consulte o [guia de deployment](DEPLOYMENT.md) para configurar as variáveis de ambiente corretamente.
 
 ### Outras Plataformas
 - **Netlify**: Suporte completo
