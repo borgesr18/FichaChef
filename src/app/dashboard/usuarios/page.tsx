@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Shield, Plus, Mail, Key } from 'lucide-react'
+import { Users, Shield, Plus, Mail, Key, Trash2 } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
@@ -183,6 +183,26 @@ export default function UsuariosPage() {
     }
   }
 
+  const deleteUser = async (userId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este usuário?')) return
+
+    try {
+      const response = await fetch(`/api/usuarios/${userId}`, { 
+        method: 'DELETE' 
+      })
+
+      if (response.ok) {
+        await fetchUsuarios()
+      } else {
+        const error = await response.json()
+        alert(`Erro ao excluir usuário: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Erro ao excluir usuário')
+    }
+  }
+
   if (currentUser && currentUser.role !== 'chef') {
     return (
       <DashboardLayout>
@@ -274,6 +294,13 @@ export default function UsuariosPage() {
                           title="Redefinir senha"
                         >
                           <Key className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => deleteUser(usuario.userId)}
+                          className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                          title="Excluir usuário"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     )
