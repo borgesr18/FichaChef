@@ -91,6 +91,11 @@ const nextConfig: NextConfig = {
       tls: false,
     }
 
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts', '.tsx'],
+      '.mjs': ['.mjs', '.js'],
+    }
+
     // Configurar aliases para imports mais limpos
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -98,6 +103,21 @@ const nextConfig: NextConfig = {
       '@/components': path.resolve(__dirname, 'src/components'),
       '@/lib': path.resolve(__dirname, 'src/lib'),
       '@/hooks': path.resolve(__dirname, 'src/hooks'),
+    }
+
+    config.module.rules.push({
+      test: /\.m?js$/,
+      resolve: {
+        fullySpecified: false,
+      },
+    })
+
+    if (!dev) {
+      config.devtool = false
+    }
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
     }
 
     // Plugin para analisar bundle (apenas em desenvolvimento)
@@ -111,7 +131,7 @@ const nextConfig: NextConfig = {
           })
         )
       } catch (error) {
-        console.warn('Bundle analyzer not available:', error.message)
+        console.warn('Bundle analyzer not available:', error instanceof Error ? error.message : String(error))
       }
     }
 
@@ -120,12 +140,13 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  },
+
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
