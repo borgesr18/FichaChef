@@ -9,7 +9,7 @@ export interface LogEntry {
   level: LogLevel
   message: string
   timestamp: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   error?: Error | string
   userId?: string
   sessionId?: string
@@ -96,7 +96,7 @@ class Logger {
   private createLogEntry(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
     error?: Error | string
   ): LogEntry {
     return {
@@ -109,10 +109,10 @@ class Logger {
         url: typeof window !== 'undefined' ? window.location.href : undefined,
       },
       error,
-      userId: context?.userId,
-      sessionId: context?.sessionId || this.generateSessionId(),
-      requestId: context?.requestId || this.generateRequestId(),
-      source: context?.source || 'frontend',
+      userId: context?.userId as string | undefined,
+      sessionId: (context?.sessionId as string) || this.generateSessionId(),
+      requestId: (context?.requestId as string) || this.generateRequestId(),
+      source: (context?.source as string) || 'frontend',
       environment: this.environment,
     }
   }
@@ -185,7 +185,7 @@ class Logger {
       
       try {
         await this.sendLogToRemote(entry)
-      } catch (error) {
+      } catch {
         // Se falhar, recolocar na fila para retry
         this.logQueue.unshift(entry)
         break
@@ -228,7 +228,7 @@ class Logger {
   /**
    * Log de debug
    */
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     if (!this.shouldLog('debug')) return
     
     const entry = this.createLogEntry('debug', message, context)
@@ -238,7 +238,7 @@ class Logger {
   /**
    * Log de informação
    */
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: Record<string, unknown>): void {
     if (!this.shouldLog('info')) return
     
     const entry = this.createLogEntry('info', message, context)
@@ -248,7 +248,7 @@ class Logger {
   /**
    * Log de aviso
    */
-  warn(message: string, context?: Record<string, any>): void {
+  warn(message: string, context?: Record<string, unknown>): void {
     if (!this.shouldLog('warn')) return
     
     const entry = this.createLogEntry('warn', message, context)
@@ -258,7 +258,7 @@ class Logger {
   /**
    * Log de erro
    */
-  error(message: string, error?: Error | string, context?: Record<string, any>): void {
+  error(message: string, error?: Error | string, context?: Record<string, unknown>): void {
     if (!this.shouldLog('error')) return
     
     const entry = this.createLogEntry('error', message, context, error)
@@ -268,7 +268,7 @@ class Logger {
   /**
    * Log de performance
    */
-  performance(operation: string, duration: number, context?: Record<string, any>): void {
+  performance(operation: string, duration: number, context?: Record<string, unknown>): void {
     this.info(`Performance: ${operation}`, {
       ...context,
       duration,
@@ -280,7 +280,7 @@ class Logger {
   /**
    * Log de auditoria
    */
-  audit(action: string, userId: string, context?: Record<string, any>): void {
+  audit(action: string, userId: string, context?: Record<string, unknown>): void {
     this.info(`Audit: ${action}`, {
       ...context,
       userId,
@@ -292,7 +292,7 @@ class Logger {
   /**
    * Log de segurança
    */
-  security(event: string, context?: Record<string, any>): void {
+  security(event: string, context?: Record<string, unknown>): void {
     this.warn(`Security: ${event}`, {
       ...context,
       event,
@@ -303,7 +303,7 @@ class Logger {
   /**
    * Configura contexto global para logs
    */
-  setGlobalContext(context: Record<string, any>): void {
+  setGlobalContext(): void {
     // Implementar contexto global se necessário
   }
 
@@ -343,7 +343,7 @@ export class PerformanceTimer {
     this.startTime = performance.now()
   }
 
-  end(context?: Record<string, any>): number {
+  end(context?: Record<string, unknown>): number {
     const duration = performance.now() - this.startTime
     logger.performance(this.operation, duration, context)
     return duration
@@ -352,10 +352,10 @@ export class PerformanceTimer {
 
 // Decorator para logging automático de métodos
 export function LogMethod(operation?: string) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (target: Record<string, unknown>, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const timer = new PerformanceTimer(operation || `${target.constructor.name}.${propertyKey}`)
       
       try {
@@ -364,7 +364,7 @@ export function LogMethod(operation?: string) {
         return result
       } catch (error) {
         timer.end({ success: false, error: error instanceof Error ? error.message : error })
-        logger.error(`Method ${propertyKey} failed`, error)
+        logger.error(`Method ${propertyKey} failed`, error as Error)
         throw error
       }
     }

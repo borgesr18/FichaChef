@@ -6,8 +6,8 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { User, Session, AuthError } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import type { User, Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 
 export interface UserProfile {
@@ -34,7 +34,7 @@ export interface AuthState {
 
 export interface AuthActions {
   signIn: (email: string, password: string) => Promise<{ error?: string }>
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error?: string }>
   updatePassword: (password: string) => Promise<{ error?: string }>
@@ -67,9 +67,12 @@ export function useAuth(): UseAuthReturn {
     isManager: false
   })
 
-  const supabase = createClientComponentClient()
-  const refreshTimeoutRef = useRef<NodeJS.Timeout>()
-  const activityTimeoutRef = useRef<NodeJS.Timeout>()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   /**
    * Atualiza estado de autenticação
@@ -136,7 +139,7 @@ export function useAuth(): UseAuthReturn {
 
       return data as UserProfile
     } catch (error) {
-      logger.error('Error loading user profile', error)
+      logger.error('Error loading user profile', error as Error)
       return null
     }
   }, [supabase])
@@ -163,7 +166,7 @@ export function useAuth(): UseAuthReturn {
           setupSessionRefresh(data.session)
         }
       } catch (error) {
-        logger.error('Error refreshing session', error)
+        logger.error('Error refreshing session', error as Error)
         await signOut()
       }
     }, Math.max(0, refreshAt - Date.now()))
@@ -234,7 +237,7 @@ export function useAuth(): UseAuthReturn {
         updateAuthState(null, null)
       }
     } catch (error) {
-      logger.error('Error initializing auth', error)
+      logger.error('Error initializing auth', error as Error)
       updateAuthState(null, null, null, 'Erro ao inicializar autenticação')
     }
   }, [supabase, updateAuthState, loadUserProfile, setupSessionRefresh, setupActivityTimeout, checkSessionActivity])
@@ -270,7 +273,7 @@ export function useAuth(): UseAuthReturn {
       return { error: 'Falha na autenticação' }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      logger.error('Sign in error', error)
+      logger.error('Sign in error', error as Error)
       updateAuthState(null, null, null, errorMessage)
       return { error: errorMessage }
     }
@@ -279,7 +282,7 @@ export function useAuth(): UseAuthReturn {
   /**
    * Registro de usuário
    */
-  const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, any>) => {
+  const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, unknown>) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }))
 
@@ -301,7 +304,7 @@ export function useAuth(): UseAuthReturn {
       return {}
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      logger.error('Sign up error', error)
+      logger.error('Sign up error', error as Error)
       updateAuthState(null, null, null, errorMessage)
       return { error: errorMessage }
     }
@@ -329,7 +332,7 @@ export function useAuth(): UseAuthReturn {
         logger.audit('user_logout', userId)
       }
     } catch (error) {
-      logger.error('Sign out error', error)
+      logger.error('Sign out error', error as Error)
     }
   }, [supabase, updateAuthState, state.user?.id])
 
@@ -351,7 +354,7 @@ export function useAuth(): UseAuthReturn {
       return {}
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      logger.error('Reset password error', error)
+      logger.error('Reset password error', error as Error)
       return { error: errorMessage }
     }
   }, [supabase])
@@ -374,7 +377,7 @@ export function useAuth(): UseAuthReturn {
       return {}
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      logger.error('Update password error', error)
+      logger.error('Update password error', error as Error)
       return { error: errorMessage }
     }
   }, [supabase, state.user])
@@ -408,7 +411,7 @@ export function useAuth(): UseAuthReturn {
       return {}
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-      logger.error('Update profile error', error)
+      logger.error('Update profile error', error as Error)
       return { error: errorMessage }
     }
   }, [supabase, state.user, state.session, loadUserProfile, updateAuthState])
@@ -428,7 +431,7 @@ export function useAuth(): UseAuthReturn {
         logger.info('Session refreshed manually')
       }
     } catch (error) {
-      logger.error('Error refreshing session manually', error)
+      logger.error('Error refreshing session manually', error as Error)
       await signOut()
     }
   }, [supabase, setupSessionRefresh, signOut])
@@ -457,7 +460,7 @@ export function useAuth(): UseAuthReturn {
   // Listener para mudanças de autenticação
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session) => {
         logger.info('Auth state changed', { event })
         
         if (event === 'SIGNED_IN' && session?.user) {

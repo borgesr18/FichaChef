@@ -24,7 +24,7 @@ export function createSupabaseClient(request: NextRequest, response: NextRespons
         get(name: string) {
           return request.cookies.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: Record<string, unknown>) {
           request.cookies.set({
             name,
             value,
@@ -36,7 +36,7 @@ export function createSupabaseClient(request: NextRequest, response: NextRespons
             ...options,
           })
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: Record<string, unknown>) {
           request.cookies.set({
             name,
             value: '',
@@ -57,7 +57,7 @@ export function createSupabaseClient(request: NextRequest, response: NextRespons
  * Verifica autenticação do usuário
  */
 export async function verifyAuth(request: NextRequest): Promise<AuthContext> {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
