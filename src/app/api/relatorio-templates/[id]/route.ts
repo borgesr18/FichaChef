@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
 const templateSchema = z.object({
@@ -27,65 +28,52 @@ const templateSchema = z.object({
   padrao: z.boolean().optional()
 })
 
-export async function PUT(
+export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'write')
+  const user = await authenticateWithPermission('relatorios', 'write')
 
-    const body = await request.json()
-    const validatedData = templateSchema.parse(body)
+  const body = await request.json()
+  const validatedData = templateSchema.parse(body)
 
-    const params = await context.params
-    const template = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioTemplate.update({
-          where: {
-            id: params.id,
-            userId: user.id
-          },
-          data: validatedData
-        })
+  const params = await context.params
+  const template = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.update({
+        where: {
+          id: params.id,
+          userId: user.id
+        },
+        data: validatedData
       })
     })
+  })
 
-    await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, request)
+  await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, request)
 
-    return NextResponse.json(template)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
-    }
-    console.error('Error updating template:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(template)
+})
 
-export async function DELETE(
+export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const user = await authenticateWithPermission('relatorios', 'admin')
+  const user = await authenticateWithPermission('relatorios', 'admin')
 
-    const params = await context.params
-    await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.relatorioTemplate.delete({
-          where: {
-            id: params.id,
-            userId: user.id
-          }
-        })
+  const params = await context.params
+  await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.relatorioTemplate.delete({
+        where: {
+          id: params.id,
+          userId: user.id
+        }
       })
     })
+  })
 
-    await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, request)
+  await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, request)
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error deleting template:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json({ success: true })
+})

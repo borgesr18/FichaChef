@@ -3,66 +3,57 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { authenticateWithPermission } from '@/lib/auth'
 import { logUserAction } from '@/lib/permissions'
+import { withErrorHandler } from '@/lib/api-helpers'
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  try {
-    const user = await authenticateWithPermission('insumos', 'write')
+  const user = await authenticateWithPermission('insumos', 'write')
 
-    const body = await request.json()
-    const { nome, descricao } = body
+  const body = await request.json()
+  const { nome, descricao } = body
 
-    if (!nome) {
-      return NextResponse.json({ 
-        error: 'Nome é obrigatório' 
-      }, { status: 400 })
-    }
+  if (!nome) {
+    return NextResponse.json({ 
+      error: 'Nome é obrigatório' 
+    }, { status: 400 })
+  }
 
-    const categoria = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.categoriaInsumo.update({
-          where: { 
-            id,
-            userId: user.id
-          },
-          data: {
-            nome,
-            descricao
-          }
-        })
+  const categoria = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.categoriaInsumo.update({
+        where: { 
+          id,
+          userId: user.id
+        },
+        data: {
+          nome,
+          descricao
+        }
       })
     })
+  })
 
-    await logUserAction(user.id, 'update', 'categorias-insumos', id, 'categoria', { nome, descricao })
+  await logUserAction(user.id, 'update', 'categorias-insumos', id, 'categoria', { nome, descricao })
 
-    return NextResponse.json(categoria)
-  } catch (error) {
-    console.error('Error updating categoria insumo:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json(categoria)
+})
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  try {
-    const user = await authenticateWithPermission('insumos', 'admin')
+  const user = await authenticateWithPermission('insumos', 'admin')
 
-    await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.categoriaInsumo.delete({
-          where: { 
-            id,
-            userId: user.id
-          }
-        })
+  await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.categoriaInsumo.delete({
+        where: { 
+          id,
+          userId: user.id
+        }
       })
     })
+  })
 
-    await logUserAction(user.id, 'delete', 'categorias-insumos', id, 'categoria')
+  await logUserAction(user.id, 'delete', 'categorias-insumos', id, 'categoria')
 
-    return NextResponse.json({ message: 'Categoria deletada com sucesso' })
-  } catch (error) {
-    console.error('Error deleting categoria insumo:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+  return NextResponse.json({ message: 'Categoria deletada com sucesso' })
+})
