@@ -88,6 +88,64 @@ Para confirmar que tudo está funcionando:
    - Após login bem-sucedido, deve redirecionar para o dashboard
    - O menu lateral deve mostrar as opções corretas para cada perfil
 
+## Troubleshooting Deployment Pipeline
+
+### Problema: Mudanças não aparecem em produção
+
+Se você fez merge de PRs mas as mudanças não aparecem em https://ficha-chef.vercel.app:
+
+1. **Verifique se o Vercel está configurado para auto-deploy**:
+   - Acesse [Vercel Dashboard](https://vercel.com/dashboard)
+   - Vá em Settings > Git
+   - Certifique-se que "Production Branch" está definido como `main`
+   - Verifique se "Auto-deploy" está habilitado
+
+2. **Force um novo deployment**:
+   - No painel do Vercel, vá em "Deployments"
+   - Clique em "Redeploy" no último deployment
+   - Ou faça um commit vazio: `git commit --allow-empty -m "Force redeploy" && git push`
+
+3. **Verifique logs de build**:
+   - No Vercel, clique no deployment que falhou
+   - Verifique os logs de "Build" e "Function" para erros
+   - Procure por erros relacionados a variáveis de ambiente
+
+### Problema: Build failures
+
+Se o build falha no Vercel:
+
+1. **Teste localmente primeiro**:
+   ```bash
+   npm run build
+   ```
+
+2. **Verifique variáveis de ambiente**:
+   - Todas as variáveis `NEXT_PUBLIC_*` devem estar definidas
+   - `DATABASE_URL` deve estar configurado
+   - `NEXTAUTH_SECRET` deve estar definido
+
+3. **Logs comuns de erro**:
+   - `Cannot read property of undefined`: Variável de ambiente faltando
+   - `PrismaClientInitializationError`: DATABASE_URL incorreto
+   - `Supabase client error`: Credenciais Supabase incorretas
+
+### Verificação de Deployment
+
+Para confirmar que o deployment funcionou:
+
+1. **Verifique a versão do código**:
+   - Abra https://ficha-chef.vercel.app/login
+   - Verifique se a mensagem de erro mudou para a nova versão
+   - Console do browser deve mostrar logs de diagnóstico
+
+2. **Teste APIs**:
+   - Abra https://ficha-chef.vercel.app/api/dashboard-stats
+   - Deve retornar JSON ao invés de erro 500
+
+3. **Verifique autenticação**:
+   - Login deve funcionar sem mostrar "Modo Desenvolvimento"
+   - Dashboard deve carregar sem erros 500
+
 ## Suporte
 
 Se ainda houver problemas após seguir este guia:

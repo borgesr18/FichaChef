@@ -13,7 +13,7 @@ export function withErrorHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
     try {
       return await handler(req, context)
     } catch (error) {
-      console.error('Error in API route:', error)
+      console.error('❌ Error in API route:', req.url, error)
 
       if (error instanceof ZodError) {
         return createValidationErrorResponse(error.errors.map(e => e.message).join(', '))
@@ -22,6 +22,11 @@ export function withErrorHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
       if (error instanceof Error) {
         if (error.message.includes('not found')) {
           return createNotFoundResponse()
+        }
+        
+        if (error.message.includes('Usuário não autenticado')) {
+          console.error('🔧 PRODUÇÃO: Erro de autenticação - verifique variáveis Supabase no Vercel')
+          return createServerErrorResponse('Erro de autenticação. Verifique a configuração do sistema.')
         }
       }
 
@@ -33,11 +38,13 @@ export function withErrorHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
       }
 
       if (error instanceof Error && error.name === 'PrismaClientInitializationError') {
+        console.error('🔧 PRODUÇÃO: Erro de conexão com banco - verifique DATABASE_URL no Vercel')
         console.error('Database connectivity error:', error.message)
         return createServerErrorResponse('Database temporarily unavailable. Please try again.')
       }
 
-      return createServerErrorResponse()
+      console.error('🚨 PRODUÇÃO: Erro não tratado na API:', error)
+      return createServerErrorResponse('Erro interno do servidor. Verifique a configuração das variáveis de ambiente.')
     }
   }
 }

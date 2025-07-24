@@ -22,6 +22,7 @@ export async function authenticateUser(): Promise<AuthenticatedUser | null> {
         supabaseKey.includes('placeholder')) {
       
       console.log('🔓 Supabase não configurado - Modo desenvolvimento ativo')
+      console.log('🔧 Para produção: Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no Vercel')
       return {
         id: 'dev-user-id',
         email: 'dev@fichachef.com'
@@ -34,7 +35,8 @@ export async function authenticateUser(): Promise<AuthenticatedUser | null> {
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
-      console.error('Erro na autenticação Supabase:', error.message)
+      console.error('❌ Erro na autenticação Supabase:', error.message)
+      console.error('🔧 Verifique as credenciais do Supabase no Vercel')
       return null
     }
 
@@ -49,7 +51,7 @@ export async function authenticateUser(): Promise<AuthenticatedUser | null> {
       email: user.email,
     }
   } catch (error) {
-    console.error('Erro na autenticação:', error)
+    console.error('❌ Erro crítico na autenticação:', error)
     
     // Em desenvolvimento, retornar usuário fake em caso de erro
     if (process.env.NODE_ENV === 'development') {
@@ -60,6 +62,7 @@ export async function authenticateUser(): Promise<AuthenticatedUser | null> {
       }
     }
     
+    console.error('🚨 PRODUÇÃO: Falha crítica na autenticação - verifique variáveis de ambiente no Vercel')
     return null
   }
 }
