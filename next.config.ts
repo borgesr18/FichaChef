@@ -105,20 +105,26 @@ const nextConfig: NextConfig = {
       '@/hooks': path.resolve(__dirname, 'src/hooks'),
     }
 
+    config.devtool = false
+    
+    if (!isServer) {
+      config.externals = config.externals || []
+      config.externals.push({
+        '@jridgewell/sourcemap-codec': 'var undefined',
+        '@jridgewell/trace-mapping': 'var undefined',
+      })
+    }
+    
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    }
+
     config.module.rules.push({
       test: /\.m?js$/,
       resolve: {
         fullySpecified: false,
       },
     })
-
-    if (!dev) {
-      config.devtool = false
-    }
-
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    }
 
     // Plugin para analisar bundle (apenas em desenvolvimento)
     if (dev && process.env.ANALYZE === 'true') {
