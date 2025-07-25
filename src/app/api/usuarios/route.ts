@@ -1,10 +1,16 @@
 import { prisma } from '@/lib/prisma'
-import { authenticateWithPermission, createSuccessResponse } from '@/lib/auth'
+import { createSuccessResponse } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
+import { NextRequest } from 'next/server'
 
-export const GET = withErrorHandler(async function GET() {
-  await authenticateWithPermission('usuarios', 'read')
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
 
   const usuarios = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {

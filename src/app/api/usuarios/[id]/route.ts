@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { z } from 'zod'
@@ -16,7 +17,12 @@ export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await authenticateWithPermission('usuarios', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
   const { id } = await params
 
   const body = await request.json()
@@ -38,7 +44,12 @@ export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await authenticateWithPermission('usuarios', 'admin')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
   const { id } = await params
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
