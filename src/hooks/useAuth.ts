@@ -104,17 +104,19 @@ export function useAuth(): UseAuthReturn {
       isManager
     })
 
-    // Salvar no localStorage
-    if (isAuthenticated && session) {
-      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session))
-      localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString())
-      if (profile) {
-        localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile))
+    // Salvar no localStorage apenas no cliente
+    if (typeof window !== 'undefined' && isHydrated) {
+      if (isAuthenticated && session) {
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session))
+        localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString())
+        if (profile) {
+          localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile))
+        }
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.SESSION)
+        localStorage.removeItem(STORAGE_KEYS.PROFILE)
+        localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY)
       }
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.SESSION)
-      localStorage.removeItem(STORAGE_KEYS.PROFILE)
-      localStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY)
     }
 
     // Log de auditoria
@@ -125,7 +127,7 @@ export function useAuth(): UseAuthReturn {
         sessionId: session?.access_token?.slice(-8)
       })
     }
-  }, [])
+  }, [isHydrated])
 
   /**
    * Carrega perfil do usuário
@@ -202,27 +204,31 @@ export function useAuth(): UseAuthReturn {
    * Atualiza atividade do usuário
    */
   const updateActivity = useCallback(() => {
-    localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString())
+    if (typeof window !== 'undefined' && isHydrated) {
+      localStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString())
+    }
     setupActivityTimeout()
-  }, [setupActivityTimeout])
+  }, [setupActivityTimeout, isHydrated])
 
   /**
    * Verifica se a sessão expirou por inatividade
    */
   const checkSessionActivity = useCallback(() => {
-    const lastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY)
-    if (lastActivity) {
-      const timeSinceActivity = Date.now() - parseInt(lastActivity)
-      if (timeSinceActivity > SESSION_TIMEOUT) {
-        logger.warn('Session expired due to inactivity')
-        // Logout interno para evitar dependência circular
-        supabase.auth.signOut()
-        updateAuthState(null, null)
-        return false
+    if (typeof window !== 'undefined' && isHydrated) {
+      const lastActivity = localStorage.getItem(STORAGE_KEYS.LAST_ACTIVITY)
+      if (lastActivity) {
+        const timeSinceActivity = Date.now() - parseInt(lastActivity)
+        if (timeSinceActivity > SESSION_TIMEOUT) {
+          logger.warn('Session expired due to inactivity')
+          // Logout interno para evitar dependência circular
+          supabase.auth.signOut()
+          updateAuthState(null, null)
+          return false
+        }
       }
     }
     return true
-  }, [supabase, updateAuthState])
+  }, [supabase, updateAuthState, isHydrated])
 
   /**
    * Inicializa autenticação
