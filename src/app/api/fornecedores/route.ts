@@ -8,6 +8,7 @@ import {
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
+import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -18,21 +19,23 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
-  const fornecedores = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.fornecedor.findMany({
-        where: { userId: user.id },
-        include: {
-          _count: {
-            select: { insumos: true, precos: true }
-          }
-        },
-        orderBy: { nome: 'asc' },
+  return withTempUserHandling(user.id, 'fornecedores', async () => {
+    const fornecedores = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fornecedor.findMany({
+          where: { userId: user.id },
+          include: {
+            _count: {
+              select: { insumos: true, precos: true }
+            }
+          },
+          orderBy: { nome: 'asc' },
+        })
       })
     })
-  })
 
-  return createSuccessResponse(fornecedores)
+    return createSuccessResponse(fornecedores)
+  })
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {

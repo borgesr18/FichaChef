@@ -7,6 +7,7 @@ import {
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
+import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -17,23 +18,25 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
-  const { searchParams } = new URL(request.url)
-  const lida = searchParams.get('lida')
+  return withTempUserHandling(user.id, 'notificacoes', async () => {
+    const { searchParams } = new URL(request.url)
+    const lida = searchParams.get('lida')
 
-  const where: { userId: string; lida?: boolean } = { userId: user.id }
-  if (lida !== null) where.lida = lida === 'true'
+    const where: { userId: string; lida?: boolean } = { userId: user.id }
+    if (lida !== null) where.lida = lida === 'true'
 
-  const notificacoes = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.notificacao.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: 50,
+    const notificacoes = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.notificacao.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        })
       })
     })
-  })
 
-  return createSuccessResponse(notificacoes)
+    return createSuccessResponse(notificacoes)
+  })
 })
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
