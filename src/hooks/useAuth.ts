@@ -160,17 +160,21 @@ export function useAuth(): UseAuthReturn {
         const { data, error } = await supabase.auth.refreshSession()
         if (error) {
           logger.error('Session refresh failed', error)
-          await signOut()
+          // Logout interno para evitar dependência circular
+          await supabase.auth.signOut()
+          updateAuthState(null, null)
         } else if (data.session) {
           logger.info('Session refreshed successfully')
           setupSessionRefresh(data.session)
         }
       } catch (error) {
         logger.error('Error refreshing session', error as Error)
-        await signOut()
+        // Logout interno para evitar dependência circular
+        await supabase.auth.signOut()
+        updateAuthState(null, null)
       }
     }, Math.max(0, refreshAt - Date.now()))
-  }, [supabase])
+  }, [supabase, updateAuthState])
 
   /**
    * Configura timeout de inatividade
@@ -182,9 +186,11 @@ export function useAuth(): UseAuthReturn {
 
     activityTimeoutRef.current = setTimeout(async () => {
       logger.warn('Session expired due to inactivity')
-      await signOut()
+      // Logout interno para evitar dependência circular
+      await supabase.auth.signOut()
+      updateAuthState(null, null)
     }, SESSION_TIMEOUT)
-  }, [])
+  }, [supabase, updateAuthState])
 
   /**
    * Atualiza atividade do usuário
@@ -203,12 +209,14 @@ export function useAuth(): UseAuthReturn {
       const timeSinceActivity = Date.now() - parseInt(lastActivity)
       if (timeSinceActivity > SESSION_TIMEOUT) {
         logger.warn('Session expired due to inactivity')
-        signOut()
+        // Logout interno para evitar dependência circular
+        supabase.auth.signOut()
+        updateAuthState(null, null)
         return false
       }
     }
     return true
-  }, [])
+  }, [supabase, updateAuthState])
 
   /**
    * Inicializa autenticação
@@ -477,7 +485,7 @@ export function useAuth(): UseAuthReturn {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [loadUserProfile, updateAuthState, setupSessionRefresh, setupActivityTimeout, supabase.auth])
 
   // Listener para atividade do usuário
   useEffect(() => {

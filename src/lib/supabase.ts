@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type Session } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -9,10 +9,10 @@ if (process.env.NODE_ENV === 'development' && (!supabaseUrl || !supabaseAnonKey)
 }
 
 // Verificar se as credenciais são válidas (não placeholders)
-const isValidConfig = supabaseUrl && 
+const isValidConfig: boolean = !!(supabaseUrl && 
                      supabaseAnonKey && 
                      !supabaseUrl.includes('placeholder') && 
-                     !supabaseAnonKey.includes('placeholder')
+                     !supabaseAnonKey.includes('placeholder'))
 
 // Criar cliente com configuração adequada
 export const supabase = createClient(
@@ -142,7 +142,7 @@ export async function signOut() {
 }
 
 // Função para registrar listener de mudanças de autenticação
-export function onAuthStateChange(callback: (event: string, session: any) => void) {
+export function onAuthStateChange(callback: (event: string, session: Session | null) => void) {
   if (!isValidConfig) {
     console.log('🔧 Supabase não configurado - não registrando listener de auth')
     return { data: { subscription: { unsubscribe: () => {} } } }
