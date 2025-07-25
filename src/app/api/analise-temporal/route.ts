@@ -2,10 +2,10 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import {
-  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { analiseTemporalSchema } from '@/lib/validations'
 import { 
@@ -17,7 +17,13 @@ import {
 } from '@/lib/utils'
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('analise-temporal', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = analiseTemporalSchema.safeParse({
@@ -146,7 +152,13 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 })
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateWithPermission('analise-temporal', 'read')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const { searchParams } = new URL(request.url)
   const type = searchParams.get('type')

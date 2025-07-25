@@ -2,14 +2,20 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
-  authenticateWithPermission, 
   createValidationErrorResponse,
   createSuccessResponse 
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateWithPermission('alertas', 'read')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const { searchParams } = new URL(request.url)
   const lida = searchParams.get('lida')
@@ -31,7 +37,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
-  const user = await authenticateWithPermission('alertas', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const { ids, lida } = body

@@ -2,10 +2,10 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import {
-  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
@@ -15,7 +15,14 @@ export const PUT = withErrorHandler(async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateWithPermission('produtos', 'write')
+  
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = produtoSchema.safeParse(body)
@@ -71,7 +78,14 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await authenticateWithPermission('produtos', 'admin')
+  
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {

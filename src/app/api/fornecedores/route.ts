@@ -3,14 +3,20 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
-  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 
-export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateWithPermission('fornecedores', 'read')
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const fornecedores = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -30,7 +36,13 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('fornecedores', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = fornecedorSchema.safeParse(body)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { authenticateWithPermission } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
@@ -25,7 +25,13 @@ interface EstoqueItem {
 }
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateWithPermission('relatorios', 'read')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const { searchParams } = new URL(request.url)
   const reportType = searchParams.get('type') || 'custos'

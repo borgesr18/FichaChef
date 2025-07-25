@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -10,7 +11,11 @@ const resetPasswordSchema = z.object({
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  await authenticateWithPermission('usuarios', 'admin')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
 
   const body = await request.json()
   const { userId, newPassword } = resetPasswordSchema.parse(body)
