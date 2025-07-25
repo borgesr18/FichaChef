@@ -1,203 +1,256 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, ChefHat, Lock, Mail, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, loading: authLoading, isConfigured } = useSupabase()
+  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [isDevMode, setIsDevMode] = useState(false)
-  const router = useRouter()
+  const [isHydrated, setIsHydrated] = useState(false)
 
+  // ✅ Aguardar hidratação
   useEffect(() => {
-    // Verificar se está em modo desenvolvimento
-    const checkDevMode = () => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      
-      console.log('🔍 Environment check:', {
-        hasUrl: !!supabaseUrl,
-        hasKey: !!supabaseKey,
-        urlValue: supabaseUrl ? 'SET' : 'NOT SET',
-        keyValue: supabaseKey ? 'SET' : 'NOT SET',
-        hostname: window.location.hostname,
-        isProduction: window.location.hostname === 'ficha-chef.vercel.app'
-      })
-      
-      const isDev = !supabaseUrl || !supabaseKey || 
-                   supabaseUrl === '' || supabaseKey === '' ||
-                   supabaseUrl.includes('placeholder') || 
-                   supabaseKey.includes('placeholder')
-      
-      if (isDev && window.location.hostname === 'ficha-chef.vercel.app') {
-        console.error('🚨 PRODUÇÃO: Variáveis de ambiente não configuradas no Vercel!')
-      }
-      
-      setIsDevMode(isDev)
-    }
-    
-    checkDevMode()
+    setIsHydrated(true)
   }, [])
 
-  const handleDevLogin = () => {
-    setLoading(true)
-    // Simular login em modo desenvolvimento
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1000)
-  }
+  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
+  useEffect(() => {
+    if (!isHydrated || authLoading) return
 
+    // ✅ Se usuário já está logado, redirecionar
+    if (user) {
+      const redirect = searchParams.get('redirect') || '/dashboard'
+      console.log('✅ Login: Usuário já autenticado, redirecionando para:', redirect)
+      router.push(redirect)
+    }
+  }, [isHydrated, authLoading, user, router, searchParams])
+
+  // ✅ CORRIGIDO: Função de login com tratamento de erros
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos')
+      return
+    }
+
     setLoading(true)
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // ✅ Se Supabase não está configurado, simular login
+      if (!isConfigured) {
+        console.log('🔧 Login: Modo desenvolvimento - simulando login')
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Simular delay
+        router.push('/dashboard')
+        return
+      }
+
+      // ✅ Login real com Supabase
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
       })
 
-      if (error) {
-        setError(error.message)
-      } else {
-        router.push('/dashboard')
+      if (loginError) {
+        console.error('❌ Login: Erro na autenticação:', loginError.message)
+        
+        // ✅ Mensagens de erro mais amigáveis
+        if (loginError.message.includes('Invalid login credentials')) {
+          setError('Email ou senha incorretos')
+        } else if (loginError.message.includes('Email not confirmed')) {
+          setError('Email não confirmado. Verifique sua caixa de entrada.')
+        } else {
+          setError(loginError.message)
+        }
+        return
       }
-    } catch {
+
+      if (data.user) {
+        console.log('✅ Login: Usuário autenticado com sucesso:', data.user.email)
+        
+        // ✅ Aguardar um pouco para garantir que o estado seja atualizado
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        const redirect = searchParams.get('redirect') || '/dashboard'
+        router.push(redirect)
+      }
+
+    } catch (error) {
+      console.error('❌ Login: Erro inesperado:', error)
       setError('Erro inesperado. Tente novamente.')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+  // ✅ LOADING: Durante hidratação ou carregamento de auth
+  if (!isHydrated || authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-xl">FC</span>
-          </div>
-          <h2 className="text-3xl font-extrabold text-gray-900">
-            FichaChef
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sistema de Gestão Gastronômica
-          </p>
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Carregando sistema...</p>
         </div>
-        
-        <div className="bg-white py-8 px-6 shadow-lg rounded-lg">
-          {isDevMode && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
-              <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
-                <div>
-                  <h3 className="text-sm font-medium text-amber-800">
-                    Modo Desenvolvimento
-                  </h3>
-                  <p className="mt-1 text-sm text-amber-700">
-                    Variáveis de ambiente do Supabase não configuradas. Em produção, configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no painel do Vercel.
-                  </p>
-                  <button
-                    onClick={handleDevLogin}
-                    disabled={loading}
-                    className="mt-3 w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? (
-                      <div className="flex items-center">
-                        <LoadingSpinner size="sm" className="mr-2" />
-                        Entrando...
-                      </div>
-                    ) : (
-                      'Entrar em Modo Desenvolvimento'
-                    )}
-                  </button>
-                </div>
-              </div>
+      </div>
+    )
+  }
+
+  // ✅ Se usuário já está logado, mostrar redirecionamento
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Redirecionando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* ✅ Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4 shadow-lg">
+            <ChefHat className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">FichaChef</h1>
+          <p className="text-slate-600">Sistema de Gestão Gastronômica</p>
+          
+          {/* ✅ Indicador de modo */}
+          {!isConfigured && (
+            <div className="mt-4 p-3 bg-blue-100 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 font-medium">
+                🔧 Modo Desenvolvimento
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Supabase não configurado
+              </p>
             </div>
           )}
+        </div>
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+        {/* ✅ Form */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* ✅ Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
                 Email
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required={!isDevMode}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-50"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading || isDevMode}
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  placeholder="seu@email.com"
+                  disabled={loading}
+                  autoComplete="email"
+                />
+              </div>
             </div>
-            
+
+            {/* ✅ Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
                 Senha
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-slate-400" />
+                </div>
                 <input
                   id="password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required={!isDevMode}
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:bg-gray-50"
-                  placeholder="Sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading || isDevMode}
+                  className="block w-full pl-10 pr-12 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Sua senha"
+                  disabled={loading}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading || isDevMode}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600" />
                   )}
                 </button>
               </div>
             </div>
 
+            {/* ✅ Error */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                {error}
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <span className="text-sm text-red-700 font-medium">{error}</span>
+                </div>
               </div>
             )}
 
-            {!isDevMode && (
-              <div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <LoadingSpinner size="sm" className="mr-2" />
-                      Entrando...
-                    </div>
-                  ) : (
-                    'Entrar'
-                  )}
-                </button>
-              </div>
-            )}
+            {/* ✅ Submit Button */}
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center"
+            >
+              {loading ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
+            </button>
           </form>
+
+          {/* ✅ Dados de teste */}
+          {!isConfigured && (
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-sm font-semibold text-slate-700 mb-2">
+                🧪 Dados para teste:
+              </p>
+              <div className="text-xs text-slate-600 space-y-1">
+                <p><strong>Email:</strong> qualquer@email.com</p>
+                <p><strong>Senha:</strong> qualquer senha</p>
+                <p className="text-slate-500 mt-2">
+                  (Modo desenvolvimento - qualquer credencial funciona)
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ✅ Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-slate-500">
+            © 2025 FichaChef. Sistema de Gestão Gastronômica.
+          </p>
         </div>
       </div>
     </div>
