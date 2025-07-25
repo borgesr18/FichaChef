@@ -3,15 +3,21 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
-  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
-export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateWithPermission('insumos', 'read')
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const insumos = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -31,7 +37,13 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('insumos', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = insumoSchema.safeParse(body)

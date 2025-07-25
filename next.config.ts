@@ -55,90 +55,16 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Configurações para desenvolvimento
-    if (dev) {
-      config.devtool = 'eval-source-map'
-    }
-
-    // Otimizações para produção
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              enforce: true,
-            },
-          },
+    // Configuração específica para @jridgewell modules apenas em produção
+    if (!dev) {
+      config.module.rules.push({
+        test: /\.m?js$/,
+        include: /node_modules\/@jridgewell/,
+        type: 'javascript/auto',
+        resolve: {
+          fullySpecified: false,
         },
-      }
-    }
-
-    // Resolver problemas de módulos
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    }
-
-    config.resolve.extensionAlias = {
-      '.js': ['.js', '.ts', '.tsx'],
-      '.mjs': ['.mjs', '.js'],
-    }
-
-    // Configurar aliases para imports mais limpos
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-      '@/components': path.resolve(__dirname, 'src/components'),
-      '@/lib': path.resolve(__dirname, 'src/lib'),
-      '@/hooks': path.resolve(__dirname, 'src/hooks'),
-    }
-
-    config.devtool = false
-    
-    if (!isServer) {
-      config.externals = config.externals || []
-      config.externals.push({
-        '@jridgewell/sourcemap-codec': 'var undefined',
-        '@jridgewell/trace-mapping': 'var undefined',
       })
-    }
-    
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    }
-
-    config.module.rules.push({
-      test: /\.m?js$/,
-      resolve: {
-        fullySpecified: false,
-      },
-    })
-
-    // Plugin para analisar bundle (apenas em desenvolvimento)
-    if (dev && process.env.ANALYZE === 'true') {
-      try {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'server',
-            openAnalyzer: true,
-          })
-        )
-      } catch (error) {
-        console.warn('Bundle analyzer not available:', error instanceof Error ? error.message : String(error))
-      }
     }
 
     return config
@@ -165,8 +91,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   
-  // Configurações de build
-  output: 'standalone',
+  // Configurações de build (apenas para produção)
+  ...(process.env.NODE_ENV === 'production' && { output: 'standalone' }),
   
   // Configurações de TypeScript
   typescript: {

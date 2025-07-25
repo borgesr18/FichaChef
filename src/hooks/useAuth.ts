@@ -127,9 +127,9 @@ export function useAuth(): UseAuthReturn {
   const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('perfilUsuario')
         .select('*')
-        .eq('id', userId)
+        .eq('userId', userId)
         .single()
 
       if (error) {
@@ -392,9 +392,9 @@ export function useAuth(): UseAuthReturn {
       }
 
       const { error } = await supabase
-        .from('profiles')
+        .from('perfilUsuario')
         .update(updates)
-        .eq('id', state.user.id)
+        .eq('userId', state.user.id)
 
       if (error) {
         logger.error('Profile update failed', error)
