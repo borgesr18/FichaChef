@@ -18,6 +18,7 @@ interface Notificacao {
 interface HeaderProps {
   onGlobalSearch?: () => void
   onToggleWorkflow?: () => void
+  onMenuClick?: () => void
 }
 
 export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {

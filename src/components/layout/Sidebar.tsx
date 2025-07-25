@@ -51,27 +51,31 @@ const menuItems = [
 
 interface SidebarProps {
   isOpen: boolean
-  onToggle: () => void
+  onToggle?: () => void
+  onClose?: () => void
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname()
   const { userRole, loading } = useSupabase()
-  const { config, getColorClasses, isModuleVisible, isQuickAction } = useProfileInterface()
+  const { config, getColorClasses, isModuleVisible, isQuickActionAvailable } = useProfileInterface()
+
+  // Usar onClose se disponível, senão usar onToggle
+  const handleClose = onClose || onToggle || (() => {})
 
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !userRole) return true
     return item.roles.includes(userRole) && isModuleVisible(item.href)
   })
 
-  const quickActionItems = filteredMenuItems.filter(item => isQuickAction(item.href))
-  const regularItems = filteredMenuItems.filter(item => !isQuickAction(item.href))
+  const quickActionItems = filteredMenuItems.filter(item => isQuickActionAvailable(item.href))
+  const regularItems = filteredMenuItems.filter(item => !isQuickActionAvailable(item.href))
 
   return (
     <>
       {/* Mobile menu button */}
       <button
-        onClick={onToggle}
+        onClick={handleClose}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
         aria-label="Toggle menu"
       >
@@ -82,7 +86,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={onToggle}
+          onClick={handleClose}
         />
       )}
 
@@ -139,7 +143,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                           title=""
                           onClick={() => {
                             if (window.innerWidth < 1024) {
-                              onToggle()
+                              handleClose()
                             }
                           }}
                           className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
@@ -182,7 +186,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                           title=""
                           onClick={() => {
                             if (window.innerWidth < 1024) {
-                              onToggle()
+                              handleClose()
                             }
                           }}
                           className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${

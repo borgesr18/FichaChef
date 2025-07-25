@@ -107,13 +107,13 @@ export function useProfileInterface() {
 
   // ✅ ADICIONADO: Função para verificar se módulo está visível
   const isModuleVisible = useCallback((moduleName: string) => {
-    return !config.hiddenModules.includes(moduleName)
-  }, [config.hiddenModules])
+    return !config?.hiddenModules.includes(moduleName)
+  }, [config?.hiddenModules])
 
   // ✅ ADICIONADO: Função para verificar se ação rápida está disponível
   const isQuickActionAvailable = useCallback((actionName: string) => {
-    return config.quickActions.includes(actionName)
-  }, [config.quickActions])
+    return config?.quickActions.includes(actionName) || false
+  }, [config?.quickActions])
 
   // ✅ ADICIONADO: Função para obter título baseado no role
   const getRoleTitle = useCallback(() => {
