@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const produtos = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.produto.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         include: {
           produtoFichas: {
             include: {
@@ -71,7 +71,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           nome: data.nome,
           precoVenda: data.precoVenda,
           margemLucro: data.margemLucro,
-          userId: user.id,
+          user_id: user.id,
           produtoFichas: {
             create: data.fichas.map(ficha => ({
               fichaTecnicaId: ficha.fichaTecnicaId,

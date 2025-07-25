@@ -34,7 +34,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
       return await prisma.producao.update({
         where: { 
           id,
-          userId: user.id
+          user_id: user.id
         },
         data: {
           fichaTecnicaId,
@@ -69,7 +69,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
       return await prisma.producao.delete({
         where: { 
           id,
-          userId: user.id
+          user_id: user.id
         }
       })
     })

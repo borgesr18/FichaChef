@@ -10,7 +10,7 @@ import ModernTable from '@/components/ui/ModernTable'
 
 interface Usuario {
   id: string
-  userId: string
+  user_id: string
   nome?: string
   email?: string
   role: string
@@ -156,7 +156,7 @@ export default function UsuariosPage() {
     try {
       const endpoint = resetMethod === 'direct' ? 'reset-password' : 'send-password-reset'
       const body = resetMethod === 'direct' 
-        ? { userId: selectedUser.userId, newPassword }
+        ? { user_id: selectedUser.user_id, newPassword }
         : { email: selectedUser.email }
 
       const response = await fetch(`/api/usuarios/${endpoint}`, {
@@ -272,7 +272,7 @@ export default function UsuariosPage() {
                     return (
                       <select
                         value={value as string}
-                        onChange={(e) => updateUserRole(usuario.userId, e.target.value)}
+                        onChange={(e) => updateUserRole(usuario.user_id, e.target.value)}
                         className="text-sm border border-slate-300 rounded-lg px-2 py-1 bg-white hover:bg-slate-50 transition-colors duration-200"
                       >
                         <option value="cozinheiro">Cozinheiro</option>
@@ -296,7 +296,7 @@ export default function UsuariosPage() {
                           <Key className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => deleteUser(usuario.userId)}
+                          onClick={() => deleteUser(usuario.user_id)}
                           className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
                           title="Excluir usuário"
                         >

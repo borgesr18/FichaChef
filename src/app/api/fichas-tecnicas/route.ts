@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const fichas = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.fichaTecnica.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         include: {
           categoria: true,
           ingredientes: {
@@ -78,7 +78,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           temperaturaForno,
           modoPreparo,
           nivelDificuldade,
-          userId: user.id,
+          user_id: user.id,
           ingredientes: {
             create: ingredientes?.map(ing => ({
               insumoId: ing.insumoId,

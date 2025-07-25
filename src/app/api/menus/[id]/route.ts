@@ -25,7 +25,7 @@ export const GET = withErrorHandler(async function GET(
   const menu = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.menu.findFirst({
-        where: { id, userId: user.id },
+        where: { id, user_id: user.id },
         include: {
           itens: {
             include: {
@@ -84,7 +84,7 @@ export const PUT = withErrorHandler(async function PUT(
 
   const existingMenu = await withDatabaseRetry(async () => {
     return await prisma.menu.findFirst({
-      where: { id, userId: user.id }
+      where: { id, user_id: user.id }
     })
   })
 
@@ -165,7 +165,7 @@ export const DELETE = withErrorHandler(async function DELETE(
 
   const existingMenu = await withDatabaseRetry(async () => {
     return await prisma.menu.findFirst({
-      where: { id, userId: user.id }
+      where: { id, user_id: user.id }
     })
   })
 

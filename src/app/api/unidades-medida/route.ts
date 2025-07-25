@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const unidades = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.unidadeMedida.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         orderBy: { nome: 'asc' },
       })
     })
@@ -54,7 +54,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.unidadeMedida.create({
         data: {
           ...data,
-          userId: user.id,
+          user_id: user.id,
         },
       })
     })

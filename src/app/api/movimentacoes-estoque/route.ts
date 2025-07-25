@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const movimentacoes = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoEstoque.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         include: {
           insumo: true,
         },
@@ -57,7 +57,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.movimentacaoEstoque.create({
         data: {
           ...data,
-          userId: user.id,
+          user_id: user.id,
         },
         include: {
           insumo: true,

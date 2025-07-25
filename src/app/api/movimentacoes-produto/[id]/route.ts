@@ -33,7 +33,7 @@ export const PUT = withErrorHandler(async function PUT(
   const movimentacao = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoProduto.update({
-        where: { id, userId: user.id },
+        where: { id, user_id: user.id },
         data: {
           ...data,
         },
@@ -65,7 +65,7 @@ export const DELETE = withErrorHandler(async function DELETE(
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoProduto.delete({
-        where: { id, userId: user.id },
+        where: { id, user_id: user.id },
       })
     })
   })

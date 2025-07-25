@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const categorias = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.categoriaReceita.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         orderBy: { nome: 'asc' },
       })
     })
@@ -54,7 +54,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         data: {
           nome,
           descricao,
-          userId: user.id,
+          user_id: user.id,
         },
       })
     })

@@ -31,7 +31,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const agendamentos = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.relatorioAgendamento.findMany({
-        where: { userId: user.id },
+        where: { user_id: user.id },
         include: { template: true },
         orderBy: { createdAt: 'desc' }
       })
@@ -61,7 +61,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         data: {
           ...validatedData,
           proximaExecucao,
-          userId: user.id
+          user_id: user.id
         },
         include: { template: true }
       })

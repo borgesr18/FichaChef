@@ -20,7 +20,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest, { p
       return await prisma.fichaTecnica.findUnique({
         where: { 
           id,
-          userId: user.id
+          user_id: user.id
         },
         include: {
           categoria: true,
@@ -83,7 +83,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
       return await prisma.fichaTecnica.update({
         where: { 
           id,
-          userId: user.id
+          user_id: user.id
         },
         data: {
           nome,
@@ -133,7 +133,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
       return await prisma.fichaTecnica.delete({
         where: { 
           id,
-          userId: user.id
+          user_id: user.id
         }
       })
     })
