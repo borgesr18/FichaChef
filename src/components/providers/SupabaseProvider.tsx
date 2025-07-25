@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 
-// ✅ SIMPLIFICADO: Provider básico sem conflitos com useAuth
+// ✅ CORRIGIDO: Provider com debug e cache clearing
 interface SupabaseContextType {
   user: User | null
   userRole: string | null
@@ -12,6 +12,7 @@ interface SupabaseContextType {
   signOut: () => Promise<void>
   isConfigured: boolean
   refreshUserRole: () => Promise<void>
+  clearCache: () => void
 }
 
 const SupabaseContext = createContext<SupabaseContextType>({
@@ -20,7 +21,8 @@ const SupabaseContext = createContext<SupabaseContextType>({
   loading: true,
   signOut: async () => {},
   isConfigured: false,
-  refreshUserRole: async () => {}
+  refreshUserRole: async () => {},
+  clearCache: () => {}
 })
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
@@ -29,35 +31,91 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isConfigured, setIsConfigured] = useState(false)
 
-  // ✅ CORRIGIDO: Função simplificada para buscar role
-  const refreshUserRole = useCallback(async () => {
+  // ✅ NOVO: Função para limpar cache
+  const clearCache = useCallback(() => {
+    console.log('🧹 Limpando cache de role...')
+    setUserRole(null)
+    localStorage.removeItem('fichachef-user-role')
+    localStorage.removeItem('fichachef-user-profile')
+  }, [])
+
+  // ✅ CORRIGIDO: Função com debug e cache clearing
+  const refreshUserRole = useCallback(async (forceRefresh = false) => {
     if (!user) {
+      console.log('❌ refreshUserRole: Sem usuário')
       setUserRole(null)
       return
     }
 
+    console.log('🔄 refreshUserRole: Buscando role para usuário:', user.email)
+
+    // ✅ Se forçar refresh, limpar cache primeiro
+    if (forceRefresh) {
+      clearCache()
+    }
+
     try {
-      // ✅ Buscar diretamente na tabela perfis_usuarios
+      // ✅ CORRIGIDO: Query com debug
+      console.log('📡 Fazendo query na tabela perfis_usuarios...')
       const { data, error } = await supabase
         .from('perfis_usuarios')
-        .select('role')
+        .select('role, nome, email')
         .eq('user_id', user.id)
         .single()
 
+      console.log('📊 Resultado da query:', { data, error })
+
       if (error) {
-        console.warn('Erro ao buscar role do usuário:', error.message)
-        // ✅ FALLBACK: Se não encontrar, assumir cozinheiro
-        setUserRole('cozinheiro')
+        console.error('❌ Erro ao buscar role do usuário:', error.message)
+        
+        // ✅ FALLBACK: Tentar buscar por email como backup
+        console.log('🔄 Tentando buscar por email como backup...')
+        const { data: backupData, error: backupError } = await supabase
+          .from('perfis_usuarios')
+          .select('role, nome, email')
+          .eq('email', user.email)
+          .single()
+
+        console.log('📊 Resultado backup:', { backupData, backupError })
+
+        if (backupError) {
+          console.warn('⚠️ Backup também falhou, usando fallback cozinheiro')
+          setUserRole('cozinheiro')
+          return
+        }
+
+        console.log('✅ Backup funcionou! Role encontrado:', backupData.role)
+        setUserRole(backupData.role || 'cozinheiro')
+        
+        // ✅ Salvar no cache
+        localStorage.setItem('fichachef-user-role', backupData.role || 'cozinheiro')
         return
       }
 
-      setUserRole(data.role || 'cozinheiro')
+      console.log('✅ Role encontrado com sucesso:', data.role)
+      console.log('👤 Dados do perfil:', data)
+      
+      const role = data.role || 'cozinheiro'
+      setUserRole(role)
+      
+      // ✅ Salvar no cache
+      localStorage.setItem('fichachef-user-role', role)
+      localStorage.setItem('fichachef-user-profile', JSON.stringify(data))
+
+      // ✅ Debug final
+      if (role === 'chef') {
+        console.log('👨‍🍳 USUÁRIO É CHEF - Deve ter acesso completo!')
+      } else if (role === 'gerente') {
+        console.log('👔 USUÁRIO É GERENTE - Acesso limitado')
+      } else {
+        console.log('🍳 USUÁRIO É COZINHEIRO - Acesso básico')
+      }
+
     } catch (error) {
-      console.error('Erro ao buscar role:', error)
-      // ✅ FALLBACK: Em caso de erro, assumir cozinheiro
+      console.error('💥 Erro inesperado ao buscar role:', error)
       setUserRole('cozinheiro')
     }
-  }, [user])
+  }, [user, clearCache])
 
   useEffect(() => {
     // Verificar se o Supabase está configurado
@@ -71,24 +129,39 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       !supabaseKey.includes('placeholder'))
     
     setIsConfigured(configured)
+    console.log('⚙️ Supabase configurado:', configured)
 
     // ✅ Só tentar autenticação se estiver configurado
     if (configured) {
       // Obter sessão atual
       supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log('🔐 Sessão atual:', session?.user?.email || 'Nenhuma')
         setUser(session?.user ?? null)
         setLoading(false)
       })
 
-      // ✅ SIMPLIFICADO: Escutar mudanças de autenticação
+      // ✅ Escutar mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
+          console.log('🔄 Auth state change:', event, session?.user?.email || 'Nenhuma')
           setUser(session?.user ?? null)
           setLoading(false)
           
           // ✅ Limpar role quando usuário sair
           if (event === 'SIGNED_OUT') {
+            console.log('👋 Usuário saiu - limpando role')
             setUserRole(null)
+            clearCache()
+          }
+          
+          // ✅ Forçar refresh do role no login
+          if (event === 'SIGNED_IN') {
+            console.log('🚪 Usuário entrou - forçando refresh do role')
+            setTimeout(() => {
+              if (session?.user) {
+                refreshUserRole(true) // Forçar refresh
+              }
+            }, 1000)
           }
         }
       )
@@ -98,21 +171,25 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       console.warn('⚠️ Supabase não configurado - algumas funcionalidades podem não funcionar')
       setLoading(false)
     }
-  }, [isConfigured])
+  }, [isConfigured, refreshUserRole, clearCache])
 
   // ✅ Buscar role quando usuário mudar
   useEffect(() => {
     if (user && isConfigured) {
+      console.log('👤 Usuário mudou, buscando role...')
       refreshUserRole()
     } else if (!user) {
+      console.log('❌ Sem usuário, limpando role')
       setUserRole(null)
     }
   }, [user, isConfigured, refreshUserRole])
 
   const signOut = async () => {
     if (isConfigured) {
+      console.log('👋 Fazendo logout...')
       await supabase.auth.signOut()
       setUserRole(null)
+      clearCache()
     }
   }
 
@@ -123,7 +200,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       loading, 
       signOut, 
       isConfigured, 
-      refreshUserRole 
+      refreshUserRole: () => refreshUserRole(true), // Sempre forçar refresh
+      clearCache
     }}>
       {children}
     </SupabaseContext.Provider>
