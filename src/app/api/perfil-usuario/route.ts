@@ -27,7 +27,7 @@ export const GET = withErrorHandler(async function GET() {
 
   if (isDevMode) {
     return createSuccessResponse({
-      userId: user.id,
+      user_id: user.id,
       email: user.email,
       role: user.role,
       nome: user.nome
