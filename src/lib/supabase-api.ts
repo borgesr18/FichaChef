@@ -7,17 +7,30 @@ import { logger } from './logger'
  * Extrai cookies e headers diretamente do NextRequest
  */
 export function createSupabaseApiClient(req: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Verificar se as credenciais estão configuradas
+  if (!supabaseUrl || !supabaseKey || 
+      supabaseUrl === '' || supabaseKey === '' ||
+      supabaseUrl.includes('placeholder') || 
+      supabaseKey.includes('placeholder')) {
+    throw new Error('Supabase não configurado')
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
           return req.cookies.get(name)?.value
         },
         set() {
+          // Não definir cookies em rotas da API
         },
         remove() {
+          // Não remover cookies em rotas da API
         },
       },
     }
@@ -30,8 +43,28 @@ export function createSupabaseApiClient(req: NextRequest) {
  */
 export async function authenticateUserFromApi(req: NextRequest) {
   try {
+    // Verificar configuração do Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    // Se Supabase não está configurado, usar modo desenvolvimento
+    if (!supabaseUrl || !supabaseKey || 
+        supabaseUrl === '' || supabaseKey === '' ||
+        supabaseUrl.includes('placeholder') || 
+        supabaseKey.includes('placeholder')) {
+      
+      logger.info('api_auth_dev_mode', { message: 'Supabase não configurado - usando modo desenvolvimento' })
+      return {
+        id: 'dev-user-id',
+        email: 'dev@fichachef.com',
+        user_metadata: { role: 'chef' },
+        app_metadata: {}
+      }
+    }
+
     const supabase = createSupabaseApiClient(req)
     
+    // Tentar autenticação via cookies de sessão primeiro
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (user && !error) {
@@ -44,12 +77,13 @@ export async function authenticateUserFromApi(req: NextRequest) {
       }
     }
     
+    // Se falhou com cookies, tentar com Authorization header
     const authHeader = req.headers.get('authorization')
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
       try {
         const supabaseAdmin = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          supabaseUrl,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
           {
             cookies: {
@@ -79,11 +113,24 @@ export async function authenticateUserFromApi(req: NextRequest) {
     
     logger.security('api_auth_failed', { 
       sessionError: error?.message,
-      hasAuthHeader: !!authHeader 
+      hasAuthHeader: !!authHeader,
+      cookieCount: req.cookies.getAll().length
     })
     return null
   } catch (error) {
     logger.error('api_auth_error', error as Error)
+    
+    // Em desenvolvimento, retornar usuário fake em caso de erro
+    if (process.env.NODE_ENV === 'development') {
+      logger.warn('api_auth_fallback_dev', { message: 'Erro na autenticação, usando usuário de desenvolvimento' })
+      return {
+        id: 'dev-user-id',
+        email: 'dev@fichachef.com',
+        user_metadata: { role: 'chef' },
+        app_metadata: {}
+      }
+    }
+    
     return null
   }
 }
@@ -100,7 +147,11 @@ export async function requireApiAuthentication(req: NextRequest) {
       authenticated: false,
       user: null,
       response: NextResponse.json(
-        { error: 'Não autorizado' },
+        { 
+          error: 'Não autorizado. Faça login para continuar.',
+          code: 'UNAUTHORIZED',
+          timestamp: new Date().toISOString()
+        },
         { status: 401 }
       )
     }
