@@ -39,12 +39,12 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const { insumoId, fornecedorId, dataInicio, dataFim, periodo, mesesProjecao } = parsedBody.data
 
   const where: {
-    user_id: string
+    userId: string
     dataVigencia: { gte: Date; lte: Date }
     insumoId?: string
     fornecedorId?: string
   } = {
-    user_id: user.id,
+    userId: user.id,
     dataVigencia: {
       gte: dataInicio,
       lte: dataFim
@@ -168,7 +168,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
       return await withDatabaseRetry(async () => {
         return await prisma.insumo.findMany({
           where: {
-            user_id: user.id,
+            userId: user.id,
             fornecedorPrecos: {
               some: {}
             }
@@ -195,7 +195,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
       return await withDatabaseRetry(async () => {
         return await prisma.fornecedor.findMany({
           where: {
-            user_id: user.id,
+            userId: user.id,
             ativo: true,
             precos: {
               some: {}
@@ -222,7 +222,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
     withDatabaseRetry(async () => {
       return await prisma.insumo.findMany({
         where: {
-          user_id: user.id,
+          userId: user.id,
           fornecedorPrecos: { some: {} }
         },
         select: { id: true, nome: true },
@@ -232,7 +232,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
     withDatabaseRetry(async () => {
       return await prisma.fornecedor.findMany({
         where: {
-          user_id: user.id,
+          userId: user.id,
           ativo: true,
           precos: { some: {} }
         },

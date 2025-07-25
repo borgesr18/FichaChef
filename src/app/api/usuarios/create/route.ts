@@ -37,9 +37,9 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     
     const newUser = await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
-        return await prisma.perfis_usuarios.create({
+        return await prisma.perfilUsuario.create({
           data: {
-            user_id: mockUserId,
+            userId: mockUserId,
             email: validatedData.email,
             nome: validatedData.nome,
             role: validatedData.role
@@ -71,9 +71,9 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
     const newUser = await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
-        return await prisma.perfis_usuarios.create({
+        return await prisma.perfilUsuario.create({
           data: {
-            user_id: authUser.user.id,
+            userId: authUser.user.id,
             email: validatedData.email,
             nome: validatedData.nome,
             role: validatedData.role

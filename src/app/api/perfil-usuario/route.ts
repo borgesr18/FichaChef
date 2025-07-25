@@ -36,8 +36,8 @@ export const GET = withErrorHandler(async function GET() {
 
   const perfil = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
-      return await prisma.perfis_usuarios.findUnique({
-        where: { user_id: user.id }
+      return await prisma.perfilUsuario.findUnique({
+        where: { userId: user.id }
       })
     })
   })
@@ -60,8 +60,8 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
 
   const perfil = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
-      return await prisma.perfis_usuarios.update({
-        where: { user_id: user.id },
+      return await prisma.perfilUsuario.update({
+        where: { userId: user.id },
         data: validatedData
       })
     })

@@ -17,7 +17,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   try {
     const { prisma } = await import('@/lib/prisma')
-    userCount = await prisma.perfis_usuarios.count()
+    userCount = await prisma.perfilUsuario.count()
     console.log('📊 User count in database:', userCount)
     
     if (userCount > 0) {
