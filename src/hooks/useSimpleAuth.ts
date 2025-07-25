@@ -9,7 +9,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   SimpleAuthState,
-  SimpleUserProfile,
   simpleSignIn,
   simpleSignOut,
   getCurrentSession,

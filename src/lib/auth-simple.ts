@@ -46,7 +46,7 @@ export async function simpleSignIn(email: string, password: string) {
     }
 
     return { success: true, user: data.user, session: data.session }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Erro inesperado ao fazer login' }
   }
 }
@@ -63,7 +63,7 @@ export async function simpleSignOut() {
     }
 
     return { success: true }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Erro inesperado ao fazer logout' }
   }
 }
@@ -80,7 +80,7 @@ export async function getCurrentSession() {
     }
 
     return { success: true, session }
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Erro ao obter sessão', session: null }
   }
 }
