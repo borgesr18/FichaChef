@@ -2,16 +2,22 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import {
-  authenticateWithPermission,
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { movimentacaoProdutoSchema } from '@/lib/validations'
 
-export const GET = withErrorHandler(async function GET() {
-  const user = await authenticateWithPermission('estoque', 'read')
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const movimentacoes = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -29,7 +35,13 @@ export const GET = withErrorHandler(async function GET() {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('estoque', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = movimentacaoProdutoSchema.safeParse(body)

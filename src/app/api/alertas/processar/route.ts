@@ -1,14 +1,21 @@
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { 
-  authenticateWithPermission, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { logUserAction } from '@/lib/permissions'
+import { NextRequest } from 'next/server'
 
-export const POST = withErrorHandler(async function POST(request) {
-  const user = await authenticateWithPermission('alertas', 'write')
+export const POST = withErrorHandler(async function POST(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const alertasGerados = []
 

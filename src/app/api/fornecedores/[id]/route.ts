@@ -3,17 +3,22 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { fornecedorSchema } from '@/lib/validations'
 import { 
-  authenticateWithPermission, 
   createValidationErrorResponse,
   createSuccessResponse,
   createNotFoundResponse
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const user = await authenticateWithPermission('fornecedores', 'write')
+  
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  const user = auth.user!
 
   const body = await request.json()
   const validationResult = fornecedorSchema.safeParse(body)
@@ -56,7 +61,12 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
 
 export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const user = await authenticateWithPermission('fornecedores', 'admin')
+  
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  const user = auth.user!
 
   const existingFornecedor = await withDatabaseRetry(async () => {
     return await prisma.fornecedor.findFirst({

@@ -3,15 +3,21 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { fornecedorPrecoSchema } from '@/lib/validations'
 import { 
-  authenticateWithPermission, 
   createValidationErrorResponse, 
   createSuccessResponse 
 } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateWithPermission('fornecedores', 'read')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const { searchParams } = new URL(request.url)
   const insumoId = searchParams.get('insumoId')
@@ -38,7 +44,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('fornecedores', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const parsedBody = fornecedorPrecoSchema.safeParse({

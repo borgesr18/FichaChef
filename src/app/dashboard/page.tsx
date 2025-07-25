@@ -28,39 +28,93 @@ export default function DashboardPage() {
   const { notifications, addNotification, removeNotification } = useNotifications()
 
   useEffect(() => {
+    let isMounted = true
+    let hasExecuted = false
+
     const fetchStats = async () => {
+      if (!isMounted || hasExecuted) return
+      hasExecuted = true
+      
       try {
         setLoading(true)
         setError('')
         
-        // Fetch stats from APIs with timeout
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000)
         
-        const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.all([
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json'
+        }
+        
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`
+        }
+
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+        
+        const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.allSettled([
           withRequestDeduplication('dashboard-insumos', () => 
-            fetch('/api/insumos', { signal: controller.signal })),
-          withRequestDeduplication('dashboard-fichas', () => 
-            fetch('/api/fichas-tecnicas', { signal: controller.signal })),
-          withRequestDeduplication('dashboard-producao', () => 
-            fetch('/api/producao', { signal: controller.signal })),
-          withRequestDeduplication('dashboard-produtos', () => 
-            fetch('/api/produtos', { signal: controller.signal }))
+            fetch('/api/insumos', { 
+              signal: controller.signal,
+              headers,
+              credentials: 'include'
+            })),
+          delay(1000).then(() => withRequestDeduplication('dashboard-fichas', () => 
+            fetch('/api/fichas-tecnicas', { 
+              signal: controller.signal,
+              headers,
+              credentials: 'include'
+            }))),
+          delay(2000).then(() => withRequestDeduplication('dashboard-producao', () => 
+            fetch('/api/producao', { 
+              signal: controller.signal,
+              headers,
+              credentials: 'include'
+            }))),
+          delay(3000).then(() => withRequestDeduplication('dashboard-produtos', () => 
+            fetch('/api/produtos', { 
+              signal: controller.signal,
+              headers,
+              credentials: 'include'
+            })))
         ])
         
         clearTimeout(timeoutId)
 
-        if (!insumosRes.ok || !fichasRes.ok || !producoesRes.ok || !produtosRes.ok) {
-          const statuses = [insumosRes.status, fichasRes.status, producoesRes.status, produtosRes.status]
-          throw new Error(`API requests failed: ${statuses.join(', ')}`)
+        const responses = []
+        responses.push(insumosRes.status === 'fulfilled' ? insumosRes.value : null)
+        responses.push(fichasRes.status === 'fulfilled' ? fichasRes.value : null)
+        responses.push(producoesRes.status === 'fulfilled' ? producoesRes.value : null)
+        responses.push(produtosRes.status === 'fulfilled' ? produtosRes.value : null)
+
+        const [insumosResponse, fichasResponse, producoesResponse, produtosResponse] = responses
+
+        const failedStatuses = []
+        if (!insumosResponse?.ok) failedStatuses.push(insumosResponse?.status || 'failed')
+        if (!fichasResponse?.ok) failedStatuses.push(fichasResponse?.status || 'failed')
+        if (!producoesResponse?.ok) failedStatuses.push(producoesResponse?.status || 'failed')
+        if (!produtosResponse?.ok) failedStatuses.push(produtosResponse?.status || 'failed')
+
+        if (failedStatuses.length > 0) {
+          throw new Error(`API requests failed: ${failedStatuses.join(', ')}`)
         }
 
         const [insumos, fichas, producoes, produtos] = await Promise.all([
-          insumosRes.json(),
-          fichasRes.json(),
-          producoesRes.json(),
-          produtosRes.json()
+          insumosResponse?.json() || [],
+          fichasResponse?.json() || [],
+          producoesResponse?.json() || [],
+          produtosResponse?.json() || []
         ])
+
+        if (!isMounted) return
 
         const newStats = {
           insumos: Array.isArray(insumos) ? insumos.length : 0,
@@ -81,6 +135,8 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
+        if (!isMounted) return
+        
         const errorMessage = err instanceof Error && err.name === 'AbortError' 
           ? 'Tempo limite excedido ao carregar dados. Tente novamente.' 
           : 'Erro ao carregar estatísticas. Verifique sua conexão.'
@@ -93,11 +149,17 @@ export default function DashboardPage() {
           duration: 5000
         })
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchStats()
+    
+    return () => {
+      isMounted = false
+    }
   }, [addNotification])
 
   if (loading) {

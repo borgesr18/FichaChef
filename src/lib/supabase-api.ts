@@ -34,24 +34,54 @@ export async function authenticateUserFromApi(req: NextRequest) {
     
     const { data: { user }, error } = await supabase.auth.getUser()
     
-    if (error) {
-      logger.security('api_auth_failed', { error: error.message })
-      return null
+    if (user && !error) {
+      logger.info('api_auth_success_session', { userId: user.id, email: user.email })
+      return {
+        id: user.id,
+        email: user.email || '',
+        user_metadata: user.user_metadata || {},
+        app_metadata: user.app_metadata || {}
+      }
     }
     
-    if (!user) {
-      logger.security('api_auth_no_user')
-      return null
+    const authHeader = req.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      try {
+        const supabaseAdmin = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            cookies: {
+              get() { return undefined },
+              set() {},
+              remove() {},
+            },
+          }
+        )
+        
+        const { data: { user: tokenUser }, error: tokenError } = await supabaseAdmin.auth.getUser(token)
+        if (tokenUser && !tokenError) {
+          logger.info('api_auth_success_token', { userId: tokenUser.id, email: tokenUser.email })
+          return {
+            id: tokenUser.id,
+            email: tokenUser.email || '',
+            user_metadata: tokenUser.user_metadata || {},
+            app_metadata: tokenUser.app_metadata || {}
+          }
+        } else {
+          logger.security('api_auth_token_invalid', { error: tokenError?.message })
+        }
+      } catch (tokenErr) {
+        logger.error('api_auth_token_error', tokenErr as Error)
+      }
     }
     
-    logger.info('api_auth_success', { userId: user.id, email: user.email })
-    
-    return {
-      id: user.id,
-      email: user.email || '',
-      user_metadata: user.user_metadata || {},
-      app_metadata: user.app_metadata || {}
-    }
+    logger.security('api_auth_failed', { 
+      sessionError: error?.message,
+      hasAuthHeader: !!authHeader 
+    })
+    return null
   } catch (error) {
     logger.error('api_auth_error', error as Error)
     return null

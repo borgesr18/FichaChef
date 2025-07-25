@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { authenticateWithPermission } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
@@ -23,7 +23,13 @@ export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await authenticateWithPermission('relatorios', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const validatedData = agendamentoSchema.parse(body)
@@ -51,7 +57,13 @@ export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const user = await authenticateWithPermission('relatorios', 'admin')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const params = await context.params
   await withConnectionHealthCheck(async () => {

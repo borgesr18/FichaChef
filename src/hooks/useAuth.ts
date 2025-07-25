@@ -477,7 +477,7 @@ export function useAuth(): UseAuthReturn {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase, updateAuthState, loadUserProfile, setupSessionRefresh, setupActivityTimeout])
+  }, [])
 
   // Listener para atividade do usuário
   useEffect(() => {

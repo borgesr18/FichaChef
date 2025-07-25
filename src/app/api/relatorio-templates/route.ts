@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { authenticateWithPermission } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
@@ -29,7 +29,13 @@ const templateSchema = z.object({
 })
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const user = await authenticateWithPermission('relatorios', 'read')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const { searchParams } = new URL(request.url)
   const tipo = searchParams.get('tipo')
@@ -53,7 +59,13 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await authenticateWithPermission('relatorios', 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const body = await request.json()
   const validatedData = templateSchema.parse(body)

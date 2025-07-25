@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { authenticateWithPermission, createSuccessResponse } from '@/lib/auth'
+import { createSuccessResponse } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const POST = withErrorHandler(async function POST(
@@ -9,9 +10,15 @@ export const POST = withErrorHandler(async function POST(
   context: { params: Promise<{ operationId: string }> }
 ) {
   const { operationId } = await context.params
-  const { selectedIds, fieldValues, module } = await request.json()
+  const { selectedIds, fieldValues } = await request.json()
 
-  const user = await authenticateWithPermission(module, 'write')
+  const auth = await requireApiAuthentication(request)
+  
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  
+  const user = auth.user!
 
   const result = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {

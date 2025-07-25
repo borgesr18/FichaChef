@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { authenticateWithPermission } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const user = await authenticateWithPermission('fichas-tecnicas', 'write')
+  
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  const user = auth.user!
 
   const body = await request.json()
   const { nome, descricao } = body
@@ -40,7 +45,12 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
 
 export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const user = await authenticateWithPermission('fichas-tecnicas', 'admin')
+  
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
+  }
+  const user = auth.user!
 
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { authenticateWithPermission, createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { createSuccessResponse, createErrorResponse } from '@/lib/auth'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
@@ -21,14 +22,20 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     
     if (userCount > 0) {
       console.log('🔐 Users exist, requiring admin authentication')
-      await authenticateWithPermission('usuarios', 'admin')
+      const auth = await requireApiAuthentication(request)
+      if (!auth.authenticated) {
+        return auth.response!
+      }
     } else {
       console.log('🚀 Bootstrap mode: Creating first admin user without authentication')
       isBootstrapMode = true
     }
   } catch (dbError) {
     console.error('Database error during user count check:', dbError)
-    await authenticateWithPermission('usuarios', 'admin')
+    const auth = await requireApiAuthentication(request)
+    if (!auth.authenticated) {
+      return auth.response!
+    }
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
