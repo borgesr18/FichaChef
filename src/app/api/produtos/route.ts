@@ -9,6 +9,7 @@ import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
+import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -19,31 +20,33 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
-  const produtos = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.produto.findMany({
-        where: { userId: user.id },
-        include: {
-          produtoFichas: {
-            include: {
-              fichaTecnica: {
-                include: {
-                  ingredientes: {
-                    include: {
-                      insumo: true
+  return withTempUserHandling(user.id, 'produtos', async () => {
+    const produtos = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.produto.findMany({
+          where: { userId: user.id },
+          include: {
+            produtoFichas: {
+              include: {
+                fichaTecnica: {
+                  include: {
+                    ingredientes: {
+                      include: {
+                        insumo: true
+                      }
                     }
                   }
                 }
               }
             }
-          }
-        },
-        orderBy: { nome: 'asc' },
+          },
+          orderBy: { nome: 'asc' },
+        })
       })
     })
-  })
 
-  return createSuccessResponse(produtos)
+    return createSuccessResponse(produtos)
+  })
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {

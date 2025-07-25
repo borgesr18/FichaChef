@@ -8,6 +8,7 @@ import {
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { fichaTecnicaSchema } from '@/lib/validations'
+import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -18,24 +19,26 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
-  const fichas = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.fichaTecnica.findMany({
-        where: { userId: user.id },
-        include: {
-          categoria: true,
-          ingredientes: {
-            include: {
-              insumo: true,
+  return withTempUserHandling(user.id, 'fichas-tecnicas', async () => {
+    const fichas = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.fichaTecnica.findMany({
+          where: { userId: user.id },
+          include: {
+            categoria: true,
+            ingredientes: {
+              include: {
+                insumo: true,
+              },
             },
           },
-        },
-        orderBy: { nome: 'asc' },
+          orderBy: { nome: 'asc' },
+        })
       })
     })
-  })
 
-  return createSuccessResponse(fichas)
+    return createSuccessResponse(fichas)
+  })
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {

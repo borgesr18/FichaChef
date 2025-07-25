@@ -9,6 +9,7 @@ import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { producaoSchema } from '@/lib/validations'
+import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -19,19 +20,21 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
-  const producoes = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.producao.findMany({
-        where: { userId: user.id },
-        include: {
-          fichaTecnica: true,
-        },
-        orderBy: { dataProducao: 'desc' },
+  return withTempUserHandling(user.id, 'producao', async () => {
+    const producoes = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.producao.findMany({
+          where: { userId: user.id },
+          include: {
+            fichaTecnica: true,
+          },
+          orderBy: { dataProducao: 'desc' },
+        })
       })
     })
-  })
 
-  return createSuccessResponse(producoes)
+    return createSuccessResponse(producoes)
+  })
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
