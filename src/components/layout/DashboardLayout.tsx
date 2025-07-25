@@ -1,66 +1,98 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Sidebar from './Sidebar'
 import Header from './Header'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import GlobalSearch from '@/components/ui/GlobalSearch'
-import WorkflowPanel from '@/components/ui/WorkflowPanel'
-import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt'
-import OfflineIndicator from '@/components/ui/OfflineIndicator'
-import { WorkflowProvider } from '@/components/providers/WorkflowProvider'
-import { PWAProvider } from '@/components/providers/PWAProvider'
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
-import { useProfileInterface } from '@/hooks/useProfileInterface'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const router = useRouter()
+  const { user, loading, isConfigured } = useSupabase()
+  const [isHydrated, setIsHydrated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
-  const [workflowPanelOpen, setWorkflowPanelOpen] = useState(false)
-  const { config, getColorClasses } = useProfileInterface()
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
+  // ✅ CORRIGIDO: Aguardar hidratação antes de renderizar
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação e carregamento
+  useEffect(() => {
+    if (!isHydrated || loading) return
+
+    // ✅ Se Supabase está configurado mas usuário não está logado
+    if (isConfigured && !user) {
+      console.log('🔒 DashboardLayout: Usuário não autenticado, redirecionando para login')
+      router.push('/login')
+      return
+    }
+
+    // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
+    if (!isConfigured) {
+      console.log('🔧 DashboardLayout: Modo desenvolvimento - Supabase não configurado')
+    }
+  }, [isHydrated, loading, isConfigured, user, router])
+
+  // ✅ LOADING: Mostrar spinner durante hidratação ou carregamento
+  if (!isHydrated || loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Carregando sistema...</p>
+        </div>
+      </div>
+    )
   }
 
-  useKeyboardShortcuts({
-    onGlobalSearch: () => setGlobalSearchOpen(true),
-    onToggleFavorites: () => setWorkflowPanelOpen(!workflowPanelOpen)
-  })
-
-  return (
-    <PWAProvider>
-      <WorkflowProvider>
-        <div className={`min-h-screen ${getColorClasses('background')}`}>
-          <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
-          <Header 
-            onGlobalSearch={() => setGlobalSearchOpen(true)}
-            onToggleWorkflow={() => setWorkflowPanelOpen(!workflowPanelOpen)}
-          />
-          <main className={`pt-16 transition-all duration-300 ${config?.compactMode ? 'lg:ml-56' : 'lg:ml-64'}`}>
-            <div className={`${config?.compactMode ? 'p-3 lg:p-4' : 'p-4 lg:p-6'}`}>
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </div>
-          </main>
-          
-          <GlobalSearch 
-            isOpen={globalSearchOpen} 
-            onClose={() => setGlobalSearchOpen(false)} 
-          />
-          <WorkflowPanel 
-            isOpen={workflowPanelOpen} 
-            onClose={() => setWorkflowPanelOpen(false)} 
-          />
-          <PWAInstallPrompt />
-          <OfflineIndicator />
+  // ✅ VERIFICAÇÃO: Se Supabase configurado mas sem usuário, não renderizar
+  if (isConfigured && !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Redirecionando para login...</p>
         </div>
-      </WorkflowProvider>
-    </PWAProvider>
+      </div>
+    )
+  }
+
+  // ✅ RENDERIZAÇÃO: Layout principal
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* ✅ Sidebar */}
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+      />
+
+      {/* ✅ Main Content */}
+      <div className="lg:pl-64">
+        {/* ✅ Header */}
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        
+        {/* ✅ Page Content */}
+        <main className="min-h-screen pt-16">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* ✅ Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </div>
   )
 }
+

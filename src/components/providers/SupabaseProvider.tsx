@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import { withRequestDeduplication } from '@/lib/request-cache'
 
+// ✅ SIMPLIFICADO: Provider básico sem conflitos com useAuth
 interface SupabaseContextType {
   user: User | null
   userRole: string | null
@@ -29,6 +29,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isConfigured, setIsConfigured] = useState(false)
 
+  // ✅ CORRIGIDO: Função simplificada para buscar role
   const refreshUserRole = useCallback(async () => {
     if (!user) {
       setUserRole(null)
@@ -36,16 +37,25 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const response = await withRequestDeduplication('user-role', async () => {
-        const res = await fetch('/api/perfil-usuario')
-        if (res.ok) {
-          return res.json()
-        }
-        throw new Error('Failed to fetch user role')
-      })
-      setUserRole(response.role)
+      // ✅ Buscar diretamente na tabela perfis_usuarios
+      const { data, error } = await supabase
+        .from('perfis_usuarios')
+        .select('role')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error) {
+        console.warn('Erro ao buscar role do usuário:', error.message)
+        // ✅ FALLBACK: Se não encontrar, assumir cozinheiro
+        setUserRole('cozinheiro')
+        return
+      }
+
+      setUserRole(data.role || 'cozinheiro')
     } catch (error) {
-      console.error('Error fetching user role:', error)
+      console.error('Erro ao buscar role:', error)
+      // ✅ FALLBACK: Em caso de erro, assumir cozinheiro
+      setUserRole('cozinheiro')
     }
   }, [user])
 
@@ -54,46 +64,67 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
-    setIsConfigured(!!(supabaseUrl && supabaseKey && 
+    const configured = !!(supabaseUrl && supabaseKey && 
       supabaseUrl !== 'https://placeholder.supabase.co' && 
-      supabaseKey !== 'placeholder-key'))
+      supabaseKey !== 'placeholder-key' &&
+      !supabaseUrl.includes('placeholder') &&
+      !supabaseKey.includes('placeholder'))
+    
+    setIsConfigured(configured)
 
-    // Só tentar autenticação se estiver configurado
-    if (isConfigured) {
+    // ✅ Só tentar autenticação se estiver configurado
+    if (configured) {
       // Obter sessão atual
       supabase.auth.getSession().then(({ data: { session } }) => {
         setUser(session?.user ?? null)
         setLoading(false)
       })
 
-      // Escutar mudanças de autenticação
+      // ✅ SIMPLIFICADO: Escutar mudanças de autenticação
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         (event, session) => {
           setUser(session?.user ?? null)
           setLoading(false)
+          
+          // ✅ Limpar role quando usuário sair
+          if (event === 'SIGNED_OUT') {
+            setUserRole(null)
+          }
         }
       )
 
       return () => subscription.unsubscribe()
     } else {
+      console.warn('⚠️ Supabase não configurado - algumas funcionalidades podem não funcionar')
       setLoading(false)
     }
   }, [isConfigured])
 
+  // ✅ Buscar role quando usuário mudar
   useEffect(() => {
-    if (user && !userRole) {
+    if (user && isConfigured) {
       refreshUserRole()
+    } else if (!user) {
+      setUserRole(null)
     }
-  }, [user, userRole, refreshUserRole])
+  }, [user, isConfigured, refreshUserRole])
 
   const signOut = async () => {
     if (isConfigured) {
       await supabase.auth.signOut()
+      setUserRole(null)
     }
   }
 
   return (
-    <SupabaseContext.Provider value={{ user, userRole, loading, signOut, isConfigured, refreshUserRole }}>
+    <SupabaseContext.Provider value={{ 
+      user, 
+      userRole, 
+      loading, 
+      signOut, 
+      isConfigured, 
+      refreshUserRole 
+    }}>
       {children}
     </SupabaseContext.Provider>
   )
