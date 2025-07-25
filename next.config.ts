@@ -55,25 +55,8 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Configurar aliases para imports mais limpos
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-      '@/components': path.resolve(__dirname, 'src/components'),
-      '@/lib': path.resolve(__dirname, 'src/lib'),
-      '@/hooks': path.resolve(__dirname, 'src/hooks'),
-    }
-
-    // Resolver problemas de módulos ES apenas para produção
+    // Configuração específica para @jridgewell modules apenas em produção
     if (!dev) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      }
-
-      // Configuração específica para @jridgewell modules em produção
       config.module.rules.push({
         test: /\.m?js$/,
         include: /node_modules\/@jridgewell/,
