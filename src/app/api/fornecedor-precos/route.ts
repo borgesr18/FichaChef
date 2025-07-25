@@ -23,7 +23,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const insumoId = searchParams.get('insumoId')
   const fornecedorId = searchParams.get('fornecedorId')
 
-  const where: { user_id: string; insumoId?: string; fornecedorId?: string } = { user_id: user.id }
+  const where: { userId: string; insumoId?: string; fornecedorId?: string } = { userId: user.id }
   if (insumoId) where.insumoId = insumoId
   if (fornecedorId) where.fornecedorId = fornecedorId
 
@@ -70,7 +70,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         where: {
           fornecedorId: data.fornecedorId,
           insumoId: data.insumoId,
-          user_id: user.id,
+          userId: user.id,
           ativo: true
         },
         data: { ativo: false }
@@ -83,7 +83,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.fornecedorPreco.create({
         data: {
           ...data,
-          user_id: user.id,
+          userId: user.id,
         },
         include: {
           fornecedor: true,

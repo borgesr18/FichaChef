@@ -36,7 +36,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   const existingInsumo = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.insumo.findFirst({
-        where: { id, user_id: user.id }
+        where: { id, userId: user.id }
       })
     })
   })
@@ -77,7 +77,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   const existingInsumo = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.insumo.findFirst({
-        where: { id, user_id: user.id }
+        where: { id, userId: user.id }
       })
     })
   })

@@ -44,7 +44,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
     return await withDatabaseRetry(async () => {
       return await prisma.relatorioTemplate.findMany({
         where: {
-          user_id: user.id,
+          userId: user.id,
           ...(tipo && { tipo })
         },
         orderBy: [
@@ -75,7 +75,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.relatorioTemplate.create({
         data: {
           ...validatedData,
-          user_id: user.id
+          userId: user.id
         }
       })
     })

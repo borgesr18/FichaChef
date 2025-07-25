@@ -65,7 +65,7 @@ export const POST = withErrorHandler(async function POST(
                   nome: `${fieldValues.namePrefix || 'Cópia de'} ${product.nome}`,
                   precoVenda: product.precoVenda,
                   margemLucro: product.margemLucro,
-                  user_id: user.id,
+                  userId: user.id,
                   produtoFichas: {
                     create: product.produtoFichas.map(ficha => ({
                       fichaTecnicaId: ficha.fichaTecnicaId,

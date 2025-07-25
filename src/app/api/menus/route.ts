@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const menus = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.menu.findMany({
-        where: { user_id: user.id },
+        where: { userId: user.id },
         include: {
           itens: {
             include: {
@@ -80,7 +80,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           descricao: data.descricao,
           tipo: data.tipo,
           ativo: data.ativo,
-          user_id: user.id,
+          userId: user.id,
           itens: {
             create: data.itens.map(item => ({
               produtoId: item.produtoId,

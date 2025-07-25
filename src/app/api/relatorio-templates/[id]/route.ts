@@ -49,7 +49,7 @@ export const PUT = withErrorHandler(async function PUT(
       return await prisma.relatorioTemplate.update({
         where: {
           id: params.id,
-          user_id: user.id
+          userId: user.id
         },
         data: validatedData
       })
@@ -79,7 +79,7 @@ export const DELETE = withErrorHandler(async function DELETE(
       return await prisma.relatorioTemplate.delete({
         where: {
           id: params.id,
-          user_id: user.id
+          userId: user.id
         }
       })
     })

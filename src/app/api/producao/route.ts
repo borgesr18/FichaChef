@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const producoes = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.producao.findMany({
-        where: { user_id: user.id },
+        where: { userId: user.id },
         include: {
           fichaTecnica: true,
         },
@@ -64,7 +64,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.producao.create({
         data: {
           ...data,
-          user_id: user.id,
+          userId: user.id,
         },
         include: {
           fichaTecnica: true,

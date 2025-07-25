@@ -23,7 +23,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const tipo = searchParams.get('tipo')
   const itemTipo = searchParams.get('itemTipo')
 
-  const where: { user_id: string; tipo?: string; itemTipo?: string } = { user_id: user.id }
+  const where: { userId: string; tipo?: string; itemTipo?: string } = { userId: user.id }
   if (tipo) where.tipo = tipo
   if (itemTipo) where.itemTipo = itemTipo
 
@@ -61,7 +61,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     return await withDatabaseRetry(async () => {
       return await prisma.configuracaoAlerta.findFirst({
         where: {
-          user_id: user.id,
+          userId: user.id,
           tipo: data.tipo,
           itemId: data.itemId,
           itemTipo: data.itemTipo
@@ -77,7 +77,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           where: { id: existing.id },
           data: {
             ...data,
-            user_id: user.id,
+            userId: user.id,
           },
         })
       })
@@ -91,7 +91,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         return await prisma.configuracaoAlerta.create({
           data: {
             ...data,
-            user_id: user.id,
+            userId: user.id,
           },
         })
       })

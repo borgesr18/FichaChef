@@ -20,7 +20,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const lida = searchParams.get('lida')
 
-  const where: { user_id: string; lida?: boolean } = { user_id: user.id }
+  const where: { userId: string; lida?: boolean } = { userId: user.id }
   if (lida !== null) where.lida = lida === 'true'
 
   const notificacoes = await withConnectionHealthCheck(async () => {
@@ -57,7 +57,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
       return await prisma.notificacao.updateMany({
         where: {
           id: { in: ids },
-          user_id: user.id
+          userId: user.id
         },
         data: { lida }
       })

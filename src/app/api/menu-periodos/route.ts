@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const menuId = searchParams.get('menuId')
 
-  const where = menuId ? { user_id: user.id, menuId } : { user_id: user.id }
+  const where = menuId ? { userId: user.id, menuId } : { userId: user.id }
 
   const periodos = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -74,7 +74,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       return await prisma.menuPeriodo.create({
         data: {
           ...data,
-          user_id: user.id,
+          userId: user.id,
         },
         include: {
           menu: {

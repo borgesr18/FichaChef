@@ -35,7 +35,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
       return await prisma.movimentacaoEstoque.update({
         where: { 
           id,
-          user_id: user.id
+          userId: user.id
         },
         data: {
           insumoId,
@@ -71,7 +71,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
       return await prisma.movimentacaoEstoque.delete({
         where: { 
           id,
-          user_id: user.id
+          userId: user.id
         }
       })
     })
