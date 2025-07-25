@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 // import { Geist, Geist_Mono } from "next/font/google";
 import { SupabaseProvider } from "@/components/providers/SupabaseProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import DebugPanel from "@/components/DebugPanel";
 import "./globals.css";
 
 // const geistSans = Geist({
@@ -107,6 +108,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <SupabaseProvider>
             {children}
+            <DebugPanel />
           </SupabaseProvider>
         </ErrorBoundary>
       </body>
