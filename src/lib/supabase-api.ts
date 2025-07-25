@@ -47,11 +47,26 @@ export async function authenticateUserFromApi(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
-    // Se Supabase não está configurado, usar modo desenvolvimento
+    // Log das variáveis para debug (sem expor chaves completas)
+    logger.info('api_auth_config_check', { 
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey,
+      urlPrefix: supabaseUrl?.substring(0, 20),
+      keyPrefix: supabaseKey?.substring(0, 20),
+      nodeEnv: process.env.NODE_ENV
+    })
+    
+    // Se Supabase não está configurado, usar modo desenvolvimento apenas em dev
     if (!supabaseUrl || !supabaseKey || 
         supabaseUrl === '' || supabaseKey === '' ||
         supabaseUrl.includes('placeholder') || 
         supabaseKey.includes('placeholder')) {
+      
+      // Em produção, não usar modo desenvolvimento
+      if (process.env.NODE_ENV === 'production') {
+        logger.error('Supabase não configurado em produção', new Error('api_auth_prod_no_config'))
+        return null
+      }
       
       logger.info('api_auth_dev_mode', { message: 'Supabase não configurado - usando modo desenvolvimento' })
       return {
@@ -114,7 +129,8 @@ export async function authenticateUserFromApi(req: NextRequest) {
     logger.security('api_auth_failed', { 
       sessionError: error?.message,
       hasAuthHeader: !!authHeader,
-      cookieCount: req.cookies.getAll().length
+      cookieCount: req.cookies.getAll().length,
+      userAgent: req.headers.get('user-agent')?.substring(0, 50)
     })
     return null
   } catch (error) {

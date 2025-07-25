@@ -56,6 +56,7 @@ const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutos
 const REFRESH_THRESHOLD = 5 * 60 * 1000 // 5 minutos antes do vencimento
 
 export function useAuth(): UseAuthReturn {
+  const [isHydrated, setIsHydrated] = useState(false)
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
@@ -66,6 +67,11 @@ export function useAuth(): UseAuthReturn {
     isAdmin: false,
     isManager: false
   })
+
+  // Verificar se estamos no lado do cliente
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -460,13 +466,17 @@ export function useAuth(): UseAuthReturn {
     return state.profile.role === role || (role !== 'admin' && state.isAdmin)
   }, [state.profile, state.isAdmin])
 
-  // Inicializar autenticação
+  // Inicializar autenticação apenas após hidratação
   useEffect(() => {
-    initializeAuth()
-  }, [initializeAuth])
+    if (isHydrated) {
+      initializeAuth()
+    }
+  }, [initializeAuth, isHydrated])
 
-  // Listener para mudanças de autenticação
+  // Listener para mudanças de autenticação apenas após hidratação
   useEffect(() => {
+    if (!isHydrated) return
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session) => {
         logger.info('Auth state changed', { event })
@@ -485,7 +495,7 @@ export function useAuth(): UseAuthReturn {
     )
 
     return () => subscription.unsubscribe()
-  }, [loadUserProfile, updateAuthState, setupSessionRefresh, setupActivityTimeout, supabase.auth])
+  }, [loadUserProfile, updateAuthState, setupSessionRefresh, setupActivityTimeout, supabase.auth, isHydrated])
 
   // Listener para atividade do usuário
   useEffect(() => {
