@@ -14,7 +14,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 
   const usuarios = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
-      return await prisma.perfilUsuario.findMany({
+      return await prisma.perfis_usuarios.findMany({
         orderBy: { createdAt: 'desc' }
       })
     })

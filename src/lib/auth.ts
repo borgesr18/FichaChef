@@ -125,16 +125,16 @@ export async function authenticateUserWithProfile(): Promise<AuthenticatedUser |
     const { withConnectionHealthCheck } = await import('./database-utils')
     
     let perfil = await withConnectionHealthCheck(async () => {
-      return await prisma.perfilUsuario.findUnique({
-        where: { userId: user.id }
+      return await prisma.perfis_usuarios.findUnique({
+        where: { user_id: user.id }
       })
     })
 
     if (!perfil) {
       perfil = await withConnectionHealthCheck(async () => {
-        return await prisma.perfilUsuario.create({
+        return await prisma.perfis_usuarios.create({
           data: {
-            userId: user.id,
+            user_id: user.id,
             email: user.email,
             role: 'cozinheiro'
           }

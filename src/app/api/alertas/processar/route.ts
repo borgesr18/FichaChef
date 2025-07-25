@@ -22,7 +22,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const configEstoque = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.configuracaoAlerta.findMany({
-        where: { userId: user.id, tipo: 'estoque_baixo', ativo: true }
+        where: { user_id: user.id, tipo: 'estoque_baixo', ativo: true }
       })
     })
   })
@@ -37,7 +37,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
         return await withDatabaseRetry(async () => {
           return await prisma.notificacao.findFirst({
             where: {
-              userId: user.id,
+              user_id: user.id,
               tipo: 'estoque_baixo',
               itemId: config.itemId,
               lida: false,
@@ -61,7 +61,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
                 prioridade: saldoAtual <= 0 ? 'critica' : 'alta',
                 valorAtual: saldoAtual,
                 valorLimite: config.limiteEstoqueBaixo,
-                userId: user.id
+                user_id: user.id
               }
             })
           })
@@ -74,7 +74,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   const configValidade = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.configuracaoAlerta.findMany({
-        where: { userId: user.id, tipo: 'validade_proxima', ativo: true }
+        where: { user_id: user.id, tipo: 'validade_proxima', ativo: true }
       })
     })
   })
@@ -91,7 +91,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       const notificacaoExistente = await withDatabaseRetry(async () => {
         return await prisma.notificacao.findFirst({
           where: {
-            userId: user.id,
+            user_id: user.id,
             tipo: 'validade_proxima',
             itemId: config.itemId,
             dataLimite: item.dataValidade,
@@ -115,7 +115,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
               dataLimite: new Date(item.dataValidade),
               valorAtual: diasRestantes,
               valorLimite: config.diasAntesVencimento,
-              userId: user.id
+              user_id: user.id
             }
           })
         })
@@ -126,7 +126,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
 
   const configCusto = await withDatabaseRetry(async () => {
     return await prisma.configuracaoAlerta.findMany({
-      where: { userId: user.id, tipo: 'custo_alto', ativo: true }
+      where: { user_id: user.id, tipo: 'custo_alto', ativo: true }
     })
   })
 
@@ -134,7 +134,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     if (config.itemTipo === 'produto') {
       const produto = await withDatabaseRetry(async () => {
         return await prisma.produto.findFirst({
-          where: { id: config.itemId, userId: user.id },
+          where: { id: config.itemId, user_id: user.id },
           include: {
             produtoFichas: {
               include: {
@@ -167,7 +167,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
           const notificacaoExistente = await withDatabaseRetry(async () => {
             return await prisma.notificacao.findFirst({
               where: {
-                userId: user.id,
+                user_id: user.id,
                 tipo: 'custo_alto',
                 itemId: config.itemId,
                 lida: false,
@@ -189,7 +189,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
                   prioridade: margemReal <= 0 ? 'critica' : margemReal <= 10 ? 'alta' : 'media',
                   valorAtual: margemReal,
                   valorLimite: config.margemCustoMaxima,
-                  userId: user.id
+                  user_id: user.id
                 }
               })
             })
@@ -220,7 +220,7 @@ async function calcularSaldoAtual(itemId: string, itemTipo: string, userId: stri
   if (itemTipo === 'insumo') {
     const movimentacoes = await withDatabaseRetry(async () => {
       return await prisma.movimentacaoEstoque.findMany({
-        where: { insumoId: itemId, userId }
+        where: { insumoId: itemId, user_id: userId }
       })
     })
     return movimentacoes.reduce((saldo, mov) => {
@@ -229,7 +229,7 @@ async function calcularSaldoAtual(itemId: string, itemTipo: string, userId: stri
   } else {
     const movimentacoes = await withDatabaseRetry(async () => {
       return await prisma.movimentacaoProduto.findMany({
-        where: { produtoId: itemId, userId }
+        where: { produtoId: itemId, user_id: userId }
       })
     })
     return movimentacoes.reduce((saldo, mov) => {
