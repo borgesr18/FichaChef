@@ -39,7 +39,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('fichachef-user-profile')
   }, [])
 
-  // ✅ CORRIGIDO: Função com debug e cache clearing
+  // ✅ CORRIGIDO: Função com debug e cache clearing + sync com Supabase metadata
   const refreshUserRole = useCallback(async (forceRefresh = false) => {
     if (!user) {
       console.log('❌ refreshUserRole: Sem usuário')
@@ -48,6 +48,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log('🔄 refreshUserRole: Buscando role para usuário:', user.email)
+    console.log('🔍 User metadata role:', user.user_metadata?.role)
 
     // ✅ Se forçar refresh, limpar cache primeiro
     if (forceRefresh) {
@@ -55,7 +56,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // ✅ CORRIGIDO: Query com debug
+      const roleFromMetadata = user.user_metadata?.role
+      console.log('📋 Role do Supabase metadata:', roleFromMetadata)
+
       console.log('📡 Fazendo query na tabela perfis_usuarios...')
       const { data, error } = await supabase
         .from('perfis_usuarios')
@@ -79,17 +82,65 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         console.log('📊 Resultado backup:', { backupData, backupError })
 
         if (backupError) {
-          console.warn('⚠️ Backup também falhou, usando fallback cozinheiro')
-          setUserRole('cozinheiro')
+          const finalRole = roleFromMetadata || 'cozinheiro'
+          console.warn(`⚠️ Perfil não encontrado, usando role: ${finalRole}`)
+          setUserRole(finalRole)
+          localStorage.setItem('fichachef-user-role', finalRole)
           return
+        }
+
+        if (roleFromMetadata && backupData.role !== roleFromMetadata) {
+          console.log(`🔄 SINCRONIZANDO: Banco tem '${backupData.role}', metadata tem '${roleFromMetadata}'`)
+          try {
+            const updateResponse = await fetch('/api/perfil-usuario', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ role: roleFromMetadata })
+            })
+            if (updateResponse.ok) {
+              console.log('✅ Role sincronizado com sucesso!')
+              setUserRole(roleFromMetadata)
+              localStorage.setItem('fichachef-user-role', roleFromMetadata)
+              return
+            }
+          } catch (syncError) {
+            console.error('❌ Erro ao sincronizar role:', syncError)
+          }
         }
 
         console.log('✅ Backup funcionou! Role encontrado:', backupData.role)
         setUserRole(backupData.role || 'cozinheiro')
-        
-        // ✅ Salvar no cache
         localStorage.setItem('fichachef-user-role', backupData.role || 'cozinheiro')
         return
+      }
+
+      if (roleFromMetadata && data.role !== roleFromMetadata) {
+        console.log(`🔄 SINCRONIZANDO: Banco tem '${data.role}', metadata tem '${roleFromMetadata}'`)
+        try {
+          const updateResponse = await fetch('/api/perfil-usuario', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: roleFromMetadata })
+          })
+          if (updateResponse.ok) {
+            console.log('✅ Role sincronizado com sucesso!')
+            setUserRole(roleFromMetadata)
+            localStorage.setItem('fichachef-user-role', roleFromMetadata)
+            localStorage.setItem('fichachef-user-profile', JSON.stringify({ ...data, role: roleFromMetadata }))
+            
+            // ✅ Debug final
+            if (roleFromMetadata === 'chef') {
+              console.log('👨‍🍳 USUÁRIO É CHEF - Deve ter acesso completo!')
+            } else if (roleFromMetadata === 'gerente') {
+              console.log('👔 USUÁRIO É GERENTE - Acesso limitado')
+            } else {
+              console.log('🍳 USUÁRIO É COZINHEIRO - Acesso básico')
+            }
+            return
+          }
+        } catch (syncError) {
+          console.error('❌ Erro ao sincronizar role:', syncError)
+        }
       }
 
       console.log('✅ Role encontrado com sucesso:', data.role)
