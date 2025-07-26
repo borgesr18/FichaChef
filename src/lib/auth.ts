@@ -160,12 +160,17 @@ export async function authenticateUserWithProfile(): Promise<AuthenticatedUser |
     })
 
     if (!perfil) {
+      const supabase = await createClient()
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser()
+      
+      const roleFromMetadata = supabaseUser?.user_metadata?.role || 'cozinheiro'
+      
       perfil = await withConnectionHealthCheck(async () => {
         return await prisma.perfilUsuario.create({
           data: {
             userId: user.id,
             email: user.email,
-            role: 'cozinheiro'
+            role: roleFromMetadata
           }
         })
       })
