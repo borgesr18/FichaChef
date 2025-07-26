@@ -16,7 +16,7 @@ export interface UserProfile {
   userId: string
   email: string
   nome?: string
-  role: 'chef' | 'gerente' | 'cozinheiro'  // ✅ Roles corretos do schema
+  role: 'chef' | 'gerente' | 'cozinheiro' | null  // ✅ Aceita null
   createdAt: string
   updatedAt: string
 }
@@ -155,7 +155,7 @@ export function useAuth(): UseAuthReturn {
           userId: userId,
           email: '',
           nome: 'Usuário',
-          role: 'cozinheiro', // ✅ Role padrão
+          role: null, // ✅ CORRIGIDO: null em vez de cozinheiro
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -181,7 +181,7 @@ export function useAuth(): UseAuthReturn {
         userId: userId,
         email: '',
         nome: 'Usuário',
-        role: 'cozinheiro',
+        role: null, // ✅ CORRIGIDO: null em vez de cozinheiro
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }

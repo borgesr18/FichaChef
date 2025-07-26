@@ -39,7 +39,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('fichachef-user-profile')
   }, [])
 
-  // ✅ CORRIGIDO: Função com debug e cache clearing - database como fonte da verdade
+  // ✅ CORRIGIDO: Função com debug e cache clearing
   const refreshUserRole = useCallback(async (forceRefresh = false) => {
     if (!user) {
       console.log('❌ refreshUserRole: Sem usuário')
@@ -55,39 +55,47 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // ✅ CORRIGIDO: Usar API endpoint em vez de query direta (evita problemas de RLS)
-      console.log('📡 Fazendo request para API /api/perfil-usuario...')
-      const response = await fetch('/api/perfil-usuario', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      // ✅ CORRIGIDO: Query com debug
+      console.log('📡 Fazendo query na tabela perfis_usuarios...')
+      const { data, error } = await supabase
+        .from('perfis_usuarios')
+        .select('role, nome, email')
+        .eq('user_id', user.id)
+        .single()
 
-      console.log('📊 Response status:', response.status)
+      console.log('📊 Resultado da query:', { data, error })
 
-      if (!response.ok) {
-        console.error('❌ Erro ao buscar role do usuário via API:', response.status)
-        console.warn('⚠️ API falhou, usando fallback cozinheiro')
-        setUserRole('cozinheiro')
-        localStorage.setItem('fichachef-user-role', 'cozinheiro')
-        return
-      }
+      if (error) {
+        console.error('❌ Erro ao buscar role do usuário:', error.message)
+        
+        // ✅ FALLBACK: Tentar buscar por email como backup
+        console.log('🔄 Tentando buscar por email como backup...')
+        const { data: backupData, error: backupError } = await supabase
+          .from('perfis_usuarios')
+          .select('role, nome, email')
+          .eq('email', user.email)
+          .single()
 
-      const data = await response.json()
-      console.log('📊 Resultado da API:', data)
+        console.log('📊 Resultado backup:', { backupData, backupError })
+        
+        if (backupError) {
+          console.warn('⚠️ Backup também falhou, usuário sem role definido')
+          setUserRole(null) // ✅ CORRIGIDO: null em vez de cozinheiro
+          return
+        }
 
-      if (!data || !data.role) {
-        console.warn('⚠️ Dados inválidos da API, usando fallback cozinheiro')
-        setUserRole('cozinheiro')
-        localStorage.setItem('fichachef-user-role', 'cozinheiro')
+        console.log('✅ Backup funcionou! Role encontrado:', backupData.role)
+        setUserRole(backupData.role || null) // ✅ CORRIGIDO: null em vez de cozinheiro
+        
+        // ✅ Salvar no cache
+        localStorage.setItem('fichachef-user-role', backupData.role || '') // ✅ CORRIGIDO
         return
       }
 
       console.log('✅ Role encontrado com sucesso:', data.role)
       console.log('👤 Dados do perfil:', data)
       
-      const role = data.role || 'cozinheiro'
+      const role = data.role || null // ✅ CORRIGIDO: null em vez de cozinheiro
       setUserRole(role)
       
       // ✅ Salvar no cache
@@ -105,8 +113,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     } catch (error) {
       console.error('💥 Erro inesperado ao buscar role:', error)
-      setUserRole('cozinheiro')
-      localStorage.setItem('fichachef-user-role', 'cozinheiro')
+      setUserRole(null) // ✅ CORRIGIDO: null em vez de cozinheiro
     }
   }, [user, clearCache])
 

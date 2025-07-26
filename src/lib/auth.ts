@@ -153,27 +153,22 @@ export async function authenticateUserWithProfile(): Promise<AuthenticatedUser |
     const { prisma } = await import('./prisma')
     const { withConnectionHealthCheck } = await import('./database-utils')
     
-    let perfil = await withConnectionHealthCheck(async () => {
+    const perfil = await withConnectionHealthCheck(async () => {
       return await prisma.perfilUsuario.findUnique({
         where: { userId: user.id }
       })
     })
 
     if (!perfil) {
-      const supabase = await createClient()
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser()
-      
-      const roleFromMetadata = supabaseUser?.user_metadata?.role || 'cozinheiro'
-      
-      perfil = await withConnectionHealthCheck(async () => {
-        return await prisma.perfilUsuario.create({
-          data: {
-            userId: user.id,
-            email: user.email,
-            role: roleFromMetadata
-          }
-        })
-      })
+      // ✅ CORRIGIDO: Não criar perfil automaticamente
+      // Se não existe perfil, retorna usuário sem role
+      // O perfil deve ser criado manualmente no admin
+      console.warn('⚠️ Perfil não encontrado para usuário:', user.email)
+      return {
+        ...user,
+        role: undefined,
+        nome: undefined
+      }
     }
 
     return {
