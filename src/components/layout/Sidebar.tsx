@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -16,7 +14,6 @@ import {
   Printer, 
   BarChart3, 
   FileBarChart,
-  Menu,
   X,
   Truck,
   Bell,
@@ -25,11 +22,13 @@ import {
   Palette,
   Clock,
   Users,
-  Shield
+  Shield,
+  ChefHat,
+  Home
 } from 'lucide-react'
 
 const menuItems = [
-  { href: '/dashboard', icon: BarChart3, label: 'Dashboard', roles: ['chef', 'cozinheiro', 'gerente'] },
+  { href: '/dashboard', icon: Home, label: 'Dashboard', roles: ['chef', 'cozinheiro', 'gerente'] },
   { href: '/dashboard/insumos', icon: Package, label: 'Insumos', roles: ['chef', 'cozinheiro', 'gerente'] },
   { href: '/dashboard/fichas-tecnicas', icon: FileText, label: 'Fichas Técnicas', roles: ['chef', 'cozinheiro', 'gerente'] },
   { href: '/dashboard/produtos', icon: ShoppingCart, label: 'Produtos', roles: ['chef', 'gerente'] },
@@ -50,168 +49,189 @@ const menuItems = [
 ]
 
 interface SidebarProps {
-  isOpen: boolean
-  onToggle?: () => void
+  isOpen?: boolean
   onClose?: () => void
 }
 
-export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const { userRole, loading } = useSupabase()
-  const { config, getColorClasses, isModuleVisible, isQuickActionAvailable } = useProfileInterface()
+  const { user } = useSupabase()
+  const { userRole } = useProfileInterface()
 
-  // Usar onClose se disponível, senão usar onToggle
-  const handleClose = onClose || onToggle || (() => {})
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(userRole || 'cozinheiro')
+  )
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (loading || !userRole) return true
-    return item.roles.includes(userRole) && isModuleVisible(item.href)
-  })
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard'
+    }
+    return pathname.startsWith(href)
+  }
 
-  const quickActionItems = filteredMenuItems.filter(item => isQuickActionAvailable(item.href))
-  const regularItems = filteredMenuItems.filter(item => !isQuickActionAvailable(item.href))
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'chef': return 'Chef'
+      case 'gerente': return 'Gerente'
+      case 'cozinheiro': return 'Cozinheiro'
+      default: return 'Usuário'
+    }
+  }
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'chef': return 'from-orange-400 to-orange-600'
+      case 'gerente': return 'from-blue-400 to-blue-600'
+      case 'cozinheiro': return 'from-green-400 to-green-600'
+      default: return 'from-gray-400 to-gray-600'
+    }
+  }
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={handleClose}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-        aria-label="Toggle menu"
-      >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </button>
-
-      {/* Overlay for mobile */}
+      {/* Overlay para mobile */}
       {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={handleClose}
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
+      <aside className={`
+        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 fc-shadow-lg
+        transform transition-transform duration-300 ease-in-out
+        lg:relative lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-        ${config?.compactMode ? 'w-56' : 'w-64'}
       `}>
-        <div className={`p-6 border-b border-slate-700/50 ${config?.compactMode ? 'p-4' : 'p-6'}`}>
-          <h1 className={`font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent ${config?.compactMode ? 'text-xl' : 'text-2xl'}`}>
-            FichaChef
-          </h1>
-          <p className={`text-slate-400 mt-1 ${config?.compactMode ? 'text-xs' : 'text-xs'}`}>
-            {userRole === 'chef' && 'Painel Executivo'}
-            {userRole === 'gerente' && 'Painel Gerencial'}
-            {userRole === 'cozinheiro' && 'Painel de Produção'}
-          </p>
-          {userRole && (
-            <div className={`mt-2 px-2 py-1 rounded-full text-xs font-medium ${getColorClasses('accent')}`}>
-              {userRole === 'chef' && '👨‍🍳 Chef'}
-              {userRole === 'gerente' && '📊 Gerente'}
-              {userRole === 'cozinheiro' && '🍳 Cozinheiro'}
+        {/* Header da Sidebar */}
+        <div className="fc-p-6 border-b border-gray-200">
+          <div className="fc-flex fc-items-center fc-justify-between">
+            <div className="fc-flex fc-items-center fc-gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 fc-rounded-lg fc-flex fc-items-center fc-justify-center">
+                <ChefHat className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="fc-text-lg fc-font-bold fc-gradient-text">FichaChef</h2>
+                <p className="fc-text-xs text-gray-500">Painel Executivo</p>
+              </div>
+            </div>
+            
+            {/* Botão fechar mobile */}
+            <button
+              onClick={onClose}
+              className="lg:hidden fc-btn fc-btn-ghost p-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Informações do usuário */}
+          {user && (
+            <div className="fc-mt-4 fc-p-3 bg-gray-50 fc-rounded-lg">
+              <div className="fc-flex fc-items-center fc-gap-3">
+                <div className={`w-8 h-8 bg-gradient-to-br ${getRoleColor(userRole || 'cozinheiro')} fc-rounded-full fc-flex fc-items-center fc-justify-center`}>
+                  <span className="fc-text-xs fc-font-bold text-white">
+                    {(user.email?.charAt(0) || 'U').toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="fc-text-sm fc-font-medium text-gray-800 truncate">
+                    {user.email?.split('@')[0] || 'Usuário'}
+                  </p>
+                  <p className="fc-text-xs text-gray-500">
+                    {getRoleDisplayName(userRole || 'cozinheiro')}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
-        
-        <nav className={`mt-2 px-3 ${config?.compactMode ? 'px-2' : 'px-3'}`}>
-          {loading ? (
-            <div className="px-3 py-3 text-sm text-slate-400 animate-pulse">
-              <div className="flex items-center space-x-3">
-                <div className="w-5 h-5 bg-slate-600 rounded animate-pulse"></div>
-                <div className="w-24 h-4 bg-slate-600 rounded animate-pulse"></div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Quick Actions Section */}
-              {quickActionItems.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">
-                    Acesso Rápido
-                  </h3>
-                  <div className="space-y-1">
-                    {quickActionItems.map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.href
-                      
-                      return (
-                        <Link
-                          key={`quick-${item.href}`}
-                          href={item.href}
-                          title=""
-                          onClick={() => {
-                            if (window.innerWidth < 1024) {
-                              handleClose()
-                            }
-                          }}
-                          className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                            isActive
-                              ? `${getColorClasses('primary')} shadow-lg transform scale-[1.02]`
-                              : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-[1.01]'
-                          } ${config?.compactMode ? 'py-1.5 text-xs' : 'py-2 text-sm'}`}
-                        >
-                          <Icon className={`mr-3 h-4 w-4 transition-colors ${
-                            isActive ? 'text-white' : 'text-slate-400 group-hover:text-orange-400'
-                          }`} />
-                          <span className="font-medium">{item.label}</span>
-                          {isActive && (
-                            <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                          )}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
 
-              {/* Regular Menu Items */}
-              {regularItems.length > 0 && (
-                <div>
-                  {quickActionItems.length > 0 && (
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">
-                      Módulos
-                    </h3>
+        {/* Menu de Navegação */}
+        <nav className="fc-p-4 flex-1 overflow-y-auto">
+          <div className="space-y-1">
+            {filteredMenuItems.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.href)
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`
+                    fc-flex fc-items-center fc-gap-3 fc-px-3 fc-py-2.5 fc-rounded-lg
+                    transition-all duration-200 group relative overflow-hidden
+                    ${active 
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white fc-shadow-md' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                    }
+                  `}
+                >
+                  {/* Efeito de hover */}
+                  {!active && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
                   )}
-                  <div className="space-y-1">
-                    {regularItems.map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.href
-                      
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          title=""
-                          onClick={() => {
-                            if (window.innerWidth < 1024) {
-                              handleClose()
-                            }
-                          }}
-                          className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-                            isActive
-                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 transform scale-[1.02]'
-                              : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-[1.01] hover:shadow-md'
-                          } ${config?.compactMode ? 'py-2 text-xs' : 'py-3 text-sm'}`}
-                        >
-                          <Icon className={`mr-3 h-5 w-5 transition-colors ${
-                            isActive ? 'text-white' : 'text-slate-400 group-hover:text-orange-400'
-                          }`} />
-                          <span className="font-medium">{item.label}</span>
-                          {isActive && (
-                            <div className="ml-auto w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                          )}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+                  
+                  <Icon className={`w-5 h-5 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
+                  <span className="fc-text-sm fc-font-medium">{item.label}</span>
+                  
+                  {/* Indicador ativo */}
+                  {active && (
+                    <div className="absolute right-2 w-2 h-2 bg-white fc-rounded-full opacity-80" />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Seção de Acesso Rápido */}
+          <div className="fc-mt-8 fc-pt-6 border-t border-gray-200">
+            <h3 className="fc-text-xs fc-font-semibold text-gray-400 uppercase tracking-wider fc-mb-3">
+              Acesso Rápido
+            </h3>
+            <div className="space-y-2">
+              <Link
+                href="/dashboard/fichas-tecnicas"
+                onClick={onClose}
+                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors duration-200"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="fc-text-sm">Nova Ficha</span>
+              </Link>
+              <Link
+                href="/dashboard/insumos"
+                onClick={onClose}
+                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+              >
+                <Package className="w-4 h-4" />
+                <span className="fc-text-sm">Novo Insumo</span>
+              </Link>
+              <Link
+                href="/dashboard/relatorios"
+                onClick={onClose}
+                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors duration-200"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span className="fc-text-sm">Relatórios</span>
+              </Link>
             </div>
-          )}
+          </div>
+
+          {/* Informações do Sistema */}
+          <div className="fc-mt-8 fc-p-3 bg-gradient-to-br from-gray-50 to-gray-100 fc-rounded-lg">
+            <div className="fc-text-center">
+              <div className="w-8 h-8 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 fc-rounded-full fc-flex fc-items-center fc-justify-center fc-mb-2">
+                <ChefHat className="w-4 h-4 text-white" />
+              </div>
+              <p className="fc-text-xs fc-font-medium text-gray-700">FichaChef v1.0</p>
+              <p className="fc-text-xs text-gray-500">Sistema Profissional</p>
+            </div>
+          </div>
         </nav>
-      </div>
+      </aside>
     </>
   )
 }
+

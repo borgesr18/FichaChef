@@ -393,4 +393,3 @@ export function useSupabase() {
 // ✅ Admin sempre chef
 // ✅ Performance otimizada
 // ✅ Código limpo e profissional
-
