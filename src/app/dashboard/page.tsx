@@ -2,197 +2,170 @@
 
 import React from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 export default function Dashboard() {
-  const { userRole } = useSupabase()
-
-  // Dados mockados para demonstração
-  const stats = {
-    fichas: 24,
-    produtos: 156,
-    custoMedio: 'R$ 2.450',
-    usuarios: 8
-  }
-
-  const recentRecipes = [
-    { name: 'Lasanha Bolonhesa', time: '2 horas atrás', cost: 'R$ 45,20' },
-    { name: 'Risotto de Camarão', time: '5 horas atrás', cost: 'R$ 78,90' },
-    { name: 'Salmão Grelhado', time: '1 dia atrás', cost: 'R$ 62,30' },
-    { name: 'Pasta Carbonara', time: '2 dias atrás', cost: 'R$ 32,50' }
-  ]
-
   return (
     <DashboardLayout>
-      <div className="space-y-8 fc-animate-fade-in">
-        {/* Hero Section */}
-        <div className="text-center py-12">
-          <h1 className="fc-text-4xl fc-font-bold fc-gradient-text fc-mb-4">
-            Bem-vindo ao FichaChef
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Dashboard
           </h1>
-          <p className="fc-text-xl text-gray-600 max-w-2xl mx-auto">
-            Gerencie sua cozinha profissional com eficiência e estilo moderno
+          <p className="text-gray-600">
+            Bem-vindo ao FichaChef - Sistema de Gestão Gastronômica
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="fc-stats-grid">
-          <div className="fc-card fc-card-gradient-orange fc-stat-card fc-animate-slide-in-up fc-delay-100">
-            <div className="fc-stat-icon">📋</div>
-            <div className="fc-stat-number">{stats.fichas}</div>
-            <div className="fc-stat-label">Fichas Técnicas</div>
+        <div className="fc-grid fc-grid-4 mb-8">
+          <div className="fc-stats-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Fichas Técnicas</p>
+                <p className="text-2xl font-bold text-gray-800">24</p>
+              </div>
+              <div className="text-3xl">🍳</div>
+            </div>
           </div>
-          
-          <div className="fc-card fc-card-gradient-blue fc-stat-card fc-animate-slide-in-up fc-delay-200">
-            <div className="fc-stat-icon">🥕</div>
-            <div className="fc-stat-number">{stats.produtos}</div>
-            <div className="fc-stat-label">Produtos</div>
-          </div>
-          
-          <div className="fc-card fc-card-gradient-green fc-stat-card fc-animate-slide-in-up fc-delay-300">
-            <div className="fc-stat-icon">💰</div>
-            <div className="fc-stat-number">{stats.custoMedio}</div>
-            <div className="fc-stat-label">Custo Médio</div>
-          </div>
-          
-          <div className="fc-card fc-stat-card fc-animate-slide-in-up fc-delay-400">
-            <div className="fc-stat-icon">👥</div>
-            <div className="fc-stat-number">{stats.usuarios}</div>
-            <div className="fc-stat-label">Usuários Ativos</div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="fc-card fc-quick-actions fc-animate-slide-in-up fc-delay-500">
-          <h3 className="fc-text-xl fc-font-semibold fc-mb-6 text-gray-800">
-            Ações Rápidas
-          </h3>
-          <div className="fc-actions-grid">
-            <div 
-              className="fc-card fc-card-gradient-orange fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-600"
-              onClick={() => window.location.href = '/dashboard/fichas/nova'}
-            >
-              <div className="fc-stat-icon">➕</div>
-              <div className="fc-font-semibold fc-mb-2">Nova Ficha Técnica</div>
-              <div className="fc-text-sm opacity-90">Criar nova receita</div>
+          <div className="fc-stats-card blue">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Produtos</p>
+                <p className="text-2xl font-bold text-gray-800">156</p>
+              </div>
+              <div className="text-3xl">🥕</div>
             </div>
-            
-            <div 
-              className="fc-card fc-card-gradient-blue fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-700"
-              onClick={() => window.location.href = '/dashboard/produtos/novo'}
-            >
-              <div className="fc-stat-icon">🥕</div>
-              <div className="fc-font-semibold fc-mb-2">Cadastrar Produto</div>
-              <div className="fc-text-sm opacity-90">Adicionar ingrediente</div>
+          </div>
+
+          <div className="fc-stats-card green">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Custo Médio</p>
+                <p className="text-2xl font-bold text-gray-800">R$ 2.450</p>
+              </div>
+              <div className="text-3xl">💰</div>
             </div>
-            
-            <div 
-              className="fc-card fc-card-gradient-green fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-800"
-              onClick={() => window.location.href = '/dashboard/relatorios'}
-            >
-              <div className="fc-stat-icon">📊</div>
-              <div className="fc-font-semibold fc-mb-2">Relatório de Custos</div>
-              <div className="fc-text-sm opacity-90">Análise financeira</div>
+          </div>
+
+          <div className="fc-stats-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Usuários Ativos</p>
+                <p className="text-2xl font-bold text-gray-800">8</p>
+              </div>
+              <div className="text-3xl">👥</div>
             </div>
           </div>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Recipes */}
-          <div className="fc-card fc-animate-slide-in-right fc-delay-600">
-            <div className="fc-flex fc-justify-between fc-items-center fc-mb-6">
-              <h3 className="fc-text-xl fc-font-semibold text-gray-800">
-                Fichas Recentes
-              </h3>
-              <button
-                className="fc-btn fc-btn-outline fc-btn-sm"
-                onClick={() => window.location.href = '/dashboard/fichas'}
-              >
-                Ver todas
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              {recentRecipes.map((recipe, index) => (
-                <div
-                  key={index}
-                  className="fc-flex fc-justify-between fc-items-center p-3 bg-gray-50 rounded-lg fc-hover-lift cursor-pointer"
-                  onClick={() => window.location.href = `/dashboard/fichas/${index + 1}`}
-                >
-                  <div>
-                    <div className="fc-font-medium text-gray-800">{recipe.name}</div>
-                    <div className="fc-text-sm text-gray-500">{recipe.time}</div>
-                  </div>
-                  <div className="fc-font-semibold text-orange-600">{recipe.cost}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Cost Trends */}
-          <div className="fc-card fc-animate-slide-in-right fc-delay-700">
-            <div className="fc-flex fc-justify-between fc-items-center fc-mb-6">
-              <h3 className="fc-text-xl fc-font-semibold text-gray-800">
-                Tendências de Custo
-              </h3>
-              <button
-                className="fc-btn fc-btn-outline fc-btn-sm"
-                onClick={() => window.location.href = '/dashboard/analytics'}
-              >
-                Detalhes
-              </button>
-            </div>
-            
-            <div className="h-48 bg-gradient-to-br from-orange-100 to-blue-100 rounded-lg fc-flex fc-items-center fc-justify-center">
+        {/* Action Cards */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Ações Rápidas</h2>
+          <div className="fc-grid fc-grid-3">
+            <div className="fc-card">
               <div className="text-center">
-                <div className="text-4xl mb-2">📈</div>
-                <div className="text-gray-600 fc-font-medium">Gráfico de Tendências</div>
-                <div className="fc-text-sm text-gray-500 mt-1">Em desenvolvimento</div>
+                <div className="text-4xl mb-3">📋</div>
+                <h3 className="text-lg font-semibold mb-2">Nova Ficha Técnica</h3>
+                <p className="text-gray-600 mb-4">Criar nova receita</p>
+                <button className="fc-btn-primary w-full">
+                  Criar Ficha
+                </button>
+              </div>
+            </div>
+
+            <div className="fc-card">
+              <div className="text-center">
+                <div className="text-4xl mb-3">🥕</div>
+                <h3 className="text-lg font-semibold mb-2">Cadastrar Produto</h3>
+                <p className="text-gray-600 mb-4">Adicionar ingrediente</p>
+                <button className="fc-btn-secondary w-full">
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            <div className="fc-card">
+              <div className="text-center">
+                <div className="text-4xl mb-3">📊</div>
+                <h3 className="text-lg font-semibold mb-2">Relatório de Custos</h3>
+                <p className="text-gray-600 mb-4">Análise financeira</p>
+                <button className="fc-btn-secondary w-full">
+                  Ver Relatório
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Additional Actions for Chef */}
-        {userRole === 'chef' && (
-          <div className="fc-card fc-animate-slide-in-up fc-delay-900">
-            <h3 className="fc-text-xl fc-font-semibold fc-mb-6 text-gray-800">
-              Administração
-            </h3>
-            <div className="fc-flex fc-gap-4 flex-wrap">
-              <button
-                className="fc-btn fc-btn-secondary"
-                onClick={() => window.location.href = '/dashboard/usuarios'}
-              >
-                <span>👥</span>
-                Gerenciar Usuários
-              </button>
-              <button
-                className="fc-btn fc-btn-outline"
-                onClick={() => window.location.href = '/dashboard/configuracoes'}
-              >
-                <span>⚙️</span>
-                Configurações
-              </button>
-              <button
-                className="fc-btn fc-btn-outline"
-                onClick={() => window.location.href = '/dashboard/relatorios'}
-              >
-                <span>📈</span>
-                Relatórios Avançados
-              </button>
+        {/* Recent Activity */}
+        <div className="fc-grid fc-grid-2">
+          <div className="fc-card">
+            <h3 className="text-lg font-semibold mb-4">Receitas Recentes</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">Risotto de Camarão</p>
+                  <p className="text-sm text-gray-600">Atualizado há 2 horas</p>
+                </div>
+                <span className="text-green-600 font-medium">R$ 45,80</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">Salmão Grelhado</p>
+                  <p className="text-sm text-gray-600">Criado ontem</p>
+                </div>
+                <span className="text-green-600 font-medium">R$ 38,50</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">Lasanha Bolonhesa</p>
+                  <p className="text-sm text-gray-600">Criado há 3 dias</p>
+                </div>
+                <span className="text-green-600 font-medium">R$ 22,30</span>
+              </div>
             </div>
+            <button className="fc-btn-primary w-full mt-4">
+              Ver todas
+            </button>
           </div>
-        )}
 
-        {/* Tips Card */}
-        <div className="fc-card fc-card-gradient-orange fc-animate-slide-in-up fc-delay-1000 text-center">
-          <div className="fc-text-3xl fc-mb-4">💡</div>
-          <h4 className="fc-text-lg fc-font-semibold fc-mb-2">Dica do Dia</h4>
-          <p className="opacity-90">
-            Use ingredientes sazonais para reduzir custos e melhorar a qualidade das suas receitas.
-          </p>
+          <div className="fc-card">
+            <h3 className="text-lg font-semibold mb-4">Tendências de Custo</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Proteínas</span>
+                  <span className="text-sm text-red-600">+12%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-red-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Vegetais</span>
+                  <span className="text-sm text-green-600">-5%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-green-500 h-2 rounded-full" style={{width: '45%'}}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Laticínios</span>
+                  <span className="text-sm text-yellow-600">+3%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-yellow-500 h-2 rounded-full" style={{width: '60%'}}></div>
+                </div>
+              </div>
+            </div>
+            <button className="fc-btn-secondary w-full mt-4">
+              Detalhes
+            </button>
+          </div>
         </div>
       </div>
     </DashboardLayout>
