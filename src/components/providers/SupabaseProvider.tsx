@@ -12,6 +12,7 @@ interface SupabaseContextType {
   loading: boolean
   refreshUserRole: () => Promise<void>
   clearCache: () => void
+  isConfigured: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
@@ -21,6 +22,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
   const [clearCache, setClearCache] = useState(0)
+  
+  // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
+  const isConfigured = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && 
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
   
   // ✅ CONTROLE DE LOOP: Evitar requisições infinitas
   const isLoadingRole = useRef(false)
@@ -205,7 +212,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     userRole,
     loading,
     refreshUserRole,
-    clearCache: handleClearCache
+    clearCache: handleClearCache,
+    isConfigured
   }
 
   return (
