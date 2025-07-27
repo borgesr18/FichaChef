@@ -89,110 +89,104 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-8">
-        {/* Header Moderno */}
-        <div className="fc-animate-fade-in-up">
-          <h1 className="fc-text-4xl fc-font-bold fc-gradient-text fc-mb-2">
+        {/* Header */}
+        <div className="animate-fade-in">
+          <h1 className="text-4xl font-bold gradient-text mb-2">
             Dashboard
           </h1>
-          <p className="fc-text-lg text-gray-600">
+          <p className="text-lg text-gray-600">
             Bem-vindo ao FichaChef - Sistema de Gestão Gastronômica Profissional
           </p>
         </div>
 
-        {/* Cards de Estatísticas Modernos */}
-        <div className="fc-grid fc-grid-4 fc-animate-fade-in-scale">
-          <div className="fc-stats-card">
-            <div className="fc-flex fc-items-center fc-justify-between">
+        {/* Cards de Estatísticas */}
+        <div className="modern-grid modern-grid-4 animate-fade-in">
+          <div className="stats-card">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="fc-stats-number">{stats.fichasTecnicas}</div>
-                <div className="fc-stats-label">Fichas Técnicas</div>
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.fichasTecnicas}</div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Fichas Técnicas</div>
               </div>
-              <div className="fc-stats-icon">
-                <FileText className="w-10 h-10 text-orange-500" />
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-orange-600" />
               </div>
             </div>
           </div>
 
-          <div className="fc-stats-card secondary">
-            <div className="fc-flex fc-items-center fc-justify-between">
+          <div className="stats-card blue">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="fc-stats-number">{stats.insumos}</div>
-                <div className="fc-stats-label">Insumos</div>
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.insumos}</div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Insumos</div>
               </div>
-              <div className="fc-stats-icon">
-                <Package className="w-10 h-10 text-blue-500" />
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Package className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <div className="fc-stats-card accent">
-            <div className="fc-flex fc-items-center fc-justify-between">
+          <div className="stats-card green">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="fc-stats-number">{stats.produtos}</div>
-                <div className="fc-stats-label">Produtos</div>
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.produtos}</div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Produtos</div>
               </div>
-              <div className="fc-stats-icon">
-                <ShoppingCart className="w-10 h-10 text-green-500" />
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <ShoppingCart className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className="fc-stats-card">
-            <div className="fc-flex fc-items-center fc-justify-between">
+          <div className="stats-card purple">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="fc-stats-number">{stats.producoes}</div>
-                <div className="fc-stats-label">Produções</div>
+                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.producoes}</div>
+                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Produções</div>
               </div>
-              <div className="fc-stats-icon">
-                <Factory className="w-10 h-10 text-purple-500" />
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Factory className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Seção de Ações Rápidas */}
-        <div className="fc-animate-fade-in-up">
-          <h2 className="fc-text-2xl fc-font-semibold fc-mb-6 text-gray-800">
+        {/* Ações Rápidas */}
+        <div className="animate-fade-in">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
             Ações Rápidas
           </h2>
-          <div className="fc-grid fc-grid-3">
-            <div className="fc-card fc-text-center">
-              <div className="fc-mb-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
-                  <FileText className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Nova Ficha Técnica</h3>
-                <p className="text-gray-600 fc-mb-4">Criar nova receita com cálculo automático de custos</p>
+          <div className="modern-grid modern-grid-3">
+            <div className="modern-card text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-white" />
               </div>
-              <button className="fc-btn fc-btn-primary fc-w-full">
+              <h3 className="text-xl font-semibold mb-2">Nova Ficha Técnica</h3>
+              <p className="text-gray-600 mb-4">Criar nova receita com cálculo automático de custos</p>
+              <button className="modern-btn modern-btn-primary w-full">
                 <FileText className="w-4 h-4" />
                 Criar Ficha
               </button>
             </div>
 
-            <div className="fc-card fc-text-center">
-              <div className="fc-mb-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
-                  <Package className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Cadastrar Insumo</h3>
-                <p className="text-gray-600 fc-mb-4">Adicionar novo ingrediente ao sistema</p>
+            <div className="modern-card text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mb-4">
+                <Package className="w-8 h-8 text-white" />
               </div>
-              <button className="fc-btn fc-btn-secondary fc-w-full">
+              <h3 className="text-xl font-semibold mb-2">Cadastrar Insumo</h3>
+              <p className="text-gray-600 mb-4">Adicionar novo ingrediente ao sistema</p>
+              <button className="modern-btn modern-btn-secondary w-full">
                 <Package className="w-4 h-4" />
                 Adicionar Insumo
               </button>
             </div>
 
-            <div className="fc-card fc-text-center">
-              <div className="fc-mb-4">
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
-                  <BarChart3 className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Relatórios</h3>
-                <p className="text-gray-600 fc-mb-4">Análise de custos e performance</p>
+            <div className="modern-card text-center">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-4">
+                <BarChart3 className="w-8 h-8 text-white" />
               </div>
-              <button className="fc-btn fc-btn-accent fc-w-full">
+              <h3 className="text-xl font-semibold mb-2">Relatórios</h3>
+              <p className="text-gray-600 mb-4">Análise de custos e performance</p>
+              <button className="modern-btn modern-btn-accent w-full">
                 <BarChart3 className="w-4 h-4" />
                 Ver Relatórios
               </button>
@@ -200,81 +194,81 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Seção de Informações Adicionais */}
-        <div className="fc-grid fc-grid-2 fc-animate-fade-in-up">
-          <div className="fc-card">
-            <div className="fc-card-header">
-              <h3 className="fc-card-title fc-flex fc-items-center fc-gap-2">
+        {/* Informações Adicionais */}
+        <div className="modern-grid modern-grid-2 animate-fade-in">
+          <div className="modern-card">
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-500" />
                 Atividade Recente
               </h3>
-              <p className="fc-card-subtitle">Últimas movimentações do sistema</p>
+              <p className="text-sm text-gray-500">Últimas movimentações do sistema</p>
             </div>
             <div className="space-y-4">
-              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
-                <div className="fc-flex fc-items-center fc-gap-3">
-                  <div className="w-8 h-8 bg-orange-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                     <FileText className="w-4 h-4 text-orange-600" />
                   </div>
                   <div>
-                    <p className="fc-font-medium">Nova ficha técnica criada</p>
-                    <p className="fc-text-sm text-gray-500">Há 2 horas</p>
+                    <p className="font-medium">Nova ficha técnica criada</p>
+                    <p className="text-sm text-gray-500">Há 2 horas</p>
                   </div>
                 </div>
               </div>
               
-              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
-                <div className="fc-flex fc-items-center fc-gap-3">
-                  <div className="w-8 h-8 bg-blue-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <Package className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
-                    <p className="fc-font-medium">Insumo atualizado</p>
-                    <p className="fc-text-sm text-gray-500">Há 4 horas</p>
+                    <p className="font-medium">Insumo atualizado</p>
+                    <p className="text-sm text-gray-500">Há 4 horas</p>
                   </div>
                 </div>
               </div>
               
-              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
-                <div className="fc-flex fc-items-center fc-gap-3">
-                  <div className="w-8 h-8 bg-green-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                     <Factory className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="fc-font-medium">Produção finalizada</p>
-                    <p className="fc-text-sm text-gray-500">Ontem</p>
+                    <p className="font-medium">Produção finalizada</p>
+                    <p className="text-sm text-gray-500">Ontem</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="fc-card">
-            <div className="fc-card-header">
-              <h3 className="fc-card-title fc-flex fc-items-center fc-gap-2">
+          <div className="modern-card">
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-500" />
                 Resumo Financeiro
               </h3>
-              <p className="fc-card-subtitle">Indicadores de custo e performance</p>
+              <p className="text-sm text-gray-500">Indicadores de custo e performance</p>
             </div>
             <div className="space-y-4">
-              <div className="fc-flex fc-items-center fc-justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-gray-600">Custo médio por ficha</span>
-                <span className="fc-font-semibold text-green-600">R$ 12,50</span>
+                <span className="font-semibold text-green-600">R$ 12,50</span>
               </div>
               
-              <div className="fc-flex fc-items-center fc-justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-gray-600">Economia este mês</span>
-                <span className="fc-font-semibold text-green-600">R$ 1.250,00</span>
+                <span className="font-semibold text-green-600">R$ 1.250,00</span>
               </div>
               
-              <div className="fc-flex fc-items-center fc-justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-gray-600">Fichas mais rentáveis</span>
-                <span className="fc-font-semibold text-blue-600">15 itens</span>
+                <span className="font-semibold text-blue-600">15 itens</span>
               </div>
               
               <div className="pt-4 border-t border-gray-100">
-                <button className="fc-btn fc-btn-outline fc-w-full">
+                <button className="modern-btn modern-btn-secondary w-full">
                   <BarChart3 className="w-4 h-4" />
                   Ver Análise Completa
                 </button>
@@ -284,8 +278,8 @@ export default function DashboardPage() {
         </div>
 
         {error && (
-          <div className="fc-card bg-red-50 border-red-200">
-            <div className="fc-flex fc-items-center fc-gap-2 text-red-700">
+          <div className="modern-card bg-red-50 border-red-200">
+            <div className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="w-5 h-5" />
               <span>{error}</span>
             </div>
