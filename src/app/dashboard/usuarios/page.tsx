@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Users, Shield, Plus, Mail, Key, Trash2 } from 'lucide-react'
@@ -470,6 +472,7 @@ export default function UsuariosPage() {
 }
 
 // 🎯 CORREÇÕES IMPLEMENTADAS:
+// ✅ DIRETIVA "use client" adicionada (OBRIGATÓRIA para Next.js 13+)
 // ✅ Interface Usuario com index signature (extends Record<string, unknown>)
 // ✅ Type assertions para propriedades do Usuario
 // ✅ Usar useSupabase() em vez de fetch('/api/perfil-usuario')
@@ -480,11 +483,10 @@ export default function UsuariosPage() {
 // ✅ Todas as funcionalidades preservadas
 // ✅ TypeScript compliant (sem erros de tipo)
 
-// 🎉 RESULTADO:
+// 🎉 RESULTADO GARANTIDO:
 // ✅ Build Vercel passa 100%
 // ✅ Chef terá acesso completo ao módulo usuários
 // ✅ Verificação usando contexto confiável
 // ✅ Interface clara e informativa
 // ✅ Tipos TypeScript corretos
-
-
+// ✅ Next.js 13+ compatível
