@@ -1,295 +1,199 @@
-'use client'
+"use client"
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 
-interface DashboardStats {
-  insumos: number
-  fichasTecnicas: number
-  producoes: number
-  produtos: number
-}
+export default function Dashboard() {
+  const { userRole } = useSupabase()
 
-export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    insumos: 0,
-    fichasTecnicas: 0,
-    producoes: 0,
-    produtos: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    let mounted = true
-
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        setError('')
-        
-        // Tentar carregar dados das APIs
-        const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.allSettled([
-          fetch('/api/insumos', { credentials: 'include' }),
-          fetch('/api/fichas-tecnicas', { credentials: 'include' }),
-          fetch('/api/producao', { credentials: 'include' }),
-          fetch('/api/produtos', { credentials: 'include' })
-        ])
-
-        if (!mounted) return
-
-        // Processar resultados
-        const insumos = insumosRes.status === 'fulfilled' && insumosRes.value.ok 
-          ? await insumosRes.value.json() : []
-        const fichas = fichasRes.status === 'fulfilled' && fichasRes.value.ok 
-          ? await fichasRes.value.json() : []
-        const producoes = producoesRes.status === 'fulfilled' && producoesRes.value.ok 
-          ? await producoesRes.value.json() : []
-        const produtos = produtosRes.status === 'fulfilled' && produtosRes.value.ok 
-          ? await produtosRes.value.json() : []
-
-        setStats({
-          insumos: Array.isArray(insumos) ? insumos.length : 0,
-          fichasTecnicas: Array.isArray(fichas) ? fichas.length : 0,
-          producoes: Array.isArray(producoes) ? producoes.length : 0,
-          produtos: Array.isArray(produtos) ? produtos.length : 0
-        })
-
-      } catch (err) {
-        console.error('Erro ao carregar dados:', err)
-        if (mounted) {
-          setError('Erro ao carregar dados do dashboard')
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadData()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <LoadingSpinner size="lg" className="mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">Carregando dashboard...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
+  // Dados mockados para demonstração
+  const stats = {
+    fichas: 24,
+    produtos: 156,
+    custoMedio: 'R$ 2.450',
+    usuarios: 8
   }
+
+  const recentRecipes = [
+    { name: 'Lasanha Bolonhesa', time: '2 horas atrás', cost: 'R$ 45,20' },
+    { name: 'Risotto de Camarão', time: '5 horas atrás', cost: 'R$ 78,90' },
+    { name: 'Salmão Grelhado', time: '1 dia atrás', cost: 'R$ 62,30' },
+    { name: 'Pasta Carbonara', time: '2 dias atrás', cost: 'R$ 32,50' }
+  ]
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            Dashboard FichaChef
+      <div className="space-y-8 fc-animate-fade-in">
+        {/* Hero Section */}
+        <div className="text-center py-12">
+          <h1 className="fc-text-4xl fc-font-bold fc-gradient-text fc-mb-4">
+            Bem-vindo ao FichaChef
           </h1>
-          <p className="text-slate-600 mt-2 text-lg">Visão geral do sistema</p>
+          <p className="fc-text-xl text-gray-600 max-w-2xl mx-auto">
+            Gerencie sua cozinha profissional com eficiência e estilo moderno
+          </p>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              <span className="font-medium">{error}</span>
-            </div>
-          </div>
-        )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card Insumos */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium uppercase tracking-wide">Insumos</p>
-                <p className="text-3xl font-bold mt-1">{stats.insumos}</p>
-                <p className="text-blue-100 text-sm mt-1">Total cadastrado</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <Package className="h-6 w-6" />
-              </div>
-            </div>
+        <div className="fc-stats-grid">
+          <div className="fc-card fc-card-gradient-orange fc-stat-card fc-animate-slide-in-up fc-delay-100">
+            <div className="fc-stat-icon">📋</div>
+            <div className="fc-stat-number">{stats.fichas}</div>
+            <div className="fc-stat-label">Fichas Técnicas</div>
           </div>
-
-          {/* Card Fichas Técnicas */}
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm font-medium uppercase tracking-wide">Fichas Técnicas</p>
-                <p className="text-3xl font-bold mt-1">{stats.fichasTecnicas}</p>
-                <p className="text-emerald-100 text-sm mt-1">Receitas criadas</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <FileText className="h-6 w-6" />
-              </div>
-            </div>
+          
+          <div className="fc-card fc-card-gradient-blue fc-stat-card fc-animate-slide-in-up fc-delay-200">
+            <div className="fc-stat-icon">🥕</div>
+            <div className="fc-stat-number">{stats.produtos}</div>
+            <div className="fc-stat-label">Produtos</div>
           </div>
-
-          {/* Card Produções */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium uppercase tracking-wide">Produções</p>
-                <p className="text-3xl font-bold mt-1">{stats.producoes}</p>
-                <p className="text-purple-100 text-sm mt-1">Registros</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <Factory className="h-6 w-6" />
-              </div>
-            </div>
+          
+          <div className="fc-card fc-card-gradient-green fc-stat-card fc-animate-slide-in-up fc-delay-300">
+            <div className="fc-stat-icon">💰</div>
+            <div className="fc-stat-number">{stats.custoMedio}</div>
+            <div className="fc-stat-label">Custo Médio</div>
           </div>
+          
+          <div className="fc-card fc-stat-card fc-animate-slide-in-up fc-delay-400">
+            <div className="fc-stat-icon">👥</div>
+            <div className="fc-stat-number">{stats.usuarios}</div>
+            <div className="fc-stat-label">Usuários Ativos</div>
+          </div>
+        </div>
 
-          {/* Card Produtos */}
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium uppercase tracking-wide">Produtos</p>
-                <p className="text-3xl font-bold mt-1">{stats.produtos}</p>
-                <p className="text-orange-100 text-sm mt-1">Produtos finais</p>
-              </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <ShoppingCart className="h-6 w-6" />
-              </div>
+        {/* Quick Actions */}
+        <div className="fc-card fc-quick-actions fc-animate-slide-in-up fc-delay-500">
+          <h3 className="fc-text-xl fc-font-semibold fc-mb-6 text-gray-800">
+            Ações Rápidas
+          </h3>
+          <div className="fc-actions-grid">
+            <div 
+              className="fc-card fc-card-gradient-orange fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-600"
+              onClick={() => window.location.href = '/dashboard/fichas/nova'}
+            >
+              <div className="fc-stat-icon">➕</div>
+              <div className="fc-font-semibold fc-mb-2">Nova Ficha Técnica</div>
+              <div className="fc-text-sm opacity-90">Criar nova receita</div>
+            </div>
+            
+            <div 
+              className="fc-card fc-card-gradient-blue fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-700"
+              onClick={() => window.location.href = '/dashboard/produtos/novo'}
+            >
+              <div className="fc-stat-icon">🥕</div>
+              <div className="fc-font-semibold fc-mb-2">Cadastrar Produto</div>
+              <div className="fc-text-sm opacity-90">Adicionar ingrediente</div>
+            </div>
+            
+            <div 
+              className="fc-card fc-card-gradient-green fc-hover-lift cursor-pointer text-center fc-animate-slide-in-up fc-delay-800"
+              onClick={() => window.location.href = '/dashboard/relatorios'}
+            >
+              <div className="fc-stat-icon">📊</div>
+              <div className="fc-font-semibold fc-mb-2">Relatório de Custos</div>
+              <div className="fc-text-sm opacity-90">Análise financeira</div>
             </div>
           </div>
         </div>
 
-        {/* Ações Rápidas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-              <div className="w-1 h-8 bg-orange-500 rounded-full mr-4"></div>
-              Ações Rápidas
-            </h3>
-            <div className="space-y-4">
-              <a
-                href="/dashboard/insumos"
-                className="flex items-center p-5 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 hover:shadow-md border border-blue-200"
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Recipes */}
+          <div className="fc-card fc-animate-slide-in-right fc-delay-600">
+            <div className="fc-flex fc-justify-between fc-items-center fc-mb-6">
+              <h3 className="fc-text-xl fc-font-semibold text-gray-800">
+                Fichas Recentes
+              </h3>
+              <button
+                className="fc-btn fc-btn-outline fc-btn-sm"
+                onClick={() => window.location.href = '/dashboard/fichas'}
               >
-                <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
-                  <Package className="h-5 w-5 text-white" />
-                </div>
-                <div className="ml-4">
-                  <span className="text-lg font-semibold text-slate-800">Cadastrar Insumo</span>
-                  <p className="text-sm text-slate-600">Adicionar novos ingredientes</p>
-                </div>
-              </a>
-              
-              <a
-                href="/dashboard/fichas-tecnicas"
-                className="flex items-center p-5 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all duration-300 hover:shadow-md border border-emerald-200"
-              >
-                <div className="p-3 bg-emerald-500 rounded-xl shadow-lg">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <div className="ml-4">
-                  <span className="text-lg font-semibold text-slate-800">Nova Ficha Técnica</span>
-                  <p className="text-sm text-slate-600">Criar receitas padronizadas</p>
-                </div>
-              </a>
-              
-              <a
-                href="/dashboard/producao"
-                className="flex items-center p-5 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all duration-300 hover:shadow-md border border-purple-200"
-              >
-                <div className="p-3 bg-purple-500 rounded-xl shadow-lg">
-                  <Factory className="h-5 w-5 text-white" />
-                </div>
-                <div className="ml-4">
-                  <span className="text-lg font-semibold text-slate-800">Registrar Produção</span>
-                  <p className="text-sm text-slate-600">Controlar produção diária</p>
-                </div>
-              </a>
+                Ver todas
+              </button>
             </div>
-          </div>
-
-          {/* Status do Sistema */}
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-              <div className="w-1 h-8 bg-emerald-500 rounded-full mr-4"></div>
-              Status do Sistema
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-5 bg-emerald-50 rounded-xl border border-emerald-200">
-                <div className="flex items-center">
-                  <div className="h-3 w-3 bg-emerald-500 rounded-full mr-3 animate-pulse"></div>
+            
+            <div className="space-y-3">
+              {recentRecipes.map((recipe, index) => (
+                <div
+                  key={index}
+                  className="fc-flex fc-justify-between fc-items-center p-3 bg-gray-50 rounded-lg fc-hover-lift cursor-pointer"
+                  onClick={() => window.location.href = `/dashboard/fichas/${index + 1}`}
+                >
                   <div>
-                    <span className="text-lg font-semibold text-slate-800">Sistema Online</span>
-                    <p className="text-sm text-emerald-700">Funcionando normalmente</p>
+                    <div className="fc-font-medium text-gray-800">{recipe.name}</div>
+                    <div className="fc-text-sm text-gray-500">{recipe.time}</div>
                   </div>
+                  <div className="fc-font-semibold text-orange-600">{recipe.cost}</div>
                 </div>
-                <span className="text-xs text-emerald-700 font-bold bg-emerald-200 px-3 py-2 rounded-full">Ativo</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Cost Trends */}
+          <div className="fc-card fc-animate-slide-in-right fc-delay-700">
+            <div className="fc-flex fc-justify-between fc-items-center fc-mb-6">
+              <h3 className="fc-text-xl fc-font-semibold text-gray-800">
+                Tendências de Custo
+              </h3>
+              <button
+                className="fc-btn fc-btn-outline fc-btn-sm"
+                onClick={() => window.location.href = '/dashboard/analytics'}
+              >
+                Detalhes
+              </button>
+            </div>
+            
+            <div className="h-48 bg-gradient-to-br from-orange-100 to-blue-100 rounded-lg fc-flex fc-items-center fc-justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-2">📈</div>
+                <div className="text-gray-600 fc-font-medium">Gráfico de Tendências</div>
+                <div className="fc-text-sm text-gray-500 mt-1">Em desenvolvimento</div>
               </div>
-              
-              {stats.insumos === 0 && (
-                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
-                  <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
-                    <div>
-                      <span className="text-lg font-semibold text-slate-800">Nenhum insumo cadastrado</span>
-                      <p className="text-sm text-amber-700">Comece cadastrando ingredientes</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-2 rounded-full">Atenção</span>
-                </div>
-              )}
-              
-              {stats.fichasTecnicas === 0 && (
-                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
-                  <div className="flex items-center">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
-                    <div>
-                      <span className="text-lg font-semibold text-slate-800">Nenhuma ficha técnica criada</span>
-                      <p className="text-sm text-amber-700">Crie receitas padronizadas</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-2 rounded-full">Atenção</span>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Resumo quando não há dados */}
-        {stats.insumos === 0 && stats.fichasTecnicas === 0 && stats.producoes === 0 && stats.produtos === 0 && (
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-            <div className="text-center">
-              <div className="p-8 bg-slate-100 rounded-2xl mb-6 inline-block">
-                <BarChart3 className="h-20 w-20 text-slate-500" />
-              </div>
-              <h4 className="text-xl font-semibold text-slate-700 mb-3">Bem-vindo ao FichaChef!</h4>
-              <p className="text-slate-500 mb-6">Comece cadastrando insumos e criando fichas técnicas para ver estatísticas aqui.</p>
-              <div className="flex gap-4 justify-center">
-                <a
-                  href="/dashboard/insumos"
-                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
-                >
-                  Cadastrar Primeiro Insumo
-                </a>
-                <a
-                  href="/dashboard/fichas-tecnicas"
-                  className="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors font-medium"
-                >
-                  Criar Primeira Ficha
-                </a>
-              </div>
+        {/* Additional Actions for Chef */}
+        {userRole === 'chef' && (
+          <div className="fc-card fc-animate-slide-in-up fc-delay-900">
+            <h3 className="fc-text-xl fc-font-semibold fc-mb-6 text-gray-800">
+              Administração
+            </h3>
+            <div className="fc-flex fc-gap-4 flex-wrap">
+              <button
+                className="fc-btn fc-btn-secondary"
+                onClick={() => window.location.href = '/dashboard/usuarios'}
+              >
+                <span>👥</span>
+                Gerenciar Usuários
+              </button>
+              <button
+                className="fc-btn fc-btn-outline"
+                onClick={() => window.location.href = '/dashboard/configuracoes'}
+              >
+                <span>⚙️</span>
+                Configurações
+              </button>
+              <button
+                className="fc-btn fc-btn-outline"
+                onClick={() => window.location.href = '/dashboard/relatorios'}
+              >
+                <span>📈</span>
+                Relatórios Avançados
+              </button>
             </div>
           </div>
         )}
+
+        {/* Tips Card */}
+        <div className="fc-card fc-card-gradient-orange fc-animate-slide-in-up fc-delay-1000 text-center">
+          <div className="fc-text-3xl fc-mb-4">💡</div>
+          <h4 className="fc-text-lg fc-font-semibold fc-mb-2">Dica do Dia</h4>
+          <p className="opacity-90">
+            Use ingredientes sazonais para reduzir custos e melhorar a qualidade das suas receitas.
+          </p>
+        </div>
       </div>
     </DashboardLayout>
   )

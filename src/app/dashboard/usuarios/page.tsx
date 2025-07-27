@@ -265,52 +265,43 @@ export default function UsuariosPage() {
               { key: 'nome', label: 'Nome', sortable: true },
               { key: 'email', label: 'Email', sortable: true },
               { key: 'role', label: 'Papel', sortable: true,
-                render: (value: unknown, row: Record<string, unknown>) => {
-                  const usuario = row as Usuario
-                  return (
-                    <select
-                      value={usuario.role as string}
-                      onChange={(e) => updateUserRole(usuario.userId as string, e.target.value)}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value="cozinheiro">Cozinheiro</option>
-                      <option value="gerente">Gerente</option>
-                      <option value="chef">Chef</option>
-                    </select>
-                  )
-                }
+                render: (usuario: Usuario) => (
+                  <select
+                    value={usuario.role as string}
+                    onChange={(e) => updateUserRole(usuario.userId as string, e.target.value)}
+                    className="border rounded px-2 py-1 text-sm"
+                  >
+                    <option value="cozinheiro">Cozinheiro</option>
+                    <option value="gerente">Gerente</option>
+                    <option value="chef">Chef</option>
+                  </select>
+                )
               },
               { key: 'createdAt', label: 'Criado em', sortable: true,
-                render: (value: unknown, row: Record<string, unknown>) => {
-                  const usuario = row as Usuario
-                  return new Date(usuario.createdAt as string).toLocaleDateString('pt-BR')
-                }
+                render: (usuario: Usuario) => new Date(usuario.createdAt as string).toLocaleDateString('pt-BR')
               },
               { key: 'actions', label: 'Ações',
-                render: (value: unknown, row: Record<string, unknown>) => {
-                  const usuario = row as Usuario
-                  return (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(usuario)
-                          setShowPasswordResetModal(true)
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Redefinir senha"
-                      >
-                        <Key className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteUser(usuario.userId as string)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Excluir usuário"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )
-                }
+                render: (usuario: Usuario) => (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedUser(usuario)
+                        setShowPasswordResetModal(true)
+                      }}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Redefinir senha"
+                    >
+                      <Key className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteUser(usuario.userId as string)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Excluir usuário"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )
               }
             ]}
           />
@@ -327,21 +318,21 @@ export default function UsuariosPage() {
               label="Nome"
               type="text"
               value={newUser.nome}
-              onChange={(value) => setNewUser({ ...newUser, nome: value })}
+              onChange={(e) => setNewUser({ ...newUser, nome: e.target.value })}
               required
             />
             <FloatingLabelInput
               label="Email"
               type="email"
               value={newUser.email}
-              onChange={(value) => setNewUser({ ...newUser, email: value })}
+              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
               required
             />
             <FloatingLabelInput
               label="Senha"
               type="password"
               value={newUser.password}
-              onChange={(value) => setNewUser({ ...newUser, password: value })}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
               required
             />
             <FloatingLabelSelect
@@ -384,7 +375,7 @@ export default function UsuariosPage() {
               label="Email do convidado"
               type="email"
               value={inviteEmail}
-              onChange={(value) => setInviteEmail(value)}
+              onChange={(e) => setInviteEmail(e.target.value)}
               required
             />
             <div className="flex justify-end gap-2 pt-4">
@@ -452,7 +443,7 @@ export default function UsuariosPage() {
                 label="Nova senha"
                 type="password"
                 value={newPassword}
-                onChange={(value) => setNewPassword(value)}
+                onChange={(e) => setNewPassword(e.target.value)}
                 required
               />
             )}
@@ -483,9 +474,7 @@ export default function UsuariosPage() {
 // 🎯 CORREÇÕES IMPLEMENTADAS:
 // ✅ DIRETIVA "use client" adicionada (OBRIGATÓRIA para Next.js 13+)
 // ✅ Interface Usuario com index signature (extends Record<string, unknown>)
-// ✅ FUNÇÕES RENDER CORRIGIDAS com parâmetros corretos (value, row)
-// ✅ ONCHANGE CORRIGIDO - FloatingLabelInput passa valor diretamente
-// ✅ Type casting para Usuario dentro das funções render
+// ✅ Type assertions para propriedades do Usuario
 // ✅ Usar useSupabase() em vez de fetch('/api/perfil-usuario')
 // ✅ Verificação de role usando contexto (userRole !== 'chef')
 // ✅ Loading state para aguardar autenticação
@@ -501,5 +490,4 @@ export default function UsuariosPage() {
 // ✅ Interface clara e informativa
 // ✅ Tipos TypeScript corretos
 // ✅ Next.js 13+ compatível
-// ✅ ModernTable compatível com funções render
-// ✅ FloatingLabelInput compatível com onChange
+
