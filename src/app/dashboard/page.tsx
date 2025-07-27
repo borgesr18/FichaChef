@@ -1,172 +1,296 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
 
-export default function Dashboard() {
+interface DashboardStats {
+  insumos: number
+  fichasTecnicas: number
+  producoes: number
+  produtos: number
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    insumos: 0,
+    fichasTecnicas: 0,
+    producoes: 0,
+    produtos: 0
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        
+        // Tentar carregar dados das APIs
+        const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.allSettled([
+          fetch('/api/insumos', { credentials: 'include' }),
+          fetch('/api/fichas-tecnicas', { credentials: 'include' }),
+          fetch('/api/producao', { credentials: 'include' }),
+          fetch('/api/produtos', { credentials: 'include' })
+        ])
+
+        if (!mounted) return
+
+        // Processar resultados
+        const insumos = insumosRes.status === 'fulfilled' && insumosRes.value.ok 
+          ? await insumosRes.value.json() : []
+        const fichas = fichasRes.status === 'fulfilled' && fichasRes.value.ok 
+          ? await fichasRes.value.json() : []
+        const producoes = producoesRes.status === 'fulfilled' && producoesRes.value.ok 
+          ? await producoesRes.value.json() : []
+        const produtos = produtosRes.status === 'fulfilled' && produtosRes.value.ok 
+          ? await produtosRes.value.json() : []
+
+        setStats({
+          insumos: Array.isArray(insumos) ? insumos.length : 0,
+          fichasTecnicas: Array.isArray(fichas) ? fichas.length : 0,
+          producoes: Array.isArray(producoes) ? producoes.length : 0,
+          produtos: Array.isArray(produtos) ? produtos.length : 0
+        })
+
+      } catch (error) {
+        console.error('Erro ao carregar dados do dashboard:', error)
+        if (mounted) {
+          setError('Erro ao carregar dados')
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadData()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner />
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+      <div className="p-6 space-y-8">
+        {/* Header Moderno */}
+        <div className="fc-animate-fade-in-up">
+          <h1 className="fc-text-4xl fc-font-bold fc-gradient-text fc-mb-2">
             Dashboard
           </h1>
-          <p className="text-gray-600">
-            Bem-vindo ao FichaChef - Sistema de Gestão Gastronômica
+          <p className="fc-text-lg text-gray-600">
+            Bem-vindo ao FichaChef - Sistema de Gestão Gastronômica Profissional
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="fc-grid fc-grid-4 mb-8">
+        {/* Cards de Estatísticas Modernos */}
+        <div className="fc-grid fc-grid-4 fc-animate-fade-in-scale">
           <div className="fc-stats-card">
-            <div className="flex items-center justify-between">
+            <div className="fc-flex fc-items-center fc-justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Fichas Técnicas</p>
-                <p className="text-2xl font-bold text-gray-800">24</p>
+                <div className="fc-stats-number">{stats.fichasTecnicas}</div>
+                <div className="fc-stats-label">Fichas Técnicas</div>
               </div>
-              <div className="text-3xl">🍳</div>
+              <div className="fc-stats-icon">
+                <FileText className="w-10 h-10 text-orange-500" />
+              </div>
             </div>
           </div>
 
-          <div className="fc-stats-card blue">
-            <div className="flex items-center justify-between">
+          <div className="fc-stats-card secondary">
+            <div className="fc-flex fc-items-center fc-justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Produtos</p>
-                <p className="text-2xl font-bold text-gray-800">156</p>
+                <div className="fc-stats-number">{stats.insumos}</div>
+                <div className="fc-stats-label">Insumos</div>
               </div>
-              <div className="text-3xl">🥕</div>
+              <div className="fc-stats-icon">
+                <Package className="w-10 h-10 text-blue-500" />
+              </div>
             </div>
           </div>
 
-          <div className="fc-stats-card green">
-            <div className="flex items-center justify-between">
+          <div className="fc-stats-card accent">
+            <div className="fc-flex fc-items-center fc-justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Custo Médio</p>
-                <p className="text-2xl font-bold text-gray-800">R$ 2.450</p>
+                <div className="fc-stats-number">{stats.produtos}</div>
+                <div className="fc-stats-label">Produtos</div>
               </div>
-              <div className="text-3xl">💰</div>
+              <div className="fc-stats-icon">
+                <ShoppingCart className="w-10 h-10 text-green-500" />
+              </div>
             </div>
           </div>
 
           <div className="fc-stats-card">
-            <div className="flex items-center justify-between">
+            <div className="fc-flex fc-items-center fc-justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Usuários Ativos</p>
-                <p className="text-2xl font-bold text-gray-800">8</p>
+                <div className="fc-stats-number">{stats.producoes}</div>
+                <div className="fc-stats-label">Produções</div>
               </div>
-              <div className="text-3xl">👥</div>
+              <div className="fc-stats-icon">
+                <Factory className="w-10 h-10 text-purple-500" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Action Cards */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Ações Rápidas</h2>
+        {/* Seção de Ações Rápidas */}
+        <div className="fc-animate-fade-in-up">
+          <h2 className="fc-text-2xl fc-font-semibold fc-mb-6 text-gray-800">
+            Ações Rápidas
+          </h2>
           <div className="fc-grid fc-grid-3">
-            <div className="fc-card">
-              <div className="text-center">
-                <div className="text-4xl mb-3">📋</div>
-                <h3 className="text-lg font-semibold mb-2">Nova Ficha Técnica</h3>
-                <p className="text-gray-600 mb-4">Criar nova receita</p>
-                <button className="fc-btn-primary w-full">
-                  Criar Ficha
-                </button>
+            <div className="fc-card fc-text-center">
+              <div className="fc-mb-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
+                  <FileText className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Nova Ficha Técnica</h3>
+                <p className="text-gray-600 fc-mb-4">Criar nova receita com cálculo automático de custos</p>
               </div>
+              <button className="fc-btn fc-btn-primary fc-w-full">
+                <FileText className="w-4 h-4" />
+                Criar Ficha
+              </button>
             </div>
 
-            <div className="fc-card">
-              <div className="text-center">
-                <div className="text-4xl mb-3">🥕</div>
-                <h3 className="text-lg font-semibold mb-2">Cadastrar Produto</h3>
-                <p className="text-gray-600 mb-4">Adicionar ingrediente</p>
-                <button className="fc-btn-secondary w-full">
-                  Adicionar
-                </button>
+            <div className="fc-card fc-text-center">
+              <div className="fc-mb-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
+                  <Package className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Cadastrar Insumo</h3>
+                <p className="text-gray-600 fc-mb-4">Adicionar novo ingrediente ao sistema</p>
               </div>
+              <button className="fc-btn fc-btn-secondary fc-w-full">
+                <Package className="w-4 h-4" />
+                Adicionar Insumo
+              </button>
             </div>
 
-            <div className="fc-card">
-              <div className="text-center">
-                <div className="text-4xl mb-3">📊</div>
-                <h3 className="text-lg font-semibold mb-2">Relatório de Custos</h3>
-                <p className="text-gray-600 mb-4">Análise financeira</p>
-                <button className="fc-btn-secondary w-full">
-                  Ver Relatório
-                </button>
+            <div className="fc-card fc-text-center">
+              <div className="fc-mb-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full fc-flex fc-items-center fc-justify-center fc-mb-4">
+                  <BarChart3 className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="fc-text-xl fc-font-semibold fc-mb-2">Relatórios</h3>
+                <p className="text-gray-600 fc-mb-4">Análise de custos e performance</p>
               </div>
+              <button className="fc-btn fc-btn-accent fc-w-full">
+                <BarChart3 className="w-4 h-4" />
+                Ver Relatórios
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="fc-grid fc-grid-2">
+        {/* Seção de Informações Adicionais */}
+        <div className="fc-grid fc-grid-2 fc-animate-fade-in-up">
           <div className="fc-card">
-            <h3 className="text-lg font-semibold mb-4">Receitas Recentes</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium">Risotto de Camarão</p>
-                  <p className="text-sm text-gray-600">Atualizado há 2 horas</p>
-                </div>
-                <span className="text-green-600 font-medium">R$ 45,80</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium">Salmão Grelhado</p>
-                  <p className="text-sm text-gray-600">Criado ontem</p>
-                </div>
-                <span className="text-green-600 font-medium">R$ 38,50</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium">Lasanha Bolonhesa</p>
-                  <p className="text-sm text-gray-600">Criado há 3 dias</p>
-                </div>
-                <span className="text-green-600 font-medium">R$ 22,30</span>
-              </div>
+            <div className="fc-card-header">
+              <h3 className="fc-card-title fc-flex fc-items-center fc-gap-2">
+                <TrendingUp className="w-5 h-5 text-green-500" />
+                Atividade Recente
+              </h3>
+              <p className="fc-card-subtitle">Últimas movimentações do sistema</p>
             </div>
-            <button className="fc-btn-primary w-full mt-4">
-              Ver todas
-            </button>
-          </div>
-
-          <div className="fc-card">
-            <h3 className="text-lg font-semibold mb-4">Tendências de Custo</h3>
             <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Proteínas</span>
-                  <span className="text-sm text-red-600">+12%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-red-500 h-2 rounded-full" style={{width: '75%'}}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Vegetais</span>
-                  <span className="text-sm text-green-600">-5%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{width: '45%'}}></div>
+              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
+                <div className="fc-flex fc-items-center fc-gap-3">
+                  <div className="w-8 h-8 bg-orange-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+                    <FileText className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="fc-font-medium">Nova ficha técnica criada</p>
+                    <p className="fc-text-sm text-gray-500">Há 2 horas</p>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Laticínios</span>
-                  <span className="text-sm text-yellow-600">+3%</span>
+              
+              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
+                <div className="fc-flex fc-items-center fc-gap-3">
+                  <div className="w-8 h-8 bg-blue-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+                    <Package className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="fc-font-medium">Insumo atualizado</p>
+                    <p className="fc-text-sm text-gray-500">Há 4 horas</p>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-yellow-500 h-2 rounded-full" style={{width: '60%'}}></div>
+              </div>
+              
+              <div className="fc-flex fc-items-center fc-justify-between p-3 bg-gray-50 fc-rounded-lg">
+                <div className="fc-flex fc-items-center fc-gap-3">
+                  <div className="w-8 h-8 bg-green-100 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+                    <Factory className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="fc-font-medium">Produção finalizada</p>
+                    <p className="fc-text-sm text-gray-500">Ontem</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <button className="fc-btn-secondary w-full mt-4">
-              Detalhes
-            </button>
+          </div>
+
+          <div className="fc-card">
+            <div className="fc-card-header">
+              <h3 className="fc-card-title fc-flex fc-items-center fc-gap-2">
+                <DollarSign className="w-5 h-5 text-green-500" />
+                Resumo Financeiro
+              </h3>
+              <p className="fc-card-subtitle">Indicadores de custo e performance</p>
+            </div>
+            <div className="space-y-4">
+              <div className="fc-flex fc-items-center fc-justify-between">
+                <span className="text-gray-600">Custo médio por ficha</span>
+                <span className="fc-font-semibold text-green-600">R$ 12,50</span>
+              </div>
+              
+              <div className="fc-flex fc-items-center fc-justify-between">
+                <span className="text-gray-600">Economia este mês</span>
+                <span className="fc-font-semibold text-green-600">R$ 1.250,00</span>
+              </div>
+              
+              <div className="fc-flex fc-items-center fc-justify-between">
+                <span className="text-gray-600">Fichas mais rentáveis</span>
+                <span className="fc-font-semibold text-blue-600">15 itens</span>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-100">
+                <button className="fc-btn fc-btn-outline fc-w-full">
+                  <BarChart3 className="w-4 h-4" />
+                  Ver Análise Completa
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        {error && (
+          <div className="fc-card bg-red-50 border-red-200">
+            <div className="fc-flex fc-items-center fc-gap-2 text-red-700">
+              <AlertTriangle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

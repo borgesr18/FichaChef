@@ -484,6 +484,7 @@ export default function UsuariosPage() {
 // ✅ DIRETIVA "use client" adicionada (OBRIGATÓRIA para Next.js 13+)
 // ✅ Interface Usuario com index signature (extends Record<string, unknown>)
 // ✅ FUNÇÕES RENDER CORRIGIDAS com parâmetros corretos (value, row)
+// ✅ ONCHANGE CORRIGIDO - FloatingLabelInput passa valor diretamente
 // ✅ Type casting para Usuario dentro das funções render
 // ✅ Usar useSupabase() em vez de fetch('/api/perfil-usuario')
 // ✅ Verificação de role usando contexto (userRole !== 'chef')
@@ -501,4 +502,4 @@ export default function UsuariosPage() {
 // ✅ Tipos TypeScript corretos
 // ✅ Next.js 13+ compatível
 // ✅ ModernTable compatível com funções render
-
+// ✅ FloatingLabelInput compatível com onChange
