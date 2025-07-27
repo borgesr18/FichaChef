@@ -99,28 +99,28 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 fc-shadow-lg
+        modern-sidebar fixed top-0 left-0 z-50 h-full w-64
         transform transition-transform duration-300 ease-in-out
         lg:relative lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Header da Sidebar */}
-        <div className="fc-p-6 border-b border-gray-200">
-          <div className="fc-flex fc-items-center fc-justify-between">
-            <div className="fc-flex fc-items-center fc-gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 fc-rounded-lg fc-flex fc-items-center fc-justify-center">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
                 <ChefHat className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="fc-text-lg fc-font-bold fc-gradient-text">FichaChef</h2>
-                <p className="fc-text-xs text-gray-500">Painel Executivo</p>
+                <h2 className="text-lg font-bold gradient-text">FichaChef</h2>
+                <p className="text-xs text-gray-500">Painel Executivo</p>
               </div>
             </div>
             
             {/* Botão fechar mobile */}
             <button
               onClick={onClose}
-              className="lg:hidden fc-btn fc-btn-ghost p-2"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -128,18 +128,18 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
 
           {/* Informações do usuário */}
           {user && (
-            <div className="fc-mt-4 fc-p-3 bg-gray-50 fc-rounded-lg">
-              <div className="fc-flex fc-items-center fc-gap-3">
-                <div className={`w-8 h-8 bg-gradient-to-br ${getRoleColor(userRole || 'cozinheiro')} fc-rounded-full fc-flex fc-items-center fc-justify-center`}>
-                  <span className="fc-text-xs fc-font-bold text-white">
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 bg-gradient-to-br ${getRoleColor(userRole || 'cozinheiro')} rounded-full flex items-center justify-center`}>
+                  <span className="text-xs font-bold text-white">
                     {(user.email?.charAt(0) || 'U').toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="fc-text-sm fc-font-medium text-gray-800 truncate">
+                  <p className="text-sm font-medium text-gray-800 truncate">
                     {user.email?.split('@')[0] || 'Usuário'}
                   </p>
-                  <p className="fc-text-xs text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {getRoleDisplayName(userRole || 'cozinheiro')}
                   </p>
                 </div>
@@ -149,7 +149,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         </div>
 
         {/* Menu de Navegação */}
-        <nav className="fc-p-4 flex-1 overflow-y-auto">
+        <nav className="p-4 flex-1 overflow-y-auto">
           <div className="space-y-1">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon
@@ -160,73 +160,56 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`
-                    fc-flex fc-items-center fc-gap-3 fc-px-3 fc-py-2.5 fc-rounded-lg
-                    transition-all duration-200 group relative overflow-hidden
-                    ${active 
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white fc-shadow-md' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-                    }
-                  `}
+                  className={`sidebar-item ${active ? 'active' : ''}`}
                 >
-                  {/* Efeito de hover */}
-                  {!active && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
-                  )}
-                  
-                  <Icon className={`w-5 h-5 transition-transform duration-200 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
-                  <span className="fc-text-sm fc-font-medium">{item.label}</span>
-                  
-                  {/* Indicador ativo */}
-                  {active && (
-                    <div className="absolute right-2 w-2 h-2 bg-white fc-rounded-full opacity-80" />
-                  )}
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{item.label}</span>
                 </Link>
               )
             })}
           </div>
 
           {/* Seção de Acesso Rápido */}
-          <div className="fc-mt-8 fc-pt-6 border-t border-gray-200">
-            <h3 className="fc-text-xs fc-font-semibold text-gray-400 uppercase tracking-wider fc-mb-3">
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
               Acesso Rápido
             </h3>
             <div className="space-y-2">
               <Link
                 href="/dashboard/fichas-tecnicas"
                 onClick={onClose}
-                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors duration-200"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors duration-200"
               >
                 <FileText className="w-4 h-4" />
-                <span className="fc-text-sm">Nova Ficha</span>
+                <span className="text-sm">Nova Ficha</span>
               </Link>
               <Link
                 href="/dashboard/insumos"
                 onClick={onClose}
-                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
               >
                 <Package className="w-4 h-4" />
-                <span className="fc-text-sm">Novo Insumo</span>
+                <span className="text-sm">Novo Insumo</span>
               </Link>
               <Link
                 href="/dashboard/relatorios"
                 onClick={onClose}
-                className="fc-flex fc-items-center fc-gap-2 fc-px-3 fc-py-2 fc-rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors duration-200"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 transition-colors duration-200"
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="fc-text-sm">Relatórios</span>
+                <span className="text-sm">Relatórios</span>
               </Link>
             </div>
           </div>
 
           {/* Informações do Sistema */}
-          <div className="fc-mt-8 fc-p-3 bg-gradient-to-br from-gray-50 to-gray-100 fc-rounded-lg">
-            <div className="fc-text-center">
-              <div className="w-8 h-8 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 fc-rounded-full fc-flex fc-items-center fc-justify-center fc-mb-2">
+          <div className="mt-8 p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-2">
                 <ChefHat className="w-4 h-4 text-white" />
               </div>
-              <p className="fc-text-xs fc-font-medium text-gray-700">FichaChef v1.0</p>
-              <p className="fc-text-xs text-gray-500">Sistema Profissional</p>
+              <p className="text-xs font-medium text-gray-700">FichaChef v1.0</p>
+              <p className="text-xs text-gray-500">Sistema Profissional</p>
             </div>
           </div>
         </nav>

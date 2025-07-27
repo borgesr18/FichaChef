@@ -97,45 +97,45 @@ export default function Header({ onGlobalSearch, onToggleWorkflow, onMenuClick }
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 fc-shadow-sm sticky top-0 z-50">
-      <div className="fc-flex fc-items-center fc-justify-between fc-px-6 fc-py-4">
+    <header className="modern-header sticky top-0 z-50">
+      <div className="flex items-center justify-between px-6 py-4">
         {/* Logo e Menu Mobile */}
-        <div className="fc-flex fc-items-center fc-gap-4">
+        <div className="flex items-center gap-4">
           {/* Botão Menu Mobile */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden fc-btn fc-btn-ghost p-2"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             aria-label="Abrir menu"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           {/* Logo */}
-          <div className="fc-flex fc-items-center fc-gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 fc-rounded-lg fc-flex fc-items-center fc-justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
               <ChefHat className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="fc-text-xl fc-font-bold fc-gradient-text">FichaChef</h1>
-              <p className="fc-text-xs text-gray-500 hidden sm:block">Sistema de Gestão Gastronômica</p>
+              <h1 className="text-xl font-bold gradient-text">FichaChef</h1>
+              <p className="text-xs text-gray-500 hidden sm:block">Sistema de Gestão Gastronômica</p>
             </div>
           </div>
         </div>
 
         {/* Data e Hora */}
-        <div className="hidden md:block fc-text-center">
-          <p className="fc-text-sm fc-font-medium text-gray-700">
+        <div className="hidden md:block text-center">
+          <p className="text-sm font-medium text-gray-700">
             {formatDateTime(currentDateTime)}
           </p>
         </div>
 
         {/* Ações do Header */}
-        <div className="fc-flex fc-items-center fc-gap-3">
+        <div className="flex items-center gap-3">
           {/* Busca Global */}
           {onGlobalSearch && (
             <button
               onClick={onGlobalSearch}
-              className="fc-btn fc-btn-ghost p-2"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
               title="Busca Global"
             >
               <Search className="w-5 h-5" />
@@ -146,7 +146,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow, onMenuClick }
           {onToggleWorkflow && (
             <button
               onClick={onToggleWorkflow}
-              className="fc-btn fc-btn-ghost p-2"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
               title="Workflow"
             >
               <Star className="w-5 h-5" />
@@ -157,12 +157,12 @@ export default function Header({ onGlobalSearch, onToggleWorkflow, onMenuClick }
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="fc-btn fc-btn-ghost p-2 relative"
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
               title="Notificações"
             >
               <Bell className="w-5 h-5" />
               {notificacoes.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white fc-text-xs fc-rounded-full fc-flex fc-items-center fc-justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   {notificacoes.length}
                 </span>
               )}
@@ -170,36 +170,36 @@ export default function Header({ onGlobalSearch, onToggleWorkflow, onMenuClick }
 
             {/* Dropdown de Notificações */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white fc-rounded-xl fc-shadow-xl border border-gray-200 z-50">
-                <div className="fc-p-4 border-b border-gray-100">
-                  <h3 className="fc-font-semibold text-gray-800">Notificações</h3>
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="font-semibold text-gray-800">Notificações</h3>
                 </div>
                 <div className="max-h-96 overflow-y-auto">
                   {notificacoes.length === 0 ? (
-                    <div className="fc-p-4 fc-text-center text-gray-500">
-                      <Bell className="w-8 h-8 mx-auto fc-mb-2 opacity-50" />
+                    <div className="p-4 text-center text-gray-500">
+                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p>Nenhuma notificação</p>
                     </div>
                   ) : (
                     notificacoes.map((notificacao) => (
                       <div
                         key={notificacao.id}
-                        className="fc-p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                        className="p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
                         onClick={() => markAsRead(notificacao.id)}
                       >
-                        <div className="fc-flex fc-items-start fc-justify-between fc-gap-3">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <h4 className="fc-font-medium text-gray-800 fc-mb-1">
+                            <h4 className="font-medium text-gray-800 mb-1">
                               {notificacao.titulo}
                             </h4>
-                            <p className="fc-text-sm text-gray-600 fc-mb-2">
+                            <p className="text-sm text-gray-600 mb-2">
                               {notificacao.mensagem}
                             </p>
-                            <p className="fc-text-xs text-gray-400">
+                            <p className="text-xs text-gray-400">
                               {new Date(notificacao.createdAt).toLocaleString('pt-BR')}
                             </p>
                           </div>
-                          <span className={`fc-text-xs fc-px-2 fc-py-1 fc-rounded-full ${getPriorityColor(notificacao.prioridade)}`}>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(notificacao.prioridade)}`}>
                             {notificacao.prioridade}
                           </span>
                         </div>
@@ -215,54 +215,54 @@ export default function Header({ onGlobalSearch, onToggleWorkflow, onMenuClick }
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="fc-flex fc-items-center fc-gap-2 fc-p-2 fc-rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>
-              <div className="hidden sm:block fc-text-left">
-                <p className="fc-text-sm fc-font-medium text-gray-700">
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium text-gray-700">
                   {user?.email?.split('@')[0] || 'Usuário'}
                 </p>
-                <p className="fc-text-xs text-gray-500">Chef</p>
+                <p className="text-xs text-gray-500">Chef</p>
               </div>
             </button>
 
             {/* Dropdown do Usuário */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white fc-rounded-xl fc-shadow-xl border border-gray-200 z-50">
-                <div className="fc-p-4 border-b border-gray-100">
-                  <div className="fc-flex fc-items-center fc-gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 fc-rounded-full fc-flex fc-items-center fc-justify-center">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="fc-font-medium text-gray-800">
+                      <p className="font-medium text-gray-800">
                         {user?.email?.split('@')[0] || 'Usuário'}
                       </p>
-                      <p className="fc-text-sm text-gray-500">{user?.email}</p>
+                      <p className="text-sm text-gray-500">{user?.email}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="fc-p-2">
+                <div className="p-2">
                   <button
                     onClick={() => {
                       setShowUserMenu(false)
                       router.push('/dashboard/configuracoes')
                     }}
-                    className="w-full fc-flex fc-items-center fc-gap-3 fc-p-3 fc-rounded-lg hover:bg-gray-50 transition-colors fc-text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
                   >
                     <User className="w-4 h-4 text-gray-500" />
-                    <span className="fc-text-sm text-gray-700">Perfil</span>
+                    <span className="text-sm text-gray-700">Perfil</span>
                   </button>
                   
                   <button
                     onClick={handleSignOut}
-                    className="w-full fc-flex fc-items-center fc-gap-3 fc-p-3 fc-rounded-lg hover:bg-red-50 transition-colors fc-text-left text-red-600"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-red-50 transition-colors text-left text-red-600"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span className="fc-text-sm">Sair</span>
+                    <span className="text-sm">Sair</span>
                   </button>
                 </div>
               </div>
