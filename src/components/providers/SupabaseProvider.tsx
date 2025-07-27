@@ -1,7 +1,4 @@
-"use client"
-
-// 🚨 SOLUÇÃO IMEDIATA - HARDCODE ADMIN PARA RESOLVER INCONSISTÊNCIA
-// Substitua o SupabaseProvider.tsx com este código para solução imediata
+'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -15,8 +12,6 @@ interface SupabaseContextType {
   loading: boolean
   refreshUserRole: () => Promise<void>
   clearCache: () => void
-  isConfigured: boolean
-  isInitialized: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
@@ -25,143 +20,146 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
-  const [cacheCounter, setCacheCounter] = useState(0)
-  const [isInitialized, setIsInitialized] = useState(false)
-  
-  // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
-  const isConfigured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const [clearCache, setClearCache] = useState(0)
   
   // ✅ CONTROLE DE LOOP: Evitar requisições infinitas
   const isLoadingRole = useRef(false)
+  const maxRetries = useRef(3)
+  const currentRetries = useRef(0)
+  const lastSuccessfulRole = useRef<UserRole>(null)
 
-  // 🚨 SOLUÇÃO IMEDIATA: HARDCODE PARA ADMIN CONHECIDO
+  // ✅ FUNÇÃO HÍBRIDA: Tenta banco, usa fallback inteligente se falhar
   const refreshUserRole = useCallback(async () => {
     if (!user || isLoadingRole.current) {
       console.log('🚫 refreshUserRole: Bloqueado (sem usuário ou já carregando)')
       return
     }
 
-    // ✅ AGUARDAR INICIALIZAÇÃO
-    if (!isInitialized) {
-      console.log('🕐 refreshUserRole: Aguardando inicialização da autenticação...')
+    // ✅ LIMITE DE TENTATIVAS: Evitar loops infinitos
+    if (currentRetries.current >= maxRetries.current) {
+      console.warn('⚠️ refreshUserRole: Máximo de tentativas atingido, usando fallback')
+      
+      // ✅ FALLBACK INTELIGENTE: Usar último role conhecido ou chef para admin
+      const fallbackRole = lastSuccessfulRole.current || 
+                          (user.email === 'rba1807@gmail.com' ? 'chef' : 'cozinheiro')
+      
+      setUserRole(fallbackRole)
+      setLoading(false)
       return
     }
 
     isLoadingRole.current = true
-    setLoading(true)
+    currentRetries.current += 1
 
     try {
-      console.log('🔄 refreshUserRole: Iniciando com HARDCODE para admin')
+      console.log(`🔄 refreshUserRole: Tentativa ${currentRetries.current}/${maxRetries.current}`)
       console.log('👤 Usuário:', { id: user.id, email: user.email })
 
-      // 🚨 HARDCODE DEFINITIVO PARA ADMIN CONHECIDO
-      if (user.email === 'rba1807@gmail.com') {
-        console.log('👨‍🍳 ADMIN DETECTADO: Definindo como CHEF (HARDCODE)')
-        setUserRole('chef')
+      // ✅ ESTRATÉGIA 1: Buscar por user_id (mais confiável)
+      console.log('🔍 Tentando buscar por user_id...')
+      const { data, error } = await supabase
+        .from('perfis_usuarios')
+        .select('role, nome, email')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!error && data?.role) {
+        console.log('✅ Role encontrado com sucesso:', data.role)
+        console.log('👤 Dados do perfil:', data)
         
-        // ✅ Salvar no cache para consistência
-        localStorage.setItem('fichachef-user-role', 'chef')
-        localStorage.setItem('fichachef-user-email', user.email)
+        setUserRole(data.role as UserRole)
+        lastSuccessfulRole.current = data.role as UserRole
+        currentRetries.current = 0 // ✅ Reset contador em caso de sucesso
         
-        console.log('✅ USUÁRIO É CHEF - Acesso completo garantido!')
+        // ✅ Salvar no cache
+        localStorage.setItem('fichachef-user-role', data.role)
+        localStorage.setItem('fichachef-user-email', data.email || '')
+        
+        // ✅ LOG ESPECÍFICO PARA CHEF
+        if (data.role === 'chef') {
+          console.log('👨‍🍳 USUÁRIO É CHEF - Deve ter acesso completo!')
+        }
+        
         setLoading(false)
         return
       }
 
-      // 🔍 TENTAR CONSULTA NORMAL PARA OUTROS USUÁRIOS
-      console.log('🔍 Tentando consulta normal para usuário não-admin...')
-      
-      try {
-        const { data, error } = await supabase
-          .from('perfis_usuarios')
-          .select('role, nome, email')
-          .eq('user_id', user.id)
-          .single()
+      // ✅ ESTRATÉGIA 2: Buscar por email como backup (só se strategy 1 falhar)
+      console.log('🔄 Tentando buscar por email como backup...')
+      const { data: backupData, error: backupError } = await supabase
+        .from('perfis_usuarios')
+        .select('role, nome, email')
+        .eq('email', user.email)
+        .single()
 
-        if (!error && data?.role) {
-          console.log('✅ Role encontrado via consulta:', data.role)
-          setUserRole(data.role as UserRole)
-          localStorage.setItem('fichachef-user-role', data.role)
-          setLoading(false)
-          return
-        }
-      } catch (error) {
-        console.warn('⚠️ Consulta ao banco falhou, usando fallback:', error)
+      if (!backupError && backupData?.role) {
+        console.log('✅ Backup funcionou! Role encontrado:', backupData.role)
+        setUserRole(backupData.role as UserRole)
+        lastSuccessfulRole.current = backupData.role as UserRole
+        currentRetries.current = 0 // ✅ Reset contador em caso de sucesso
+        
+        // ✅ Salvar no cache
+        localStorage.setItem('fichachef-user-role', backupData.role)
+        setLoading(false)
+        return
       }
 
-      // ✅ FALLBACK PARA OUTROS USUÁRIOS
-      console.log('🔄 Usando fallback para usuário não-admin')
+      // ✅ ESTRATÉGIA 3: Fallback inteligente baseado no email
+      console.warn('⚠️ Ambas as estratégias falharam, usando fallback inteligente')
       
-      // Verificar cache primeiro
+      let fallbackRole: UserRole = 'cozinheiro' // Default geral
+      
+      // ✅ FALLBACK ESPECÍFICO: Admin conhecido
+      if (user.email === 'rba1807@gmail.com') {
+        fallbackRole = 'chef'
+        console.log('👨‍🍳 Fallback: Email admin detectado, definindo como chef')
+      }
+      
+      // ✅ FALLBACK: Usar role do cache se disponível
       const cachedRole = localStorage.getItem('fichachef-user-role')
       if (cachedRole && ['chef', 'gerente', 'cozinheiro'].includes(cachedRole)) {
-        console.log('💾 Usando role do cache:', cachedRole)
-        setUserRole(cachedRole as UserRole)
-      } else {
-        console.log('🔧 Definindo role padrão: cozinheiro')
-        setUserRole('cozinheiro')
-        localStorage.setItem('fichachef-user-role', 'cozinheiro')
+        fallbackRole = cachedRole as UserRole
+        console.log('💾 Fallback: Usando role do cache:', cachedRole)
       }
+      
+      setUserRole(fallbackRole)
+      lastSuccessfulRole.current = fallbackRole
 
     } catch (error) {
-      console.error('💥 Erro inesperado:', error)
+      console.error('💥 Erro inesperado ao buscar role:', error)
       
-      // ✅ FALLBACK DE EMERGÊNCIA SEMPRE CONSISTENTE
-      if (user.email === 'rba1807@gmail.com') {
-        console.log('🚨 EMERGÊNCIA: Admin sempre chef')
-        setUserRole('chef')
-        localStorage.setItem('fichachef-user-role', 'chef')
-      } else {
-        console.log('🚨 EMERGÊNCIA: Outros usuários como cozinheiro')
-        setUserRole('cozinheiro')
-        localStorage.setItem('fichachef-user-role', 'cozinheiro')
-      }
+      // ✅ FALLBACK DE EMERGÊNCIA
+      const emergencyRole = user.email === 'rba1807@gmail.com' ? 'chef' : 'cozinheiro'
+      setUserRole(emergencyRole)
+      lastSuccessfulRole.current = emergencyRole
       
     } finally {
       isLoadingRole.current = false
       setLoading(false)
     }
-  }, [user, isInitialized, cacheCounter])
+  }, [user, clearCache]) // ✅ clearCache usado para forçar re-render
 
-  // ✅ FUNÇÃO DE LIMPEZA
+  // ✅ FUNÇÃO DE LIMPEZA: Reset completo
   const handleClearCache = useCallback(() => {
-    console.log('🧹 Limpando cache...')
+    console.log('🧹 Limpando cache e resetando contadores...')
     
+    // ✅ Limpar cache
     localStorage.removeItem('fichachef-user-role')
     localStorage.removeItem('fichachef-user-email')
     
+    // ✅ Reset contadores
+    currentRetries.current = 0
+    lastSuccessfulRole.current = null
     isLoadingRole.current = false
-    setCacheCounter(prev => prev + 1)
+    
+    // ✅ Forçar re-render
+    setClearCache(prev => prev + 1)
     setUserRole(null)
     setLoading(true)
   }, [])
 
   // ✅ EFEITO: Monitorar mudanças de autenticação
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        console.log('🔄 Inicializando autenticação...', session ? 'Sessão encontrada' : 'Sem sessão')
-        
-        if (session?.user) {
-          setUser(session.user)
-          setLoading(true)
-        }
-        
-        setIsInitialized(true)
-        console.log('✅ Autenticação inicializada - pronto para consultas')
-        
-      } catch (error) {
-        console.error('❌ Erro na inicialização:', error)
-        setIsInitialized(true)
-      }
-    }
-
-    initializeAuth()
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔐 Auth state changed:', event)
@@ -169,10 +167,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setUser(session.user)
           setLoading(true)
+          
+          // ✅ Reset contadores para novo usuário
+          currentRetries.current = 0
+          lastSuccessfulRole.current = null
+          
         } else {
           setUser(null)
           setUserRole(null)
           setLoading(false)
+          
+          // ✅ Limpar tudo no logout
+          currentRetries.current = 0
+          lastSuccessfulRole.current = null
           isLoadingRole.current = false
         }
       }
@@ -181,39 +188,24 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ✅ EFEITO: Carregar role quando usuário muda E autenticação está inicializada
+  // ✅ EFEITO: Carregar role quando usuário muda
   useEffect(() => {
-    if (user && isInitialized && !isLoadingRole.current) {
-      console.log('🚀 Condições atendidas: usuário logado e autenticação inicializada')
-      
-      // 🚨 VERIFICAÇÃO IMEDIATA PARA ADMIN
-      if (user.email === 'rba1807@gmail.com') {
-        console.log('⚡ ADMIN DETECTADO: Definindo chef imediatamente')
-        setUserRole('chef')
-        localStorage.setItem('fichachef-user-role', 'chef')
-        setLoading(false)
-        return
-      }
-      
-      // Para outros usuários, usar timer
+    if (user && !isLoadingRole.current) {
+      // ✅ DELAY PEQUENO: Evitar chamadas muito rápidas
       const timer = setTimeout(() => {
         refreshUserRole()
       }, 100)
       
       return () => clearTimeout(timer)
-    } else if (user && !isInitialized) {
-      console.log('🕐 Usuário presente mas aguardando inicialização...')
     }
-  }, [user, isInitialized, refreshUserRole])
+  }, [user, refreshUserRole])
 
   const value = {
     user,
     userRole,
     loading,
     refreshUserRole,
-    clearCache: handleClearCache,
-    isConfigured,
-    isInitialized
+    clearCache: handleClearCache
   }
 
   return (
@@ -231,19 +223,3 @@ export function useSupabase() {
   return context
 }
 
-// 🎯 RESULTADO ESPERADO COM ESTA SOLUÇÃO:
-// ✅ Admin (rba1807@gmail.com) SEMPRE será chef
-// ✅ Sem inconsistências entre refresh
-// ✅ Cache consistente
-// ✅ Fallbacks robustos para outros usuários
-// ✅ Sistema funcional imediatamente
-// ✅ Build passa sem erros (com "use client")
-// ✅ ESLint aprovado (sem variáveis não utilizadas)
-
-// 📋 COMO USAR:
-// 1. Substitua o conteúdo de src/components/providers/SupabaseProvider.tsx
-// 2. Recarregue o sistema
-// 3. Admin sempre aparecerá como chef
-// 4. Sem mais inconsistências
-// 5. Build funcionará corretamente
-// 6. Deploy Vercel será bem-sucedido

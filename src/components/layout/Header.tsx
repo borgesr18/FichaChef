@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
-import { supabase } from '@/lib/supabase'
-import { withRequestDeduplication } from '@/lib/request-cache'
+import { useRouter } from 'next/navigation'
 import { LogOut, User, Bell, Search, Star } from 'lucide-react'
+import { withRequestDeduplication } from '@/lib/request-cache'
 
 interface Notificacao {
   id: string
@@ -23,7 +22,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {
-  const { user } = useSupabase()
+  const { user, signOut } = useSupabase()
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
@@ -71,7 +70,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await signOut()
     router.push('/login')
   }
 
