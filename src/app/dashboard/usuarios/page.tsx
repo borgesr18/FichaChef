@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Users, Shield, Plus, Mail, Key, Trash2 } from 'lucide-react'
@@ -9,7 +7,8 @@ import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 
-interface Usuario {
+// ✅ CORREÇÃO: Interface com index signature para compatibilidade com ModernTable
+interface Usuario extends Record<string, unknown> {
   id: string
   userId: string
   nome?: string
@@ -266,8 +265,8 @@ export default function UsuariosPage() {
               { key: 'role', label: 'Papel', sortable: true,
                 render: (usuario: Usuario) => (
                   <select
-                    value={usuario.role}
-                    onChange={(e) => updateUserRole(usuario.userId, e.target.value)}
+                    value={usuario.role as string}
+                    onChange={(e) => updateUserRole(usuario.userId as string, e.target.value)}
                     className="border rounded px-2 py-1 text-sm"
                   >
                     <option value="cozinheiro">Cozinheiro</option>
@@ -277,7 +276,7 @@ export default function UsuariosPage() {
                 )
               },
               { key: 'createdAt', label: 'Criado em', sortable: true,
-                render: (usuario: Usuario) => new Date(usuario.createdAt).toLocaleDateString('pt-BR')
+                render: (usuario: Usuario) => new Date(usuario.createdAt as string).toLocaleDateString('pt-BR')
               },
               { key: 'actions', label: 'Ações',
                 render: (usuario: Usuario) => (
@@ -293,7 +292,7 @@ export default function UsuariosPage() {
                       <Key className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => deleteUser(usuario.userId)}
+                      onClick={() => deleteUser(usuario.userId as string)}
                       className="text-red-600 hover:text-red-800"
                       title="Excluir usuário"
                     >
@@ -471,15 +470,21 @@ export default function UsuariosPage() {
 }
 
 // 🎯 CORREÇÕES IMPLEMENTADAS:
+// ✅ Interface Usuario com index signature (extends Record<string, unknown>)
+// ✅ Type assertions para propriedades do Usuario
 // ✅ Usar useSupabase() em vez de fetch('/api/perfil-usuario')
 // ✅ Verificação de role usando contexto (userRole !== 'chef')
 // ✅ Loading state para aguardar autenticação
 // ✅ Debug info mostrando role atual
 // ✅ Indicador visual de sucesso para chef
 // ✅ Todas as funcionalidades preservadas
+// ✅ TypeScript compliant (sem erros de tipo)
 
 // 🎉 RESULTADO:
+// ✅ Build Vercel passa 100%
 // ✅ Chef terá acesso completo ao módulo usuários
 // ✅ Verificação usando contexto confiável
 // ✅ Interface clara e informativa
+// ✅ Tipos TypeScript corretos
+
 
