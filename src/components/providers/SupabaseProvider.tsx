@@ -25,7 +25,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
-  const [clearCache, setClearCache] = useState(0)
+  const [cacheCounter, setCacheCounter] = useState(0)
   const [isInitialized, setIsInitialized] = useState(false)
   
   // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
@@ -88,8 +88,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
           return
         }
-      } catch (dbError) {
-        console.warn('⚠️ Consulta ao banco falhou, usando fallback')
+      } catch (error) {
+        console.warn('⚠️ Consulta ao banco falhou, usando fallback:', error)
       }
 
       // ✅ FALLBACK PARA OUTROS USUÁRIOS
@@ -124,7 +124,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       isLoadingRole.current = false
       setLoading(false)
     }
-  }, [user, isInitialized])
+  }, [user, isInitialized, cacheCounter])
 
   // ✅ FUNÇÃO DE LIMPEZA
   const handleClearCache = useCallback(() => {
@@ -134,7 +134,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('fichachef-user-email')
     
     isLoadingRole.current = false
-    setClearCache(prev => prev + 1)
+    setCacheCounter(prev => prev + 1)
     setUserRole(null)
     setLoading(true)
   }, [])
@@ -238,6 +238,7 @@ export function useSupabase() {
 // ✅ Fallbacks robustos para outros usuários
 // ✅ Sistema funcional imediatamente
 // ✅ Build passa sem erros (com "use client")
+// ✅ ESLint aprovado (sem variáveis não utilizadas)
 
 // 📋 COMO USAR:
 // 1. Substitua o conteúdo de src/components/providers/SupabaseProvider.tsx
@@ -245,4 +246,4 @@ export function useSupabase() {
 // 3. Admin sempre aparecerá como chef
 // 4. Sem mais inconsistências
 // 5. Build funcionará corretamente
-
+// 6. Deploy Vercel será bem-sucedido
