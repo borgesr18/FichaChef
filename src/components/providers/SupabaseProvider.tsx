@@ -13,6 +13,7 @@ interface SupabaseContextType {
   refreshUserRole: () => Promise<void>
   clearCache: () => void
   isConfigured: boolean
+  isInitialized: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
@@ -22,6 +23,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
   const [clearCache, setClearCache] = useState(0)
+  const [isInitialized, setIsInitialized] = useState(false)
   
   // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
   const isConfigured = Boolean(
@@ -39,6 +41,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const refreshUserRole = useCallback(async () => {
     if (!user || isLoadingRole.current) {
       console.log('🚫 refreshUserRole: Bloqueado (sem usuário ou já carregando)')
+      return
+    }
+
+    // ✅ AGUARDAR INICIALIZAÇÃO: Evitar consultas antes da autenticação estar pronta
+    if (!isInitialized) {
+      console.log('🕐 refreshUserRole: Aguardando inicialização da autenticação...')
       return
     }
 
@@ -144,7 +152,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       isLoadingRole.current = false
       setLoading(false)
     }
-  }, [user, clearCache]) // ✅ clearCache usado para forçar re-render
+  }, [user, clearCache, isInitialized]) // ✅ isInitialized adicionado para controle de timing
 
   // ✅ FUNÇÃO DE LIMPEZA: Reset completo
   const handleClearCache = useCallback(() => {
@@ -167,6 +175,32 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // ✅ EFEITO: Monitorar mudanças de autenticação
   useEffect(() => {
+    // ✅ INICIALIZAÇÃO: Verificar sessão existente primeiro
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔄 Inicializando autenticação...', session ? 'Sessão encontrada' : 'Sem sessão')
+        
+        if (session?.user) {
+          setUser(session.user)
+          setLoading(true)
+          currentRetries.current = 0
+          lastSuccessfulRole.current = null
+        }
+        
+        // ✅ SINALIZAR INICIALIZAÇÃO COMPLETA
+        setIsInitialized(true)
+        console.log('✅ Autenticação inicializada - pronto para consultas')
+        
+      } catch (error) {
+        console.error('❌ Erro na inicialização:', error)
+        setIsInitialized(true) // Mesmo com erro, permitir tentativas
+      }
+    }
+
+    initializeAuth()
+
+    // ✅ MONITORAR MUDANÇAS
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔐 Auth state changed:', event)
@@ -195,17 +229,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ✅ EFEITO: Carregar role quando usuário muda
+  // ✅ EFEITO: Carregar role quando usuário muda E autenticação está inicializada
   useEffect(() => {
-    if (user && !isLoadingRole.current) {
+    if (user && isInitialized && !isLoadingRole.current) {
+      console.log('🚀 Condições atendidas: usuário logado e autenticação inicializada')
       // ✅ DELAY PEQUENO: Evitar chamadas muito rápidas
       const timer = setTimeout(() => {
         refreshUserRole()
       }, 100)
       
       return () => clearTimeout(timer)
+    } else if (user && !isInitialized) {
+      console.log('🕐 Usuário presente mas aguardando inicialização...')
     }
-  }, [user, refreshUserRole])
+  }, [user, isInitialized, refreshUserRole])
 
   const value = {
     user,
@@ -213,7 +250,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     loading,
     refreshUserRole,
     clearCache: handleClearCache,
-    isConfigured
+    isConfigured,
+    isInitialized
   }
 
   return (
