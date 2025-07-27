@@ -265,43 +265,52 @@ export default function UsuariosPage() {
               { key: 'nome', label: 'Nome', sortable: true },
               { key: 'email', label: 'Email', sortable: true },
               { key: 'role', label: 'Papel', sortable: true,
-                render: (usuario: Usuario) => (
-                  <select
-                    value={usuario.role as string}
-                    onChange={(e) => updateUserRole(usuario.userId as string, e.target.value)}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    <option value="cozinheiro">Cozinheiro</option>
-                    <option value="gerente">Gerente</option>
-                    <option value="chef">Chef</option>
-                  </select>
-                )
+                render: (value: unknown, row: Record<string, unknown>) => {
+                  const usuario = row as Usuario
+                  return (
+                    <select
+                      value={usuario.role as string}
+                      onChange={(e) => updateUserRole(usuario.userId as string, e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      <option value="cozinheiro">Cozinheiro</option>
+                      <option value="gerente">Gerente</option>
+                      <option value="chef">Chef</option>
+                    </select>
+                  )
+                }
               },
               { key: 'createdAt', label: 'Criado em', sortable: true,
-                render: (usuario: Usuario) => new Date(usuario.createdAt as string).toLocaleDateString('pt-BR')
+                render: (value: unknown, row: Record<string, unknown>) => {
+                  const usuario = row as Usuario
+                  return new Date(usuario.createdAt as string).toLocaleDateString('pt-BR')
+                }
               },
               { key: 'actions', label: 'Ações',
-                render: (usuario: Usuario) => (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedUser(usuario)
-                        setShowPasswordResetModal(true)
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Redefinir senha"
-                    >
-                      <Key className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => deleteUser(usuario.userId as string)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Excluir usuário"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )
+                render: (value: unknown, row: Record<string, unknown>) => {
+                  const usuario = row as Usuario
+                  return (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedUser(usuario)
+                          setShowPasswordResetModal(true)
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Redefinir senha"
+                      >
+                        <Key className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteUser(usuario.userId as string)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Excluir usuário"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )
+                }
               }
             ]}
           />
@@ -474,7 +483,8 @@ export default function UsuariosPage() {
 // 🎯 CORREÇÕES IMPLEMENTADAS:
 // ✅ DIRETIVA "use client" adicionada (OBRIGATÓRIA para Next.js 13+)
 // ✅ Interface Usuario com index signature (extends Record<string, unknown>)
-// ✅ Type assertions para propriedades do Usuario
+// ✅ FUNÇÕES RENDER CORRIGIDAS com parâmetros corretos (value, row)
+// ✅ Type casting para Usuario dentro das funções render
 // ✅ Usar useSupabase() em vez de fetch('/api/perfil-usuario')
 // ✅ Verificação de role usando contexto (userRole !== 'chef')
 // ✅ Loading state para aguardar autenticação
@@ -490,3 +500,4 @@ export default function UsuariosPage() {
 // ✅ Interface clara e informativa
 // ✅ Tipos TypeScript corretos
 // ✅ Next.js 13+ compatível
+// ✅ ModernTable compatível com funções render
