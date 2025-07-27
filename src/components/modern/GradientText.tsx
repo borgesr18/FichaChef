@@ -59,7 +59,7 @@ export const GradientHeading: React.FC<GradientHeadingProps> = ({
   animated = false,
   centered = false
 }) => {
-  const Component = `h${level}` as keyof JSX.IntrinsicElements
+  const Component = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
   
   // Classes de tamanho baseadas no nível
   const sizeClasses = {
