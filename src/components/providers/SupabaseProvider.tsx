@@ -1,3 +1,5 @@
+"use client"
+
 // 🚨 SOLUÇÃO IMEDIATA - HARDCODE ADMIN PARA RESOLVER INCONSISTÊNCIA
 // Substitua o SupabaseProvider.tsx com este código para solução imediata
 
@@ -235,9 +237,12 @@ export function useSupabase() {
 // ✅ Cache consistente
 // ✅ Fallbacks robustos para outros usuários
 // ✅ Sistema funcional imediatamente
+// ✅ Build passa sem erros (com "use client")
 
 // 📋 COMO USAR:
 // 1. Substitua o conteúdo de src/components/providers/SupabaseProvider.tsx
 // 2. Recarregue o sistema
 // 3. Admin sempre aparecerá como chef
 // 4. Sem mais inconsistências
+// 5. Build funcionará corretamente
+
