@@ -150,7 +150,7 @@ export default function RelatoriosPage() {
           ))}
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 p-6 card-modern">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Dados Detalhados</h3>
           <div className="space-y-4">
             {reportData.data && typeof reportData.data === 'object' && Object.keys(reportData.data).length > 0 ? (
@@ -209,7 +209,7 @@ export default function RelatoriosPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Relatórios Gerenciais</h1>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 p-6 card-modern">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <FloatingLabelSelect
               label="Tipo de Relatório"
@@ -244,7 +244,7 @@ export default function RelatoriosPage() {
               <button 
                 onClick={fetchReport}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 flex items-center justify-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 flex items-center justify-center btn-modern shadow-elegant transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
               >
                 <Filter className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-12" />
                 {loading ? 'Gerando...' : 'Gerar Relatório'}
@@ -256,7 +256,7 @@ export default function RelatoriosPage() {
             <button
               onClick={handleExportPDF}
               disabled={!reportData}
-              className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+              className="bg-gradient-to-r from-red-500 to-red-600 text-white py-3 px-6 rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 flex items-center btn-modern shadow-elegant transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
             >
               <Download className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:-translate-y-1" />
               Exportar PDF
@@ -264,7 +264,7 @@ export default function RelatoriosPage() {
             <button
               onClick={handleExportExcel}
               disabled={!reportData}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl hover:from-green-600 hover:to-green-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-6 rounded-xl hover:from-green-600 hover:to-green-700 disabled:opacity-50 flex items-center btn-modern shadow-elegant transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
             >
               <Download className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:-translate-y-1" />
               Exportar Excel

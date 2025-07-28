@@ -46,7 +46,7 @@ export default function MobileOptimizedInput({
           ${config?.compactMode ? 'px-3 py-2 text-sm' : 'px-4 py-3 text-base'}
           focus:ring-2 focus:ring-orange-500 focus:border-orange-500
           disabled:bg-gray-100 disabled:cursor-not-allowed
-          transition-colors duration-200
+          transition-all duration-300
           touch-manipulation
           mobile-full-width
           ${className}

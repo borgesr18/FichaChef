@@ -26,10 +26,10 @@ export default function MobileOptimizedCard({
 
   return (
     <div className={`
-      bg-white rounded-xl shadow-sm border border-gray-200/50
-      ${hover ? 'hover:shadow-md hover:border-gray-300/50' : ''}
+      glass-morphism rounded-xl shadow-elegant border border-white/20
+      ${hover ? 'hover:shadow-floating hover:border-white/30 card-modern' : ''}
       ${paddingClasses[padding]}
-      transition-all duration-200
+      transition-all duration-300
       touch-manipulation
       ${className}
     `}>

@@ -13,7 +13,7 @@ export default function SkeletonLoader({ variant = 'card', count = 1, className 
     switch (variant) {
       case 'card':
         return (
-          <div key={index} className={`bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 animate-pulse ${className}`}>
+          <div key={index} className={`glass-morphism p-6 rounded-2xl shadow-lg border border-white/20 animate-pulse ${className}`}>
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-slate-200 to-slate-300 rounded-xl"></div>
               <div className="flex-1 space-y-2">

@@ -145,7 +145,7 @@ export default function ImpressaoPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Impressão de Fichas Técnicas</h1>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6 no-print">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 p-6 no-print card-modern">
           <div className="max-w-md">
             <FloatingLabelSelect
               label="Selecionar Ficha Técnica"
@@ -169,7 +169,7 @@ export default function ImpressaoPage() {
             <button
               onClick={handlePrint}
               disabled={!selectedFicha}
-              className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+              className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group btn-modern"
             >
               <Printer className="h-4 w-4 mr-2" />
               Imprimir Ficha Técnica
@@ -178,7 +178,7 @@ export default function ImpressaoPage() {
         </div>
 
         {selectedFicha && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 print-content">
+          <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 print-content card-modern">
             <div className="print-header text-center border-b-2 border-gray-300 pb-4 mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">FichaChef</h1>
               <p className="text-lg text-gray-600">Sistema de Fichas Técnicas</p>

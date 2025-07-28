@@ -40,7 +40,7 @@ export default function LoadingSpinner({ size = 'md', className = '', variant = 
   }
 
   return (
-    <Loader2 className={`animate-spin text-orange-500 ${sizeClasses[size]} ${className}`} style={{ 
+    <Loader2 className={`animate-spin text-orange-500 shadow-elegant ${sizeClasses[size]} ${className}`} style={{ 
       animation: 'spin 1s linear infinite, pulse 2s ease-in-out infinite alternate' 
     }} />
   )

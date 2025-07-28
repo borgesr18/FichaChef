@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
+        fixed left-0 top-0 h-full w-64 glass-morphism-dark text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-floating
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
         ${config?.compactMode ? 'w-56' : 'w-64'}
@@ -146,10 +146,10 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
                               handleClose()
                             }
                           }}
-                          className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                          className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 btn-modern ${
                             isActive
-                              ? `${getColorClasses('primary')} shadow-lg transform scale-[1.02]`
-                              : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-[1.01]'
+                              ? `${getColorClasses('primary')} shadow-glow-orange transform scale-[1.02] animate-pulse-glow`
+                              : 'text-slate-300 hover:bg-white/10 hover:text-white hover:transform hover:scale-[1.01] hover:shadow-elegant'
                           } ${config?.compactMode ? 'py-1.5 text-xs' : 'py-2 text-sm'}`}
                         >
                           <Icon className={`mr-3 h-4 w-4 transition-colors ${
@@ -189,10 +189,10 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
                               handleClose()
                             }
                           }}
-                          className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-300 btn-modern ${
                             isActive
-                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 transform scale-[1.02]'
-                              : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:transform hover:scale-[1.01] hover:shadow-md'
+                              ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-white shadow-glow-orange transform scale-[1.02] animate-pulse-glow'
+                              : 'text-slate-300 hover:bg-white/10 hover:text-white hover:transform hover:scale-[1.01] hover:shadow-elegant'
                           } ${config?.compactMode ? 'py-2 text-xs' : 'py-3 text-sm'}`}
                         >
                           <Icon className={`mr-3 h-5 w-5 transition-colors ${

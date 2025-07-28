@@ -271,7 +271,7 @@ export default function ConfiguracoesPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Configurações</h1>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
           <div className="border-b border-slate-200/60">
             <nav className="-mb-px flex space-x-8 px-6">
               {tabs.map((tab) => (
@@ -297,7 +297,7 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Categorias de Insumos</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center btn-modern shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
                   >
                     <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Categoria
@@ -313,7 +313,7 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Categorias de Receitas</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center btn-modern shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
                   >
                     <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Categoria
@@ -329,7 +329,7 @@ export default function ConfiguracoesPage() {
                   <h3 className="text-lg font-medium text-gray-900">Unidades de Medida</h3>
                   <button 
                     onClick={() => handleOpenModal()}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center btn-modern shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group"
                   >
                     <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                     Nova Unidade
@@ -409,7 +409,7 @@ export default function ConfiguracoesPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 btn-modern shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
             >
               {loading ? 'Salvando...' : 'Salvar'}
             </button>

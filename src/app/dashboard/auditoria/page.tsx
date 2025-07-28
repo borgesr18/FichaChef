@@ -61,7 +61,7 @@ export default function AuditoriaPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
           <div className="p-6 border-b border-slate-200/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center">

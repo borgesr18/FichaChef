@@ -132,7 +132,7 @@ export default function ProfileDashboard() {
       case 'operational':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+            <div className="glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
                   <Calculator className="h-6 w-6 text-white" />
@@ -147,7 +147,7 @@ export default function ProfileDashboard() {
               </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+            <div className="glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
                   <Warehouse className="h-6 w-6 text-white" />
@@ -163,7 +163,7 @@ export default function ProfileDashboard() {
               </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+            <div className="glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
                   <DollarSign className="h-6 w-6 text-white" />
@@ -179,7 +179,7 @@ export default function ProfileDashboard() {
               </div>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200/60 hover:shadow-xl transition-all duration-300">
+            <div className="glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
                   <AlertTriangle className="h-6 w-6 text-white" />

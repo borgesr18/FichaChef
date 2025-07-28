@@ -51,18 +51,18 @@ export function getDesignToken(path: string): unknown {
 
 export const componentVariants = {
   button: {
-    primary: 'bg-primary-500 hover:bg-primary-600 text-white shadow-md hover:shadow-lg',
-    secondary: 'bg-neutral-200 hover:bg-neutral-300 text-neutral-800',
-    outline: 'border-2 border-primary-500 text-primary-500 hover:bg-primary-50',
-    ghost: 'text-neutral-700 hover:bg-neutral-100'
+    primary: 'btn-modern bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-elegant hover:shadow-glow-orange',
+    secondary: 'btn-modern glass-morphism hover:bg-white/80 text-slate-800 shadow-elegant',
+    outline: 'btn-modern border-2 border-orange-500 text-orange-500 hover:glass-morphism hover:shadow-elegant',
+    ghost: 'btn-modern text-slate-700 hover:glass-morphism hover:shadow-elegant'
   },
   card: {
-    default: 'bg-white rounded-xl shadow-sm border border-neutral-200',
-    elevated: 'bg-white rounded-xl shadow-lg border border-neutral-200',
-    interactive: 'bg-white rounded-xl shadow-sm border border-neutral-200 hover:shadow-md transition-shadow'
+    default: 'glass-morphism rounded-2xl shadow-elegant border border-white/20',
+    elevated: 'glass-morphism rounded-2xl shadow-floating border border-white/20',
+    interactive: 'card-modern glass-morphism rounded-2xl shadow-elegant border border-white/20 hover:shadow-floating'
   },
   input: {
-    default: 'border border-neutral-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-    error: 'border border-error-border rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500'
+    default: 'glass-morphism border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:shadow-glow-orange transition-all duration-300',
+    error: 'glass-morphism border border-red-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20 transition-all duration-300'
   }
 }

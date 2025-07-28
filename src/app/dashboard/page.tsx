@@ -112,56 +112,56 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card Insumos */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-6 rounded-2xl shadow-floating text-white hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02] card-modern animate-slide-in-elegant">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium uppercase tracking-wide">Insumos</p>
-                <p className="text-3xl font-bold mt-1">{stats.insumos}</p>
+                <p className="text-3xl font-bold mt-1 animate-float">{stats.insumos}</p>
                 <p className="text-blue-100 text-sm mt-1">Total cadastrado</p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 glass-morphism rounded-xl shadow-elegant">
                 <Package className="h-6 w-6" />
               </div>
             </div>
           </div>
 
           {/* Card Fichas Técnicas */}
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 rounded-2xl shadow-floating text-white hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02] card-modern animate-slide-in-elegant">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 text-sm font-medium uppercase tracking-wide">Fichas Técnicas</p>
-                <p className="text-3xl font-bold mt-1">{stats.fichasTecnicas}</p>
+                <p className="text-3xl font-bold mt-1 animate-float">{stats.fichasTecnicas}</p>
                 <p className="text-emerald-100 text-sm mt-1">Receitas criadas</p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 glass-morphism rounded-xl shadow-elegant">
                 <FileText className="h-6 w-6" />
               </div>
             </div>
           </div>
 
           {/* Card Produções */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 p-6 rounded-2xl shadow-floating text-white hover:shadow-glow-blue transition-all duration-300 hover:scale-[1.02] card-modern animate-slide-in-elegant">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium uppercase tracking-wide">Produções</p>
-                <p className="text-3xl font-bold mt-1">{stats.producoes}</p>
+                <p className="text-3xl font-bold mt-1 animate-float">{stats.producoes}</p>
                 <p className="text-purple-100 text-sm mt-1">Registros</p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 glass-morphism rounded-xl shadow-elegant">
                 <Factory className="h-6 w-6" />
               </div>
             </div>
           </div>
 
           {/* Card Produtos */}
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 p-6 rounded-2xl shadow-floating text-white hover:shadow-glow-orange transition-all duration-300 hover:scale-[1.02] card-modern animate-slide-in-elegant">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium uppercase tracking-wide">Produtos</p>
-                <p className="text-3xl font-bold mt-1">{stats.produtos}</p>
+                <p className="text-3xl font-bold mt-1 animate-float">{stats.produtos}</p>
                 <p className="text-orange-100 text-sm mt-1">Produtos finais</p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 glass-morphism rounded-xl shadow-elegant">
                 <ShoppingCart className="h-6 w-6" />
               </div>
             </div>
@@ -170,17 +170,17 @@ export default function DashboardPage() {
 
         {/* Ações Rápidas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-              <div className="w-1 h-8 bg-orange-500 rounded-full mr-4"></div>
+          <div className="glass-morphism p-8 rounded-2xl shadow-floating border border-white/20 card-modern">
+            <h3 className="text-2xl font-bold text-gradient-elegant mb-6 flex items-center">
+              <div className="w-1 h-8 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full mr-4 shadow-glow-orange"></div>
               Ações Rápidas
             </h3>
             <div className="space-y-4">
               <a
                 href="/dashboard/insumos"
-                className="flex items-center p-5 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 hover:shadow-md border border-blue-200"
+                className="flex items-center p-5 glass-morphism rounded-xl hover:shadow-elegant transition-all duration-300 border border-blue-200/50 btn-modern"
               >
-                <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-elegant">
                   <Package className="h-5 w-5 text-white" />
                 </div>
                 <div className="ml-4">
@@ -191,9 +191,9 @@ export default function DashboardPage() {
               
               <a
                 href="/dashboard/fichas-tecnicas"
-                className="flex items-center p-5 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all duration-300 hover:shadow-md border border-emerald-200"
+                className="flex items-center p-5 glass-morphism rounded-xl hover:shadow-elegant transition-all duration-300 border border-emerald-200/50 btn-modern"
               >
-                <div className="p-3 bg-emerald-500 rounded-xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-elegant">
                   <FileText className="h-5 w-5 text-white" />
                 </div>
                 <div className="ml-4">
@@ -204,9 +204,9 @@ export default function DashboardPage() {
               
               <a
                 href="/dashboard/producao"
-                className="flex items-center p-5 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all duration-300 hover:shadow-md border border-purple-200"
+                className="flex items-center p-5 glass-morphism rounded-xl hover:shadow-elegant transition-all duration-300 border border-purple-200/50 btn-modern"
               >
-                <div className="p-3 bg-purple-500 rounded-xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-elegant">
                   <Factory className="h-5 w-5 text-white" />
                 </div>
                 <div className="ml-4">
@@ -218,13 +218,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Status do Sistema */}
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
-            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-              <div className="w-1 h-8 bg-emerald-500 rounded-full mr-4"></div>
+          <div className="glass-morphism p-8 rounded-2xl shadow-floating border border-white/20 card-modern">
+            <h3 className="text-2xl font-bold text-gradient-elegant mb-6 flex items-center">
+              <div className="w-1 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full mr-4 shadow-glow-blue"></div>
               Status do Sistema
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-5 bg-emerald-50 rounded-xl border border-emerald-200">
+              <div className="flex items-center justify-between p-5 glass-morphism rounded-xl border border-emerald-200/50 shadow-elegant">
                 <div className="flex items-center">
                   <div className="h-3 w-3 bg-emerald-500 rounded-full mr-3 animate-pulse"></div>
                   <div>
@@ -236,7 +236,7 @@ export default function DashboardPage() {
               </div>
               
               {stats.insumos === 0 && (
-                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
+                <div className="flex items-center justify-between p-5 glass-morphism rounded-xl border border-amber-200/50 shadow-elegant">
                   <div className="flex items-center">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
                     <div>
@@ -249,7 +249,7 @@ export default function DashboardPage() {
               )}
               
               {stats.fichasTecnicas === 0 && (
-                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
+                <div className="flex items-center justify-between p-5 glass-morphism rounded-xl border border-amber-200/50 shadow-elegant">
                   <div className="flex items-center">
                     <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
                     <div>
@@ -266,9 +266,9 @@ export default function DashboardPage() {
 
         {/* Resumo quando não há dados */}
         {stats.insumos === 0 && stats.fichasTecnicas === 0 && stats.producoes === 0 && stats.produtos === 0 && (
-          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+          <div className="glass-morphism p-8 rounded-2xl shadow-floating border border-white/20 card-modern">
             <div className="text-center">
-              <div className="p-8 bg-slate-100 rounded-2xl mb-6 inline-block">
+              <div className="p-8 glass-morphism rounded-2xl mb-6 inline-block shadow-elegant">
                 <BarChart3 className="h-20 w-20 text-slate-500" />
               </div>
               <h4 className="text-xl font-semibold text-slate-700 mb-3">Bem-vindo ao FichaChef!</h4>
@@ -276,13 +276,13 @@ export default function DashboardPage() {
               <div className="flex gap-4 justify-center">
                 <a
                   href="/dashboard/insumos"
-                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium btn-modern shadow-elegant"
                 >
                   Cadastrar Primeiro Insumo
                 </a>
                 <a
                   href="/dashboard/fichas-tecnicas"
-                  className="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors font-medium"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 font-medium btn-modern shadow-elegant"
                 >
                   Criar Primeira Ficha
                 </a>
