@@ -77,10 +77,15 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   const notificacaoNaoLidas = notificacoes.filter(n => !n.lida)
 
   return (
-    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300">
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.1), inset 0 -1px 0 rgba(255, 255, 255, 0.2)'
+      }}>
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center space-x-4 ml-12 lg:ml-0">
-          <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent hidden md:block">
+          <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 bg-clip-text text-transparent hidden md:block animate-fade-in text-shadow">
             {currentDateTime.toLocaleDateString('pt-BR', {
               weekday: 'long',
               year: 'numeric',
@@ -92,7 +97,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
               second: '2-digit'
             })}
           </h1>
-          <h1 className="text-sm font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent md:hidden">
+          <h1 className="text-sm font-bold bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent md:hidden animate-slide-in-left text-shadow">
             FichaChef
           </h1>
           
