@@ -60,15 +60,15 @@ export default function FloatingLabelSelect({
           required={required}
           disabled={disabled}
           className={`
-            peer w-full px-4 pt-6 pb-2 text-slate-800 bg-white/80 backdrop-blur-sm border-2 rounded-xl
+            peer w-full px-4 pt-6 pb-2 text-slate-800 glass-morphism border-2 rounded-xl
             transition-all duration-300 ease-out appearance-none cursor-pointer
             focus:outline-none focus:ring-0
             disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed
             ${error 
               ? 'border-red-300 focus:border-red-500 focus:shadow-lg focus:shadow-red-500/20' 
               : isFocused 
-                ? 'border-blue-500 focus:border-blue-600 focus:shadow-lg focus:shadow-blue-500/20' 
-                : 'border-slate-300 hover:border-slate-400'
+                ? 'border-blue-500 focus:border-blue-600 shadow-glow-blue' 
+                : 'border-slate-300 hover:border-slate-400 hover:shadow-elegant'
             }
           `}
         >

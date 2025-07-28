@@ -106,7 +106,7 @@ const NotificationItem: React.FC<{
         
         <button
           onClick={handleRemove}
-          className="flex-shrink-0 p-1 rounded-lg hover:bg-white/50 transition-colors duration-200 group"
+          className="flex-shrink-0 p-1 rounded-lg hover:bg-white/50 transition-all duration-300 group"
         >
           <X className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
         </button>

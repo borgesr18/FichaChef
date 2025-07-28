@@ -120,14 +120,14 @@ export default function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen gradient-mesh flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* ✅ Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4 shadow-lg">
             <ChefHat className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">FichaChef</h1>
+          <h1 className="text-3xl font-bold text-gradient-elegant mb-2">FichaChef</h1>
           <p className="text-slate-600">Sistema de Gestão Gastronômica</p>
           
           {/* ✅ Indicador de modo */}
@@ -144,7 +144,7 @@ export default function LoginPageContent() {
         </div>
 
         {/* ✅ Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+        <div className="glass-morphism rounded-2xl shadow-floating p-8 border border-white/20">
           <form onSubmit={handleLogin} className="space-y-6">
             {/* ✅ Email */}
             <div>
@@ -216,7 +216,7 @@ export default function LoginPageContent() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-elegant hover:shadow-glow-orange btn-modern"
             >
               {loading ? (
                 <>

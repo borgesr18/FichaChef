@@ -91,7 +91,7 @@ export default function ModernTable({
 
   if (loading) {
     return (
-      <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 overflow-hidden ${className}`}>
+      <div className={`glass-morphism rounded-2xl shadow-floating border border-white/20 overflow-hidden ${className}`}>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gradient-to-r from-slate-200 to-slate-300 rounded w-1/4"></div>
@@ -107,10 +107,10 @@ export default function ModernTable({
   }
 
   return (
-    <div className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 overflow-hidden ${className}`}>
+    <div className={`glass-morphism rounded-2xl shadow-floating border border-white/20 overflow-hidden ${className}`}>
       {/* Header with search and filters */}
       {(searchable || filterable) && (
-        <div className="p-6 border-b border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white/80">
+        <div className="p-6 border-b border-white/20 glass-morphism">
           <div className="flex items-center justify-between space-x-4">
             {searchable && (
               <div className="relative flex-1 max-w-md">
@@ -120,13 +120,13 @@ export default function ModernTable({
                   placeholder="Buscar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2 glass-morphism border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-elegant transition-all duration-300"
                 />
               </div>
             )}
             
             {filterable && (
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white/80 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors duration-200">
+              <button className="flex items-center space-x-2 px-4 py-2 glass-morphism border border-slate-300 rounded-xl hover:shadow-elegant transition-all duration-300 btn-modern">
                 <Filter className="h-4 w-4 text-slate-500" />
                 <span className="text-sm font-medium text-slate-700">Filtros</span>
               </button>
@@ -139,13 +139,13 @@ export default function ModernTable({
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-slate-100/80 to-slate-50/80 border-b border-slate-200/60">
+            <tr className="glass-morphism border-b border-white/20">
               {columns.map((column) => (
                 <th
                   key={column.key}
                   className={`
                     px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider
-                    ${column.sortable ? 'cursor-pointer hover:bg-slate-200/50 transition-colors duration-200' : ''}
+                    ${column.sortable ? 'cursor-pointer hover:shadow-elegant transition-all duration-300' : ''}
                     ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : ''}
                   `}
                   style={{ width: column.width }}
@@ -168,7 +168,7 @@ export default function ModernTable({
               <tr
                 key={index}
                 className={`
-                  group transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50
+                  group transition-all duration-300 hover:glass-morphism hover:shadow-elegant
                   ${onRowClick ? 'cursor-pointer' : ''}
                   ${index % 2 === 0 ? 'bg-white/40' : 'bg-slate-50/40'}
                 `}
@@ -206,7 +206,7 @@ export default function ModernTable({
 
       {/* Pagination */}
       {pagination && totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-slate-200/60 bg-gradient-to-r from-slate-50/80 to-white/80">
+        <div className="px-6 py-4 border-t border-white/20 glass-morphism">
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-600">
               Mostrando {startIndex + 1} a {Math.min(startIndex + pageSize, sortedData.length)} de {sortedData.length} resultados
@@ -216,7 +216,7 @@ export default function ModernTable({
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="px-3 py-2 text-sm font-medium text-slate-600 glass-morphism border border-slate-300 rounded-lg hover:shadow-elegant disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 btn-modern"
               >
                 Anterior
               </button>
@@ -231,8 +231,8 @@ export default function ModernTable({
                       className={`
                         px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
                         ${currentPage === pageNum
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                          : 'text-slate-600 bg-white border border-slate-300 hover:bg-slate-50'
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-glow-blue'
+                          : 'text-slate-600 glass-morphism border border-slate-300 hover:shadow-elegant'
                         }
                       `}
                     >
@@ -245,7 +245,7 @@ export default function ModernTable({
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="px-3 py-2 text-sm font-medium text-slate-600 glass-morphism border border-slate-300 rounded-lg hover:shadow-elegant disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 btn-modern"
               >
                 Próximo
               </button>

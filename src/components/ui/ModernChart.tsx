@@ -58,7 +58,7 @@ export default function ModernChart({
 
   if (type === 'bar') {
     return (
-      <div className={`bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-slate-200/60 ${className}`}>
+      <div className={`glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 ${className}`}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-slate-800 flex items-center">
             <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
@@ -100,7 +100,7 @@ export default function ModernChart({
     let cumulativePercentage = 0
 
     return (
-      <div className={`bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-slate-200/60 ${className}`}>
+      <div className={`glass-morphism p-6 rounded-2xl shadow-floating border border-white/20 ${className}`}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-slate-800 flex items-center">
             <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-purple-600 rounded-full mr-3"></div>

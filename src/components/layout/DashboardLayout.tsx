@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // ✅ RENDERIZAÇÃO: Layout principal
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen gradient-mesh">
       {/* ✅ Sidebar */}
       <Sidebar 
         isOpen={sidebarOpen} 

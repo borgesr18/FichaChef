@@ -355,14 +355,14 @@ export default function CardapiosPage() {
           </div>
           <button 
             onClick={() => handleOpenModal()}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-elegant hover:shadow-glow-orange transform transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 group btn-modern"
           >
             <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Novo Cardápio
           </button>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+        <div className="glass-morphism rounded-2xl shadow-floating border border-white/20 hover:shadow-floating transition-all duration-300 card-modern">
           <div className="p-6 border-b border-slate-200/60">
             <div className="flex items-center space-x-4">
               <div className="flex-1">

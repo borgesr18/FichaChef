@@ -29,7 +29,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const variants = {
       primary: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl focus:ring-blue-500 hover:scale-[1.02] active:scale-[0.98]',
       secondary: 'bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-lg hover:shadow-xl focus:ring-slate-500 hover:scale-[1.02] active:scale-[0.98]',
-      outline: 'border-2 border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-800 bg-white hover:bg-slate-50 focus:ring-slate-500 hover:scale-[1.02] active:scale-[0.98]',
+      outline: 'border-2 border-slate-300 hover:border-slate-400 text-slate-700 hover:text-slate-800 glass-morphism hover:shadow-elegant focus:ring-slate-500 hover:scale-[1.02] active:scale-[0.98]',
       ghost: 'text-slate-600 hover:text-slate-800 hover:bg-slate-100 focus:ring-slate-500 hover:scale-[1.02] active:scale-[0.98]',
       danger: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg hover:shadow-xl focus:ring-red-500 hover:scale-[1.02] active:scale-[0.98]'
     }
