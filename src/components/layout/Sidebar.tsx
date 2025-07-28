@@ -92,17 +92,11 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-all duration-500 ease-out overflow-y-auto shadow-2xl
+        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
         ${config?.compactMode ? 'w-56' : 'w-64'}
-        backdrop-blur-xl border-r border-slate-700/50
-      `}
-      style={{
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(51, 65, 85, 0.95) 100%)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 1px 0 0 rgba(255, 255, 255, 0.1)'
-      }}>
+      `}>
         <div className={`p-6 border-b border-slate-700/50 ${config?.compactMode ? 'p-4' : 'p-6'}`}>
           <h1 className={`font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent ${config?.compactMode ? 'text-xl' : 'text-2xl'}`}>
             FichaChef
