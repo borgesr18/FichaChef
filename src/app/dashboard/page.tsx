@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
 import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react'
+import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
 
 interface DashboardStats {
   insumos: number
@@ -57,10 +57,10 @@ export default function DashboardPage() {
           produtos: Array.isArray(produtos) ? produtos.length : 0
         })
 
-      } catch (error) {
-        console.error('Erro ao carregar dados do dashboard:', error)
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err)
         if (mounted) {
-          setError('Erro ao carregar dados')
+          setError('Erro ao carregar dados do dashboard')
         }
       } finally {
         if (mounted) {
@@ -80,7 +80,10 @@ export default function DashboardPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner />
+          <div className="text-center">
+            <LoadingSpinner size="lg" className="mx-auto mb-4" />
+            <p className="text-slate-600 font-medium">Carregando dashboard...</p>
+          </div>
         </div>
       </DashboardLayout>
     )
@@ -88,200 +91,202 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8">
+      <div className="space-y-8 p-6">
         {/* Header */}
-        <div className="animate-fade-in">
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            Dashboard
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+            Dashboard FichaChef
           </h1>
-          <p className="text-lg text-gray-600">
-            Bem-vindo ao FichaChef - Sistema de Gestão Gastronômica Profissional
-          </p>
+          <p className="text-slate-600 mt-2 text-lg">Visão geral do sistema</p>
         </div>
 
-        {/* Cards de Estatísticas */}
-        <div className="modern-grid modern-grid-4 animate-fade-in">
-          <div className="stats-card">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <span className="font-medium">{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card Insumos */}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.fichasTecnicas}</div>
-                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Fichas Técnicas</div>
+                <p className="text-blue-100 text-sm font-medium uppercase tracking-wide">Insumos</p>
+                <p className="text-3xl font-bold mt-1">{stats.insumos}</p>
+                <p className="text-blue-100 text-sm mt-1">Total cadastrado</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-orange-600" />
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Package className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="stats-card blue">
+          {/* Card Fichas Técnicas */}
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.insumos}</div>
-                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Insumos</div>
+                <p className="text-emerald-100 text-sm font-medium uppercase tracking-wide">Fichas Técnicas</p>
+                <p className="text-3xl font-bold mt-1">{stats.fichasTecnicas}</p>
+                <p className="text-emerald-100 text-sm mt-1">Receitas criadas</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-white/20 rounded-xl">
+                <FileText className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="stats-card green">
+          {/* Card Produções */}
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.produtos}</div>
-                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Produtos</div>
+                <p className="text-purple-100 text-sm font-medium uppercase tracking-wide">Produções</p>
+                <p className="text-3xl font-bold mt-1">{stats.producoes}</p>
+                <p className="text-purple-100 text-sm mt-1">Registros</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Factory className="h-6 w-6" />
               </div>
             </div>
           </div>
 
-          <div className="stats-card purple">
+          {/* Card Produtos */}
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-gray-800 mb-2">{stats.producoes}</div>
-                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Produções</div>
+                <p className="text-orange-100 text-sm font-medium uppercase tracking-wide">Produtos</p>
+                <p className="text-3xl font-bold mt-1">{stats.produtos}</p>
+                <p className="text-orange-100 text-sm mt-1">Produtos finais</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Factory className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-white/20 rounded-xl">
+                <ShoppingCart className="h-6 w-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Ações Rápidas */}
-        <div className="animate-fade-in">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-            Ações Rápidas
-          </h2>
-          <div className="modern-grid modern-grid-3">
-            <div className="modern-card text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-4">
-                <FileText className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Nova Ficha Técnica</h3>
-              <p className="text-gray-600 mb-4">Criar nova receita com cálculo automático de custos</p>
-              <button className="modern-btn modern-btn-primary w-full">
-                <FileText className="w-4 h-4" />
-                Criar Ficha
-              </button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+              <div className="w-1 h-8 bg-orange-500 rounded-full mr-4"></div>
+              Ações Rápidas
+            </h3>
+            <div className="space-y-4">
+              <a
+                href="/dashboard/insumos"
+                className="flex items-center p-5 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 hover:shadow-md border border-blue-200"
+              >
+                <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
+                  <Package className="h-5 w-5 text-white" />
+                </div>
+                <div className="ml-4">
+                  <span className="text-lg font-semibold text-slate-800">Cadastrar Insumo</span>
+                  <p className="text-sm text-slate-600">Adicionar novos ingredientes</p>
+                </div>
+              </a>
+              
+              <a
+                href="/dashboard/fichas-tecnicas"
+                className="flex items-center p-5 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all duration-300 hover:shadow-md border border-emerald-200"
+              >
+                <div className="p-3 bg-emerald-500 rounded-xl shadow-lg">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
+                <div className="ml-4">
+                  <span className="text-lg font-semibold text-slate-800">Nova Ficha Técnica</span>
+                  <p className="text-sm text-slate-600">Criar receitas padronizadas</p>
+                </div>
+              </a>
+              
+              <a
+                href="/dashboard/producao"
+                className="flex items-center p-5 bg-purple-50 rounded-xl hover:bg-purple-100 transition-all duration-300 hover:shadow-md border border-purple-200"
+              >
+                <div className="p-3 bg-purple-500 rounded-xl shadow-lg">
+                  <Factory className="h-5 w-5 text-white" />
+                </div>
+                <div className="ml-4">
+                  <span className="text-lg font-semibold text-slate-800">Registrar Produção</span>
+                  <p className="text-sm text-slate-600">Controlar produção diária</p>
+                </div>
+              </a>
             </div>
+          </div>
 
-            <div className="modern-card text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mb-4">
-                <Package className="w-8 h-8 text-white" />
+          {/* Status do Sistema */}
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+            <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+              <div className="w-1 h-8 bg-emerald-500 rounded-full mr-4"></div>
+              Status do Sistema
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-5 bg-emerald-50 rounded-xl border border-emerald-200">
+                <div className="flex items-center">
+                  <div className="h-3 w-3 bg-emerald-500 rounded-full mr-3 animate-pulse"></div>
+                  <div>
+                    <span className="text-lg font-semibold text-slate-800">Sistema Online</span>
+                    <p className="text-sm text-emerald-700">Funcionando normalmente</p>
+                  </div>
+                </div>
+                <span className="text-xs text-emerald-700 font-bold bg-emerald-200 px-3 py-2 rounded-full">Ativo</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Cadastrar Insumo</h3>
-              <p className="text-gray-600 mb-4">Adicionar novo ingrediente ao sistema</p>
-              <button className="modern-btn modern-btn-secondary w-full">
-                <Package className="w-4 h-4" />
-                Adicionar Insumo
-              </button>
-            </div>
-
-            <div className="modern-card text-center">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-4">
-                <BarChart3 className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Relatórios</h3>
-              <p className="text-gray-600 mb-4">Análise de custos e performance</p>
-              <button className="modern-btn modern-btn-accent w-full">
-                <BarChart3 className="w-4 h-4" />
-                Ver Relatórios
-              </button>
+              
+              {stats.insumos === 0 && (
+                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
+                    <div>
+                      <span className="text-lg font-semibold text-slate-800">Nenhum insumo cadastrado</span>
+                      <p className="text-sm text-amber-700">Comece cadastrando ingredientes</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-2 rounded-full">Atenção</span>
+                </div>
+              )}
+              
+              {stats.fichasTecnicas === 0 && (
+                <div className="flex items-center justify-between p-5 bg-amber-50 rounded-xl border border-amber-200">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mr-3" />
+                    <div>
+                      <span className="text-lg font-semibold text-slate-800">Nenhuma ficha técnica criada</span>
+                      <p className="text-sm text-amber-700">Crie receitas padronizadas</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-amber-700 font-bold bg-amber-200 px-3 py-2 rounded-full">Atenção</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Informações Adicionais */}
-        <div className="modern-grid modern-grid-2 animate-fade-in">
-          <div className="modern-card">
-            <div className="mb-4 pb-4 border-b border-gray-200">
-              <h3 className="text-xl font-semibold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                Atividade Recente
-              </h3>
-              <p className="text-sm text-gray-500">Últimas movimentações do sistema</p>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Nova ficha técnica criada</p>
-                    <p className="text-sm text-gray-500">Há 2 horas</p>
-                  </div>
-                </div>
+        {/* Resumo quando não há dados */}
+        {stats.insumos === 0 && stats.fichasTecnicas === 0 && stats.producoes === 0 && stats.produtos === 0 && (
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+            <div className="text-center">
+              <div className="p-8 bg-slate-100 rounded-2xl mb-6 inline-block">
+                <BarChart3 className="h-20 w-20 text-slate-500" />
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Package className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Insumo atualizado</p>
-                    <p className="text-sm text-gray-500">Há 4 horas</p>
-                  </div>
-                </div>
+              <h4 className="text-xl font-semibold text-slate-700 mb-3">Bem-vindo ao FichaChef!</h4>
+              <p className="text-slate-500 mb-6">Comece cadastrando insumos e criando fichas técnicas para ver estatísticas aqui.</p>
+              <div className="flex gap-4 justify-center">
+                <a
+                  href="/dashboard/insumos"
+                  className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
+                >
+                  Cadastrar Primeiro Insumo
+                </a>
+                <a
+                  href="/dashboard/fichas-tecnicas"
+                  className="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors font-medium"
+                >
+                  Criar Primeira Ficha
+                </a>
               </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <Factory className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Produção finalizada</p>
-                    <p className="text-sm text-gray-500">Ontem</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="modern-card">
-            <div className="mb-4 pb-4 border-b border-gray-200">
-              <h3 className="text-xl font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-500" />
-                Resumo Financeiro
-              </h3>
-              <p className="text-sm text-gray-500">Indicadores de custo e performance</p>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Custo médio por ficha</span>
-                <span className="font-semibold text-green-600">R$ 12,50</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Economia este mês</span>
-                <span className="font-semibold text-green-600">R$ 1.250,00</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Fichas mais rentáveis</span>
-                <span className="font-semibold text-blue-600">15 itens</span>
-              </div>
-              
-              <div className="pt-4 border-t border-gray-100">
-                <button className="modern-btn modern-btn-secondary w-full">
-                  <BarChart3 className="w-4 h-4" />
-                  Ver Análise Completa
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="modern-card bg-red-50 border-red-200">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-5 h-5" />
-              <span>{error}</span>
             </div>
           </div>
         )}
