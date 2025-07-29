@@ -205,11 +205,14 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
                 )}
               </div>
 
-              <div className="flex items-center space-x-3 px-3 py-2 bg-white/60 backdrop-blur-sm rounded-xl border border-slate-200/60 hover:bg-white/80 transition-all duration-300 hover:shadow-md hover:shadow-slate-200/30">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200">
-                  <User className="h-4 w-4 text-white" />
+              <div className="flex items-center space-x-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200/60 hover:bg-white/90 transition-all duration-300 hover:shadow-md hover:shadow-slate-200/30">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-sm">CC</span>
                 </div>
-                <span className="text-sm font-medium text-slate-700 hidden md:inline">{user.email}</span>
+                <div className="hidden md:block">
+                  <div className="text-sm font-semibold text-slate-800">Chef Carlos</div>
+                  <div className="text-xs text-slate-600">Administrador</div>
+                </div>
               </div>
             </>
           )}

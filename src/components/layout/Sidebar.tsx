@@ -90,29 +90,22 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Estilo UXPilot */}
       <div className={`
-        fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
+        fixed left-0 top-0 h-full w-64 bg-slate-800 text-white z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-xl
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
         ${config?.compactMode ? 'w-56' : 'w-64'}
       `}>
-        <div className={`p-6 border-b border-slate-700/50 ${config?.compactMode ? 'p-4' : 'p-6'}`}>
-          <h1 className={`font-bold bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent ${config?.compactMode ? 'text-xl' : 'text-2xl'}`}>
-            FichaChef
-          </h1>
-          <p className={`text-slate-400 mt-1 ${config?.compactMode ? 'text-xs' : 'text-xs'}`}>
-            {userRole === 'chef' && 'Painel Executivo'}
-            {userRole === 'gerente' && 'Painel Gerencial'}
-            {userRole === 'cozinheiro' && 'Painel de Produção'}
-          </p>
-          {userRole && (
-            <div className={`mt-2 px-2 py-1 rounded-full text-xs font-medium ${getColorClasses('accent')}`}>
-              {userRole === 'chef' && '👨‍🍳 Chef'}
-              {userRole === 'gerente' && '📊 Gerente'}
-              {userRole === 'cozinheiro' && '🍳 Cozinheiro'}
+        <div className={`p-6 border-b border-slate-700/30 ${config?.compactMode ? 'p-4' : 'p-6'}`}>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">🍴</span>
+              <h1 className={`font-bold text-white ${config?.compactMode ? 'text-xl' : 'text-2xl'}`}>
+                FichaChef
+              </h1>
             </div>
-          )}
+          </div>
         </div>
         
         <nav className={`mt-2 px-3 ${config?.compactMode ? 'px-2' : 'px-3'}`}>
