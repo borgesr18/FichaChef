@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, Bell, Search, Star } from 'lucide-react'
+import { LogOut, Bell, Search, Star } from 'lucide-react'
 import { withRequestDeduplication } from '@/lib/request-cache'
 
 interface Notificacao {
