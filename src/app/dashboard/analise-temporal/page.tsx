@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity, Plus, Search } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface Insumo {
@@ -72,6 +72,7 @@ export default function AnaliseTemporalPage() {
   const [analysisResults, setAnalysisResults] = useState<InsumoAnalysis[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const [filters, setFilters] = useState({
     insumoId: '',
@@ -106,6 +107,10 @@ export default function AnaliseTemporalPage() {
     } catch (error) {
       console.error('Error fetching options:', error)
     }
+  }
+
+  const handleOpenModal = () => {
+    // Implementar abertura de modal se necessário
   }
 
   const handleAnalyze = async () => {
@@ -191,20 +196,110 @@ export default function AnaliseTemporalPage() {
           </div>
         </div>
 
-        {/* Card da tabela - estilo UXPilot */}
+        {/* Filtros */}
         <div className="uxpilot-card">
-          <div className="p-6 border-b border-slate-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar análises..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="uxpilot-input pl-10"
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Filtros de Análise</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FloatingLabelSelect
+                label="Insumo"
+                value={filters.insumoId}
+                onChange={(value) => setFilters(prev => ({ ...prev, insumoId: value }))}
+                options={[
+                  { value: '', label: 'Todos os insumos' },
+                  ...insumos.map(insumo => ({ value: insumo.id, label: insumo.nome }))
+                ]}
+              />
+
+              <FloatingLabelSelect
+                label="Fornecedor"
+                value={filters.fornecedorId}
+                onChange={(value) => setFilters(prev => ({ ...prev, fornecedorId: value }))}
+                options={[
+                  { value: '', label: 'Todos os fornecedores' },
+                  ...fornecedores.map(fornecedor => ({ value: fornecedor.id, label: fornecedor.nome }))
+                ]}
+              />
+
+              <FloatingLabelSelect
+                label="Período de Agrupamento"
+                value={filters.periodo}
+                onChange={(value) => setFilters(prev => ({ ...prev, periodo: value as 'monthly' | 'quarterly' | 'yearly' }))}
+                options={[
+                  { value: 'monthly', label: 'Mensal' },
+                  { value: 'quarterly', label: 'Trimestral' },
+                  { value: 'yearly', label: 'Anual' }
+                ]}
+              />
+
+              <FloatingLabelInput
+                label="Data Início"
+                type="date"
+                value={filters.dataInicio}
+                onChange={(value) => setFilters(prev => ({ ...prev, dataInicio: value }))}
+              />
+
+              <FloatingLabelInput
+                label="Data Fim"
+                type="date"
+                value={filters.dataFim}
+                onChange={(value) => setFilters(prev => ({ ...prev, dataFim: value }))}
+              />
+
+              <FloatingLabelInput
+                label="Meses de Projeção"
+                type="number"
+                value={filters.mesesProjecao.toString()}
+                onChange={(value) => setFilters(prev => ({ ...prev, mesesProjecao: parseInt(value) || 6 }))}
+                min="1"
+                max="24"
               />
             </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleAnalyze}
+                disabled={loading}
+                className="uxpilot-button-primary"
+              >
+                {loading ? 'Analisando...' : 'Realizar Análise'}
+              </button>
+            </div>
           </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        {/* Resultados */}
+        {analysisResults.length > 0 && (
+          <div className="space-y-6">
+            {analysisResults.map((analysis, index) => (
+              <div key={index} className="uxpilot-card">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{analysis.insumo.nome}</h3>
+                    <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTrendColor(analysis.trendAnalysis.trend)}`}>
+                      {getTrendIcon(analysis.trendAnalysis.trend)}
+                      <span className="ml-2 capitalize">{analysis.trendAnalysis.trend}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Preço Médio</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            {formatCurrency(analysis.statistics.averagePrice)}
+                          </p>
+                        </div>
+                        <Target className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-center justify-between">
@@ -331,7 +426,7 @@ export default function AnaliseTemporalPage() {
             <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma análise realizada</h3>
             <p className="text-gray-500">
-              Configure os filtros acima e clique em &quot;Realizar Análise&quot; para visualizar as tendências de custos.
+              Configure os filtros acima e clique em "Realizar Análise" para visualizar as tendências de custos.
             </p>
           </div>
         )}
