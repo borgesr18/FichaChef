@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
-import { Factory, Plus, Search, Edit, Trash2, FileText, Package } from 'lucide-react'
+import { Factory, Plus, Search, Edit, Trash2, FileText, Package, TrendingUp, Calendar, Clock, Download } from 'lucide-react'
 import { convertFormDataToNumbers, convertFormDataToDates } from '@/lib/form-utils'
 
 interface ProducaoFicha {
@@ -224,73 +224,280 @@ export default function ProducaoPage() {
            producao.lote.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
+  // Funções auxiliares para o design
+  const getProducaoIcon = (lote: string) => {
+    if (lote.includes('LOTE')) return '📦'
+    if (lote.includes('BATCH')) return '🏭'
+    return '🔧'
+  }
+
+  const getProducaoGradient = (activeSection: string) => {
+    return activeSection === 'fichas' ? 'from-blue-400 to-blue-600' : 'from-green-400 to-green-600'
+  }
+
+  // Estatísticas
+  const getStats = () => {
+    const totalProducoes = currentProducoes.length
+    const hoje = new Date().toDateString()
+    const producaoHoje = currentProducoes.filter(p => 
+      new Date(p.dataProducao).toDateString() === hoje
+    ).length
+    const proximoVencimento = currentProducoes.filter(p => {
+      const vencimento = new Date(p.dataValidade)
+      const agora = new Date()
+      const diasRestantes = Math.ceil((vencimento.getTime() - agora.getTime()) / (1000 * 60 * 60 * 24))
+      return diasRestantes <= 7 && diasRestantes > 0
+    }).length
+    const quantidadeTotal = currentProducoes.reduce((sum, p) => sum + p.quantidadeProduzida, 0)
+
+    return { totalProducoes, producaoHoje, proximoVencimento, quantidadeTotal }
+  }
+
+  const stats = getStats()
+
+  if (loading && currentProducoes.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B2E4B]"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header com gradiente azul - estilo UXPilot */}
-        <div className="uxpilot-header-gradient">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="p-3 bg-white/20 rounded-xl mr-4">
-                <Factory className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Produção</h1>
-                <p className="text-blue-100 mt-1">Registre e acompanhe a produção</p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
+                Produção
+              </h1>
+              <p className="text-gray-600 text-lg">Registre e acompanhe a produção</p>
             </div>
-            <button 
-              onClick={() => handleOpenModal()}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Nova Produção</span>
-            </button>
+            
+            <div className="flex items-center space-x-3">
+              <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </button>
+              <button
+                onClick={() => handleOpenModal()}
+                className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Produção
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tabs de navegação - estilo UXPilot */}
-        <div className="uxpilot-card">
-          <div className="border-b border-slate-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              <button
-                onClick={() => setActiveSection('fichas')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
-                  activeSection === 'fichas'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                <FileText className="h-4 w-4 inline mr-2" />
-                Fichas Técnicas
-              </button>
-              <button
-                onClick={() => setActiveSection('produtos')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
-                  activeSection === 'produtos'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                <Package className="h-4 w-4 inline mr-2" />
-                Produtos
-              </button>
-            </nav>
-          </div>
+        {/* Tabs */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-xl border border-white/20 mb-8 inline-flex">
+          <button
+            onClick={() => setActiveSection('fichas')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center ${
+              activeSection === 'fichas'
+                ? 'bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+            }`}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Fichas Técnicas
+          </button>
+          <button
+            onClick={() => setActiveSection('produtos')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center ${
+              activeSection === 'produtos'
+                ? 'bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+            }`}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Produtos
+          </button>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-gray-200">
+        {/* Filters */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Buscar Produção</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
                 placeholder={`Buscar produções de ${activeSection === 'fichas' ? 'fichas técnicas' : 'produtos'}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Produções</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalProducoes}</p>
+                <p className="text-xs text-blue-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +15% este mês
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Factory className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Produção Hoje</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.producaoHoje}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Lotes ativos
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Calendar className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Próximo Vencimento</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.proximoVencimento}</p>
+                <p className="text-xs text-orange-600 flex items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Próximos 7 dias
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Clock className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Quantidade Total</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.quantidadeTotal.toFixed(0)}</p>
+                <p className="text-xs text-purple-600 flex items-center">
+                  <Package className="h-3 w-3 mr-1" />
+                  Unidades produzidas
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Package className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Produções Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredProducoes.map((producao) => {
+            const itemName = activeSection === 'fichas' 
+              ? (producao as ProducaoFicha).fichaTecnica.nome 
+              : (producao as ProducaoProduto).produto.nome
+
+            const diasParaVencimento = Math.ceil(
+              (new Date(producao.dataValidade).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+            )
+
+            return (
+              <div
+                key={producao.id}
+                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              >
+                {/* Barra colorida por seção */}
+                <div className={`h-2 bg-gradient-to-r ${getProducaoGradient(activeSection)}`}></div>
+                
+                <div className="p-6">
+                  {/* Header do card */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{getProducaoIcon(producao.lote)}</span>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 truncate">{itemName}</h3>
+                        <p className="text-sm text-gray-500">Lote: {producao.lote}</p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      diasParaVencimento <= 3 
+                        ? 'bg-red-100 text-red-800' 
+                        : diasParaVencimento <= 7
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {diasParaVencimento <= 0 ? 'Vencido' : `${diasParaVencimento}d`}
+                    </span>
+                  </div>
+
+                  {/* Informações principais */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Quantidade:</span>
+                      <span className="font-semibold text-gray-900">{producao.quantidadeProduzida}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Produção:</span>
+                      <span className="font-medium text-gray-700">
+                        {new Date(producao.dataProducao).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Validade:</span>
+                      <span className={`font-medium ${
+                        diasParaVencimento <= 3 ? 'text-red-600' : 
+                        diasParaVencimento <= 7 ? 'text-yellow-600' : 'text-green-600'
+                      }`}>
+                        {new Date(producao.dataValidade).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex justify-end space-x-2 mt-6 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => handleOpenModal(producao)}
+                      className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(producao.id)}
+                      className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Tabela Moderna */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Histórico de Produção - {activeSection === 'fichas' ? 'Fichas Técnicas' : 'Produtos'}
+            </h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -328,42 +535,57 @@ export default function ProducaoPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredProducoes.map((producao) => (
-                    <tr key={producao.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {producao.lote}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {activeSection === 'fichas' 
-                          ? (producao as ProducaoFicha).fichaTecnica.nome 
-                          : (producao as ProducaoProduto).produto.nome
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(producao.dataProducao).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(producao.dataValidade).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {producao.quantidadeProduzida}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleOpenModal(producao)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(producao.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredProducoes.map((producao) => {
+                    const diasParaVencimento = Math.ceil(
+                      (new Date(producao.dataValidade).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                    )
+
+                    return (
+                      <tr key={producao.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {producao.lote}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {activeSection === 'fichas' 
+                            ? (producao as ProducaoFicha).fichaTecnica.nome 
+                            : (producao as ProducaoProduto).produto.nome
+                          }
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(producao.dataProducao).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`${
+                            diasParaVencimento <= 3 ? 'text-red-600' : 
+                            diasParaVencimento <= 7 ? 'text-yellow-600' : 'text-gray-500'
+                          }`}>
+                            {new Date(producao.dataValidade).toLocaleDateString('pt-BR')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {producao.quantidadeProduzida}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => handleOpenModal(producao)}
+                              className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                              title="Editar"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(producao.id)}
+                              className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>
@@ -385,67 +607,70 @@ export default function ProducaoPage() {
           )}
 
           <FloatingLabelSelect
-            label={`${activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'} *`}
+            label={`${activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'}`}
             value={formData.itemId}
-            onChange={(value: string) => setFormData({ ...formData, itemId: value })}
-            options={[
-              { value: '', label: `Selecione ${activeSection === 'fichas' ? 'uma ficha técnica' : 'um produto'}` },
-              ...currentItems.map((item) => ({ value: item.id, label: item.nome }))
-            ]}
+            onChange={(value) => setFormData({ ...formData, itemId: value })}
+            options={currentItems.map(item => ({ value: item.id, label: item.nome }))}
             required
+            error={error && !formData.itemId ? `${activeSection === 'fichas' ? 'Ficha Técnica' : 'Produto'} é obrigatório` : ''}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FloatingLabelInput
-              label="Data de Produção *"
+              label="Data de Produção"
               type="date"
               value={formData.dataProducao}
-              onChange={(value: string) => setFormData({ ...formData, dataProducao: value })}
+              onChange={(value) => setFormData({ ...formData, dataProducao: value })}
               required
+              error={error && !formData.dataProducao ? 'Data de produção é obrigatória' : ''}
             />
 
             <FloatingLabelInput
-              label="Data de Validade *"
+              label="Data de Validade"
               type="date"
               value={formData.dataValidade}
-              onChange={(value: string) => setFormData({ ...formData, dataValidade: value })}
+              onChange={(value) => setFormData({ ...formData, dataValidade: value })}
               required
+              error={error && !formData.dataValidade ? 'Data de validade é obrigatória' : ''}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FloatingLabelInput
-              label="Quantidade Produzida *"
+              label="Quantidade Produzida"
               type="number"
               step="0.01"
               value={formData.quantidadeProduzida}
-              onChange={(value: string) => setFormData({ ...formData, quantidadeProduzida: value })}
+              onChange={(value) => setFormData({ ...formData, quantidadeProduzida: value })}
               required
+              error={error && !formData.quantidadeProduzida ? 'Quantidade é obrigatória' : ''}
             />
 
             <FloatingLabelInput
-              label="Lote *"
+              label="Lote"
               type="text"
               value={formData.lote}
-              onChange={(value: string) => setFormData({ ...formData, lote: value })}
+              onChange={(value) => setFormData({ ...formData, lote: value })}
               required
+              error={error && !formData.lote ? 'Lote é obrigatório' : ''}
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              className="px-6 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>}
+              {editingProducao ? 'Atualizar' : 'Salvar'}
             </button>
           </div>
         </form>
