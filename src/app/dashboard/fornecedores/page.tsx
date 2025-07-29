@@ -237,9 +237,9 @@ export default function FornecedoresPage() {
               { key: 'nome', label: 'Nome', sortable: true },
               { key: 'contato', label: 'Contato', sortable: true },
               { key: 'telefone', label: 'Telefone', sortable: true,
-                render: (value) => value || '-' },
+                render: (value) => <span>{value || '-'}</span> },
               { key: 'email', label: 'Email', sortable: true,
-                render: (value) => value || '-' },
+                render: (value) => <span>{value || '-'}</span> },
               { key: 'ativo', label: 'Status', sortable: true,
                 render: (value) => (
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -372,5 +372,3 @@ export default function FornecedoresPage() {
     </DashboardLayout>
   )
 }
-
-
