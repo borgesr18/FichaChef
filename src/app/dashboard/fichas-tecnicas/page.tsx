@@ -200,16 +200,7 @@ export default function FichasTecnicasPage() {
     setIngredientes(updated)
   }
 
-  const calculateCustoTotal = () => {
-    return ingredientes.reduce((total, ing) => {
-      const insumo = insumos.find(i => i.id === ing.insumoId)
-      if (insumo && ing.quantidadeGramas) {
-        const custoPorGrama = insumo.precoUnidade / insumo.pesoLiquidoGramas
-        return total + (custoPorGrama * ing.quantidadeGramas)
-      }
-      return total
-    }, 0)
-  }
+
 
   const handleOpenScalingModal = (ficha: FichaTecnica) => {
     setScalingFicha(ficha)
@@ -889,4 +880,3 @@ export default function FichasTecnicasPage() {
     </DashboardLayout>
   )
 }
-
