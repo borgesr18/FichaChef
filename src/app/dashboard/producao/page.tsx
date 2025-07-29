@@ -227,47 +227,56 @@ export default function ProducaoPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
-              <Factory className="h-6 w-6 text-orange-600" />
+        {/* Header com gradiente azul - estilo UXPilot */}
+        <div className="uxpilot-header-gradient">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <Factory className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Produção</h1>
+                <p className="text-blue-100 mt-1">Registre e acompanhe a produção</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Produção</h1>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Nova Produção</span>
+            </button>
           </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
-          >
-            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-            Nova Produção
-          </button>
         </div>
 
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveSection('fichas')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeSection === 'fichas'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FileText className="h-4 w-4 inline mr-2" />
-              Fichas Técnicas
-            </button>
-            <button
-              onClick={() => setActiveSection('produtos')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeSection === 'produtos'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Package className="h-4 w-4 inline mr-2" />
-              Produtos
-            </button>
-          </nav>
+        {/* Tabs de navegação - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="border-b border-slate-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveSection('fichas')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
+                  activeSection === 'fichas'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <FileText className="h-4 w-4 inline mr-2" />
+                Fichas Técnicas
+              </button>
+              <button
+                onClick={() => setActiveSection('produtos')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
+                  activeSection === 'produtos'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <Package className="h-4 w-4 inline mr-2" />
+                Produtos
+              </button>
+            </nav>
+          </div>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">

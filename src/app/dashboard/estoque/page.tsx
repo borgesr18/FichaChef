@@ -245,68 +245,42 @@ export default function EstoquePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
-              <Warehouse className="h-6 w-6 text-orange-600" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Estoque</h1>
-          </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
-          >
-            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-            Nova Movimentação
-          </button>
-        </div>
-
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('insumos')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'insumos'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Package className="h-4 w-4 inline mr-2" />
-              Insumos
-            </button>
-            <button
-              onClick={() => setActiveTab('produtos')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'produtos'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <ShoppingCart className="h-4 w-4 inline mr-2" />
-              Produtos
-            </button>
-          </nav>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
+                {/* Header com gradiente azul - estilo UXPilot */}
+        <div className="uxpilot-header-gradient">
+          <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <Warehouse className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Itens</p>
-                <p className="text-2xl font-bold text-gray-900">{currentItems.length}</p>
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <Warehouse className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Estoque</h1>
+                <p className="text-blue-100 mt-1">Controle de estoque e inventário</p>
               </div>
             </div>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Item</span>
+            </button>
           </div>
+        </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Entradas Hoje</p>
-                <p className="text-2xl font-bold text-gray-900">{entradasHoje}</p>
-              </div>
+        {/* Card da tabela - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="p-6 border-b border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Buscar itens do estoque..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="uxpilot-input pl-10"
+              />
             </div>
+          </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow">

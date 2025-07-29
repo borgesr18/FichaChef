@@ -213,32 +213,39 @@ export default function ProdutosPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
-              <ShoppingCart className="h-6 w-6 text-orange-600" />
+        {/* Header com gradiente azul - estilo UXPilot */}
+        <div className="uxpilot-header-gradient">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <ShoppingCart className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Produtos</h1>
+                <p className="text-blue-100 mt-1">Gerencie produtos finais e composições</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Produtos Prontos</h1>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Produto</span>
+            </button>
           </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
-          >
-            <Plus className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-            Novo Produto
-          </button>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-slate-200/60">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-colors duration-200 group-focus-within:text-orange-500" />
+        {/* Card da tabela - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="p-6 border-b border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
               <input
                 type="text"
                 placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-3 w-full border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-slate-50/50 hover:bg-white focus:bg-white"
+                className="uxpilot-input pl-10"
               />
             </div>
           </div>

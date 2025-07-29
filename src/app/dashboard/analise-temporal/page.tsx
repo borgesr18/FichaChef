@@ -169,121 +169,42 @@ export default function AnaliseTemporalPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
-              <BarChart3 className="h-6 w-6 text-orange-600" />
+                {/* Header com gradiente azul - estilo UXPilot */}
+        <div className="uxpilot-header-gradient">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Análise Temporal</h1>
+                <p className="text-blue-100 mt-1">Análises históricas e tendências</p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Análise Temporal de Custos</h1>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Nova Análise</span>
+            </button>
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Filtros de Análise</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <FloatingLabelSelect
-              label="Insumo (Opcional)"
-              value={filters.insumoId}
-              onChange={(value) => setFilters({ ...filters, insumoId: value })}
-              options={[
-                { value: '', label: 'Todos os insumos' },
-                ...insumos.map(insumo => ({
-                  value: insumo.id,
-                  label: `${insumo.nome}${insumo._count ? ` (${insumo._count.fornecedorPrecos} preços)` : ''}`
-                }))
-              ]}
-            />
-
-            <FloatingLabelSelect
-              label="Fornecedor (Opcional)"
-              value={filters.fornecedorId}
-              onChange={(value) => setFilters({ ...filters, fornecedorId: value })}
-              options={[
-                { value: '', label: 'Todos os fornecedores' },
-                ...fornecedores.map(fornecedor => ({
-                  value: fornecedor.id,
-                  label: `${fornecedor.nome}${fornecedor._count ? ` (${fornecedor._count.precos} preços)` : ''}`
-                }))
-              ]}
-            />
-
-            <FloatingLabelInput
-              label="Data Início"
-              type="date"
-              value={filters.dataInicio || ''}
-              onChange={(value) => setFilters({ ...filters, dataInicio: value || '' })}
-            />
-
-            <FloatingLabelInput
-              label="Data Fim"
-              type="date"
-              value={filters.dataFim || ''}
-              onChange={(value) => setFilters({ ...filters, dataFim: value || '' })}
-            />
-
-            <FloatingLabelSelect
-              label="Período de Agrupamento"
-              value={filters.periodo}
-              onChange={(value) => setFilters({ ...filters, periodo: value as 'monthly' | 'quarterly' | 'yearly' })}
-              options={[
-                { value: 'monthly', label: 'Mensal' },
-                { value: 'quarterly', label: 'Trimestral' },
-                { value: 'yearly', label: 'Anual' }
-              ]}
-            />
-
-            <FloatingLabelInput
-              label="Meses de Projeção"
-              type="number"
-              min="1"
-              max="24"
-              value={filters.mesesProjecao.toString()}
-              onChange={(value) => setFilters({ ...filters, mesesProjecao: parseInt(value) || 6 })}
-            />
+        {/* Card da tabela - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="p-6 border-b border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Buscar análises..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="uxpilot-input pl-10"
+              />
+            </div>
           </div>
-
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
-          >
-            <BarChart3 className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-12" />
-            {loading ? 'Analisando...' : 'Realizar Análise'}
-          </button>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
-
-        {analysisResults.length > 0 && (
-          <div className="space-y-6">
-            {analysisResults.map((analysis) => (
-              <div key={analysis.insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
-                <div className="p-6 border-b border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-                    <Target className="h-5 w-5 mr-2" />
-                    {analysis.insumo.nome}
-                  </h3>
-                </div>
-
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Tendência</p>
-                          <p className={`text-lg font-bold ${getTrendColor(analysis.trendAnalysis.trend).split(' ')[0]}`}>
-                            {analysis.trendAnalysis.trend === 'increasing' ? 'Crescente' :
-                             analysis.trendAnalysis.trend === 'decreasing' ? 'Decrescente' : 'Estável'}
-                          </p>
-                        </div>
-                        {getTrendIcon(analysis.trendAnalysis.trend)}
-                      </div>
-                    </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-center justify-between">
