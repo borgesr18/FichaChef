@@ -5,15 +5,21 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import ModernTable from '@/components/ui/ModernTable'
-import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin } from 'lucide-react'
+import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, Phone } from 'lucide-react'
 
 interface Fornecedor {
   id: string
   nome: string
-  contato: string
-  telefone: string
-  email: string
-  endereco: string
+  razaoSocial?: string
+  cnpj?: string
+  telefone?: string
+  email?: string
+  endereco?: string
+  cidade?: string
+  estado?: string
+  cep?: string
+  contato?: string
+  observacoes?: string
   ativo: boolean
   _count: {
     insumos: number
@@ -22,8 +28,8 @@ interface Fornecedor {
 }
 
 export default function FornecedoresPage() {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
   const [loading, setLoading] = useState(false)
@@ -31,10 +37,16 @@ export default function FornecedoresPage() {
 
   const [formData, setFormData] = useState({
     nome: '',
-    contato: '',
+    razaoSocial: '',
+    cnpj: '',
     telefone: '',
     email: '',
     endereco: '',
+    cidade: '',
+    estado: '',
+    cep: '',
+    contato: '',
+    observacoes: '',
     ativo: true
   })
 
@@ -55,24 +67,35 @@ export default function FornecedoresPage() {
   }
 
   const handleOpenModal = (fornecedor?: Fornecedor) => {
+    setEditingFornecedor(fornecedor || null)
     if (fornecedor) {
-      setEditingFornecedor(fornecedor)
       setFormData({
-        nome: fornecedor.nome,
-        contato: fornecedor.contato,
-        telefone: fornecedor.telefone,
-        email: fornecedor.email,
-        endereco: fornecedor.endereco,
-        ativo: fornecedor.ativo
+        nome: fornecedor.nome || '',
+        razaoSocial: fornecedor.razaoSocial || '',
+        cnpj: fornecedor.cnpj || '',
+        telefone: fornecedor.telefone || '',
+        email: fornecedor.email || '',
+        endereco: fornecedor.endereco || '',
+        cidade: fornecedor.cidade || '',
+        estado: fornecedor.estado || '',
+        cep: fornecedor.cep || '',
+        contato: fornecedor.contato || '',
+        observacoes: fornecedor.observacoes || '',
+        ativo: fornecedor.ativo ?? true
       })
     } else {
-      setEditingFornecedor(null)
       setFormData({
         nome: '',
-        contato: '',
+        razaoSocial: '',
+        cnpj: '',
         telefone: '',
         email: '',
         endereco: '',
+        cidade: '',
+        estado: '',
+        cep: '',
+        contato: '',
+        observacoes: '',
         ativo: true
       })
     }
@@ -130,13 +153,14 @@ export default function FornecedoresPage() {
 
   const filteredFornecedores = fornecedores.filter(fornecedor =>
     fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fornecedor.contato.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fornecedor.email.toLowerCase().includes(searchTerm.toLowerCase())
+    fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fornecedor.cidade?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -148,109 +172,157 @@ export default function FornecedoresPage() {
                 <p className="text-blue-100 mt-1">Gestão de fornecedores e parcerias</p>
               </div>
             </div>
-            <button
+            <button 
               onClick={() => handleOpenModal()}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center font-medium hover:scale-[1.02] transform backdrop-blur-sm"
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Novo Fornecedor
+              <span className="font-medium">Novo Fornecedor</span>
             </button>
           </div>
         </div>
 
+        {/* Cards de métricas - estilo UXPilot */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-xl mr-4">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
-                <p className="text-2xl font-bold text-slate-800">{fornecedores.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-xl mr-4">
-                <Package className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {fornecedores.filter(f => f.ativo).length}
-                </p>
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.length}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-xl mr-4">
-                <MapPin className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Insumos Fornecidos</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {fornecedores.reduce((acc, f) => acc + f._count.insumos, 0)}
-                </p>
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-xl mr-4">
+                  <Truck className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.filter(f => f.ativo).length}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-orange-100 rounded-xl mr-4">
-                <Truck className="h-6 w-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Média Insumos/Fornecedor</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {fornecedores.length > 0 ? Math.round(fornecedores.reduce((acc, f) => acc + f._count.insumos, 0) / fornecedores.length) : 0}
-                </p>
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-orange-100 rounded-xl mr-4">
+                  <Package className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Insumos</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.insumos, 0)}</p>
+                </div>
               </div>
             </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                  <MapPin className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Preços Cadastrados</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.precos, 0)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <Truck className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Fornecedores</h1>
+                <p className="text-blue-100 mt-1">Cadastre e gerencie fornecedores</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Fornecedor</span>
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/60">
-          <div className="p-6 border-b border-slate-200/60">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-slate-800">Lista de Fornecedores</h2>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Buscar fornecedores..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+        {/* Card da tabela - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="p-6 border-b border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Buscar fornecedores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="uxpilot-input pl-10"
+              />
             </div>
           </div>
 
           <ModernTable
             columns={[
-              { key: 'nome', label: 'Nome', sortable: true },
-              { key: 'contato', label: 'Contato', sortable: true },
-              { key: 'telefone', label: 'Telefone', sortable: true,
-                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
-              { key: 'email', label: 'Email', sortable: true,
-                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
+              { key: 'nome', label: 'Nome', sortable: true,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return (
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{String(fornecedor.nome || '')}</div>
+                      {fornecedor.razaoSocial ? (
+                        <div className="text-sm text-gray-500">{String(fornecedor.razaoSocial)}</div>
+                      ) : null}
+                    </div>
+                  )
+                }},
+              { key: 'contato', label: 'Contato', sortable: false,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return (
+                    <div className="text-sm text-gray-500">
+                      {fornecedor.telefone ? <div>{String(fornecedor.telefone)}</div> : null}
+                      {fornecedor.email ? <div>{String(fornecedor.email)}</div> : null}
+                    </div>
+                  )
+                }},
+              { key: 'localizacao', label: 'Localização', sortable: true,
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  return fornecedor.cidade && fornecedor.estado ? `${String(fornecedor.cidade)}, ${String(fornecedor.estado)}` : '-'
+                }},
+              { key: 'insumos', label: 'Insumos', sortable: true, align: 'center',
+                render: (_, row) => {
+                  const fornecedor = row as Record<string, unknown>
+                  const count = fornecedor._count as Record<string, number> | undefined
+                  return (
+                    <div className="flex items-center justify-center">
+                      <Package className="h-4 w-4 mr-1" />
+                      {count?.insumos || 0}
+                    </div>
+                  )
+                }},
               { key: 'ativo', label: 'Status', sortable: true,
-                render: (value: unknown): React.ReactNode => (
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                render: (value) => (
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {value ? 'Ativo' : 'Inativo'}
                   </span>
                 )},
-              { key: '_count.insumos', label: 'Insumos', sortable: true, align: 'center',
-                render: (_, row): React.ReactNode => (row as unknown as Fornecedor)._count.insumos },
               { key: 'actions', label: 'Ações', align: 'center',
-                render: (_, row): React.ReactNode => (
+                render: (_, row) => (
                   <div className="flex items-center justify-center space-x-2">
                     <button
                       onClick={() => handleOpenModal(row as unknown as Fornecedor)}
@@ -297,13 +369,19 @@ export default function FornecedoresPage() {
               value={formData.nome}
               onChange={(value) => setFormData({ ...formData, nome: value })}
               required
+              error={error && !formData.nome ? 'Nome é obrigatório' : ''}
             />
 
             <FloatingLabelInput
-              label="Contato"
-              value={formData.contato}
-              onChange={(value) => setFormData({ ...formData, contato: value })}
-              required
+              label="Razão Social"
+              value={formData.razaoSocial}
+              onChange={(value) => setFormData({ ...formData, razaoSocial: value })}
+            />
+
+            <FloatingLabelInput
+              label="CNPJ"
+              value={formData.cnpj}
+              onChange={(value) => setFormData({ ...formData, cnpj: value })}
             />
 
             <FloatingLabelInput
@@ -318,6 +396,12 @@ export default function FornecedoresPage() {
               value={formData.email}
               onChange={(value) => setFormData({ ...formData, email: value })}
             />
+
+            <FloatingLabelInput
+              label="Contato"
+              value={formData.contato}
+              onChange={(value) => setFormData({ ...formData, contato: value })}
+            />
           </div>
 
           <FloatingLabelInput
@@ -326,16 +410,47 @@ export default function FornecedoresPage() {
             onChange={(value) => setFormData({ ...formData, endereco: value })}
           />
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="ativo"
-              checked={formData.ativo}
-              onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Cidade"
+              value={formData.cidade}
+              onChange={(value) => setFormData({ ...formData, cidade: value })}
             />
-            <label htmlFor="ativo" className="ml-2 block text-sm text-gray-900">
-              Fornecedor ativo
+
+            <FloatingLabelInput
+              label="Estado"
+              value={formData.estado}
+              onChange={(value) => setFormData({ ...formData, estado: value })}
+            />
+
+            <FloatingLabelInput
+              label="CEP"
+              value={formData.cep}
+              onChange={(value) => setFormData({ ...formData, cep: value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Observações
+            </label>
+            <textarea
+              value={formData.observacoes}
+              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.ativo}
+                onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                className="rounded border-orange-300 text-orange-600 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+              />
+              <span className="ml-2 text-sm text-slate-700">Fornecedor ativo</span>
             </label>
           </div>
 
@@ -350,12 +465,12 @@ export default function FornecedoresPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  <span className="font-medium">Salvando...</span>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Salvando...</span>
                 </>
               ) : (
                 <span className="font-medium">Salvar</span>
