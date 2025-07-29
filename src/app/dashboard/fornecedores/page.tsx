@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
-import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, Building, TrendingUp, TrendingDown, Download, Crown } from 'lucide-react'
+import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, TrendingUp, Download, Crown } from 'lucide-react'
 
 interface Fornecedor {
   id: string
