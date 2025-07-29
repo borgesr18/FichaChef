@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
-import { Printer } from 'lucide-react'
+import { Printer, FileText, TrendingUp, Download, Search, Eye } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
 
@@ -41,6 +41,7 @@ export default function ImpressaoPage() {
   const [selectedFichaId, setSelectedFichaId] = useState('')
   const [selectedFicha, setSelectedFicha] = useState<FichaTecnica | null>(null)
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     fetchFichas()
@@ -124,12 +125,41 @@ export default function ImpressaoPage() {
     window.print()
   }
 
+  // Funções auxiliares para o design
+  const getFichaIcon = (categoria: string) => {
+    if (categoria.toLowerCase().includes('massa')) return '🍝'
+    if (categoria.toLowerCase().includes('carne')) return '🥩'
+    if (categoria.toLowerCase().includes('doce')) return '🍰'
+    if (categoria.toLowerCase().includes('bebida')) return '🥤'
+    if (categoria.toLowerCase().includes('salada')) return '🥗'
+    return '📄'
+  }
+
+  // Estatísticas
+  const getStats = () => {
+    const totalFichas = fichas.length
+    const fichasComNutricao = fichas.filter(f => 
+      f.ingredientes.some(ing => (ing.insumo.calorias || 0) > 0)
+    ).length
+    const fichasImpressas = 1 // Simulado
+    const custoMedio = fichas.length > 0 ? 
+      fichas.reduce((sum, f) => sum + calculateCustoTotal(f), 0) / fichas.length : 0
+
+    return { totalFichas, fichasComNutricao, fichasImpressas, custoMedio }
+  }
+
+  const stats = getStats()
+
+  const filteredFichas = fichas.filter(ficha =>
+    ficha.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ficha.categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Carregando...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B2E4B]"></div>
         </div>
       </DashboardLayout>
     )
@@ -137,48 +167,216 @@ export default function ImpressaoPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center">
-          <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl mr-3 transform transition-transform duration-200 hover:scale-110">
-            <Printer className="h-6 w-6 text-orange-600" />
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Impressão de Fichas Técnicas</h1>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300 p-6 no-print">
-          <div className="max-w-md">
-            <FloatingLabelSelect
-              label="Selecionar Ficha Técnica"
-              value={selectedFichaId}
-              onChange={(value) => {
-                setSelectedFichaId(value)
-                const ficha = fichas.find(f => f.id === value)
-                if (ficha) {
-                  setSelectedFicha(ficha)
-                }
-              }}
-              options={[
-                { value: '', label: 'Selecione uma ficha técnica...' },
-                ...fichas.map(ficha => ({
-                  value: ficha.id,
-                  label: `${ficha.nome} - ${ficha.categoria.nome} • ${ficha.pesoFinalGramas}g • ${ficha.numeroPorcoes} porções`
-                }))
-              ]}
-            />
-
-            <button
-              onClick={handlePrint}
-              disabled={!selectedFicha}
-              className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg hover:shadow-xl transform transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 group"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir Ficha Técnica
-            </button>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
+                Impressão de Fichas Técnicas
+              </h1>
+              <p className="text-gray-600 text-lg">Imprima fichas técnicas profissionais</p>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar PDF
+              </button>
+              <button
+                onClick={handlePrint}
+                disabled={!selectedFicha}
+                className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total de Fichas</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalFichas}</p>
+                <p className="text-xs text-blue-600 flex items-center">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Disponíveis
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <FileText className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Com Nutrição</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.fichasComNutricao}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Completas
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Impressões Hoje</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.fichasImpressas}</p>
+                <p className="text-xs text-orange-600 flex items-center">
+                  <Printer className="h-3 w-3 mr-1" />
+                  Realizadas
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Printer className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Custo Médio</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.custoMedio)}</p>
+                <p className="text-xs text-purple-600 flex items-center">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Por ficha
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Eye className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Seleção de Ficha */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8 no-print">
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">Selecionar Ficha para Impressão</h3>
+            
+            {/* Busca */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Buscar Ficha</label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome da ficha ou categoria..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                />
+              </div>
+            </div>
+
+            {/* Select de Ficha */}
+            <div className="max-w-2xl">
+              <FloatingLabelSelect
+                label="Selecionar Ficha Técnica"
+                value={selectedFichaId}
+                onChange={(value) => {
+                  setSelectedFichaId(value)
+                  const ficha = fichas.find(f => f.id === value)
+                  if (ficha) {
+                    setSelectedFicha(ficha)
+                  }
+                }}
+                options={[
+                  { value: '', label: 'Selecione uma ficha técnica...' },
+                  ...filteredFichas.map(ficha => ({
+                    value: ficha.id,
+                    label: `${ficha.nome} - ${ficha.categoria.nome} • ${ficha.pesoFinalGramas}g • ${ficha.numeroPorcoes} porções`
+                  }))
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Fichas Cards */}
+        {!selectedFicha && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Fichas Disponíveis</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredFichas.slice(0, 6).map((ficha) => (
+                <div
+                  key={ficha.id}
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
+                  onClick={() => {
+                    setSelectedFichaId(ficha.id)
+                    setSelectedFicha(ficha)
+                  }}
+                >
+                  {/* Barra colorida */}
+                  <div className="h-2 bg-gradient-to-r from-orange-400 to-orange-600"></div>
+                  
+                  <div className="p-6">
+                    {/* Header do card */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{getFichaIcon(ficha.categoria.nome)}</span>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 truncate">{ficha.nome}</h3>
+                          <p className="text-sm text-gray-500">{ficha.categoria.nome}</p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                        {ficha.numeroPorcoes} porções
+                      </span>
+                    </div>
+
+                    {/* Informações principais */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Peso Total:</span>
+                        <span className="font-semibold text-gray-900">{ficha.pesoFinalGramas}g</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Custo Total:</span>
+                        <span className="font-medium text-gray-700">
+                          {formatCurrency(calculateCustoTotal(ficha))}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Por Porção:</span>
+                        <span className="font-medium text-gray-700">
+                          {formatCurrency(calculateCustoPorPorcao(ficha))}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Botão de ação */}
+                    <div className="mt-6 pt-4 border-t border-gray-100">
+                      <button className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Visualizar para Impressão
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Conteúdo da Ficha Selecionada */}
         {selectedFicha && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 print-content">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 print-content">
             <div className="print-header text-center border-b-2 border-gray-300 pb-4 mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">FichaChef</h1>
               <p className="text-lg text-gray-600">Sistema de Fichas Técnicas</p>
