@@ -12,29 +12,41 @@ import {
   Factory, 
   Warehouse, 
   ShoppingCart, 
+  Calculator,
+  Printer,
   BarChart3, 
   FileBarChart,
   Menu,
   X,
   Truck,
   Bell,
+  Calendar,
   TrendingUp,
+  Palette,
+  Clock,
   Users,
+  Shield,
   ChefHat
 } from 'lucide-react'
 
 const menuItems = [
   { href: '/dashboard', icon: BarChart3, label: 'Dashboard', roles: ['chef', 'cozinheiro', 'gerente'] },
-  { href: '/dashboard/fichas-tecnicas', icon: FileText, label: 'Fichas Técnicas', roles: ['chef', 'cozinheiro', 'gerente'] },
   { href: '/dashboard/insumos', icon: Package, label: 'Insumos', roles: ['chef', 'cozinheiro', 'gerente'] },
+  { href: '/dashboard/fichas-tecnicas', icon: FileText, label: 'Fichas Técnicas', roles: ['chef', 'cozinheiro', 'gerente'] },
   { href: '/dashboard/produtos', icon: ShoppingCart, label: 'Produtos', roles: ['chef', 'gerente'] },
   { href: '/dashboard/fornecedores', icon: Truck, label: 'Fornecedores', roles: ['chef', 'gerente'] },
   { href: '/dashboard/estoque', icon: Warehouse, label: 'Estoque', roles: ['chef', 'gerente'] },
   { href: '/dashboard/producao', icon: Factory, label: 'Produção', roles: ['chef', 'cozinheiro', 'gerente'] },
+  { href: '/dashboard/impressao', icon: Printer, label: 'Impressão', roles: ['chef', 'cozinheiro'] },
+  { href: '/dashboard/calculo-preco', icon: Calculator, label: 'Cálculo de Preço', roles: ['chef', 'gerente'] },
+  { href: '/dashboard/cardapios', icon: Calendar, label: 'Cardápios', roles: ['chef', 'gerente'] },
   { href: '/dashboard/relatorios', icon: FileBarChart, label: 'Relatórios', roles: ['chef', 'gerente'] },
+  { href: '/dashboard/usuarios', icon: Users, label: 'Usuários', roles: ['chef'] },
+  { href: '/dashboard/auditoria', icon: Shield, label: 'Auditoria', roles: ['chef', 'gerente'] },
   { href: '/dashboard/analise-temporal', icon: TrendingUp, label: 'Análise Temporal', roles: ['chef', 'gerente'] },
   { href: '/dashboard/alertas', icon: Bell, label: 'Alertas', roles: ['chef', 'cozinheiro', 'gerente'] },
-  { href: '/dashboard/usuarios', icon: Users, label: 'Usuários', roles: ['chef'] },
+  { href: '/dashboard/relatorios/templates', icon: Palette, label: 'Templates de Relatórios', roles: ['chef'] },
+  { href: '/dashboard/relatorios/agendamentos', icon: Clock, label: 'Agendamentos de Relatórios', roles: ['chef'] },
   { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações', roles: ['chef'] },
 ]
 
@@ -94,7 +106,7 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
         <nav className="p-4">
           {loading ? (
             <div className="space-y-2">
-              {[...Array(6)].map((_, i) => (
+              {[...Array(8)].map((_, i) => (
                 <div key={i} className="flex items-center space-x-3 p-3 animate-pulse">
                   <div className="w-5 h-5 bg-blue-600 rounded"></div>
                   <div className="w-24 h-4 bg-blue-600 rounded"></div>
