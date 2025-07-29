@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity, Plus, Search } from 'lucide-react'
+import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity, Plus } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface Insumo {
@@ -72,7 +72,6 @@ export default function AnaliseTemporalPage() {
   const [analysisResults, setAnalysisResults] = useState<InsumoAnalysis[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
 
   const [filters, setFilters] = useState({
     insumoId: '',
@@ -426,7 +425,7 @@ export default function AnaliseTemporalPage() {
             <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma análise realizada</h3>
             <p className="text-gray-500">
-              Configure os filtros acima e clique em "Realizar Análise" para visualizar as tendências de custos.
+              Configure os filtros acima e clique em &quot;Realizar Análise&quot; para visualizar as tendências de custos.
             </p>
           </div>
         )}
