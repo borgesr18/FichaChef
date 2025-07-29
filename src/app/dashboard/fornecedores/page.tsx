@@ -55,8 +55,8 @@ export default function FornecedoresPage() {
   }
 
   const handleOpenModal = (fornecedor?: Fornecedor) => {
-    setEditingFornecedor(fornecedor || null)
     if (fornecedor) {
+      setEditingFornecedor(fornecedor)
       setFormData({
         nome: fornecedor.nome,
         contato: fornecedor.contato,
@@ -66,6 +66,7 @@ export default function FornecedoresPage() {
         ativo: fornecedor.ativo
       })
     } else {
+      setEditingFornecedor(null)
       setFormData({
         nome: '',
         contato: '',
@@ -136,7 +137,6 @@ export default function FornecedoresPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -148,87 +148,86 @@ export default function FornecedoresPage() {
                 <p className="text-blue-100 mt-1">Gestão de fornecedores e parcerias</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => handleOpenModal()}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center font-medium hover:scale-[1.02] transform backdrop-blur-sm"
             >
               <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Novo Fornecedor</span>
+              Novo Fornecedor
             </button>
           </div>
         </div>
 
-        {/* Cards de métricas - estilo UXPilot */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-xl mr-4">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
-                  <p className="text-2xl font-bold text-slate-800">{fornecedores.length}</p>
-                </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
+                <p className="text-2xl font-bold text-slate-800">{fornecedores.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-xl mr-4">
-                  <Truck className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
-                  <p className="text-2xl font-bold text-slate-800">{fornecedores.filter(f => f.ativo).length}</p>
-                </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-xl mr-4">
+                <Package className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {fornecedores.filter(f => f.ativo).length}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-orange-100 rounded-xl mr-4">
-                  <Package className="h-6 w-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Total Insumos</p>
-                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.insumos, 0)}</p>
-                </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                <MapPin className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Insumos Fornecidos</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {fornecedores.reduce((acc, f) => acc + f._count.insumos, 0)}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-xl mr-4">
-                  <MapPin className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Preços Cadastrados</p>
-                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.precos, 0)}</p>
-                </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-xl mr-4">
+                <Truck className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Média Insumos/Fornecedor</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {fornecedores.length > 0 ? Math.round(fornecedores.reduce((acc, f) => acc + f._count.insumos, 0) / fornecedores.length) : 0}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabela de fornecedores */}
-        <div className="uxpilot-card">
-          <div className="p-6 border-b border-slate-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar fornecedores..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="uxpilot-input pl-10"
-              />
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/60">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-slate-800">Lista de Fornecedores</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar fornecedores..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
 
@@ -236,10 +235,10 @@ export default function FornecedoresPage() {
             columns={[
               { key: 'nome', label: 'Nome', sortable: true },
               { key: 'contato', label: 'Contato', sortable: true },
-              {{ key: 'telefone', label: 'Telefone', sortable: true,
-                render: (value: string) => <span>{value || '-'}</span> },
+              { key: 'telefone', label: 'Telefone', sortable: true,
+                render: (value) => <span>{value || '-'}</span> },
               { key: 'email', label: 'Email', sortable: true,
-               render: (value: string) => <span>{value || '-'}</span> },
+                render: (value) => <span>{value || '-'}</span> },
               { key: 'ativo', label: 'Status', sortable: true,
                 render: (value) => (
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -298,7 +297,6 @@ export default function FornecedoresPage() {
               value={formData.nome}
               onChange={(value) => setFormData({ ...formData, nome: value })}
               required
-              error={error && !formData.nome ? 'Nome é obrigatório' : ''}
             />
 
             <FloatingLabelInput
@@ -306,11 +304,8 @@ export default function FornecedoresPage() {
               value={formData.contato}
               onChange={(value) => setFormData({ ...formData, contato: value })}
               required
-              error={error && !formData.contato ? 'Contato é obrigatório' : ''}
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FloatingLabelInput
               label="Telefone"
               value={formData.telefone}
