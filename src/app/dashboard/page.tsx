@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { BarChart3, Package, FileText, Factory, AlertTriangle, DollarSign, TrendingUp, Edit, Printer, Trash2, Plus } from 'lucide-react'
+import { BarChart3, Package, FileText, AlertTriangle, DollarSign, TrendingUp, Edit, Printer, Trash2, Plus } from 'lucide-react'
 
 interface DashboardStats {
   insumos: number
@@ -266,10 +266,13 @@ export default function DashboardPage() {
           <div className="p-6 border-b">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800">Receitas Recentes</h3>
-              <button className="bg-[#1B2E4B] text-white px-4 py-2 rounded-lg hover:bg-[#1B2E4B]/90 transition-colors flex items-center">
+              <a
+                href="/dashboard/fichas-tecnicas"
+                className="bg-[#1B2E4B] text-white px-4 py-2 rounded-lg hover:bg-[#1B2E4B]/90 transition-colors flex items-center"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Receita
-              </button>
+              </a>
             </div>
           </div>
           
