@@ -12,20 +12,14 @@ import {
   Factory, 
   Warehouse, 
   ShoppingCart, 
-  Calculator, 
-  Printer, 
   BarChart3, 
   FileBarChart,
   Menu,
   X,
   Truck,
   Bell,
-  Calendar,
   TrendingUp,
-  Palette,
-  Clock,
   Users,
-  Shield,
   ChefHat
 } from 'lucide-react'
 
@@ -53,7 +47,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname()
   const { userRole, loading } = useSupabase()
-  const { config, isModuleVisible } = useProfileInterface()
+  const { isModuleVisible } = useProfileInterface()
 
   // Usar onClose se disponível, senão usar onToggle
   const handleClose = onClose || onToggle || (() => {})
