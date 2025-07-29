@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import ModernTable from '@/components/ui/ModernTable'
-import { Truck, Plus, Search, Edit, Trash2, Package } from 'lucide-react'
+import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, Phone } from 'lucide-react'
 
 interface Fornecedor {
   id: string
@@ -163,6 +163,82 @@ export default function FornecedoresPage() {
         {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
           <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <Truck className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Fornecedores</h1>
+                <p className="text-blue-100 mt-1">Gestão de fornecedores e parcerias</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Fornecedor</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Cards de métricas - estilo UXPilot */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-xl mr-4">
+                  <Truck className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.filter(f => f.ativo).length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-orange-100 rounded-xl mr-4">
+                  <Package className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Insumos</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.insumos, 0)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                  <MapPin className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Preços Cadastrados</p>
+                  <p className="text-2xl font-bold text-slate-800">{fornecedores.reduce((sum, f) => sum + f._count.precos, 0)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
             <div className="flex items-center">
               <div className="p-3 bg-white/20 rounded-xl mr-4">
                 <Truck className="h-8 w-8 text-white" />

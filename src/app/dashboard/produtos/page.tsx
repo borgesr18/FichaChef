@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { ShoppingCart, Plus, Search, Edit, Trash2, X } from 'lucide-react'
+import { ShoppingCart, Plus, Search, Edit, Trash2, X, Package, TrendingUp, DollarSign, Target } from 'lucide-react'
 import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface FichaTecnica {
@@ -216,6 +216,88 @@ export default function ProdutosPage() {
         {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
           <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <ShoppingCart className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Produtos</h1>
+                <p className="text-blue-100 mt-1">Gestão de produtos e composições</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Produto</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Cards de métricas - estilo UXPilot */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                  <Package className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total de Produtos</p>
+                  <p className="text-2xl font-bold text-slate-800">{produtos.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-xl mr-4">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Preço Médio</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    R$ {produtos.length > 0 ? (produtos.reduce((sum, p) => sum + p.precoVenda, 0) / produtos.length).toFixed(2) : '0.00'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-orange-100 rounded-xl mr-4">
+                  <TrendingUp className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Margem Média</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {produtos.length > 0 ? (produtos.reduce((sum, p) => sum + p.margemLucro, 0) / produtos.length).toFixed(1) : '0.0'}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="uxpilot-card">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                  <Target className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Com Fichas</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    {produtos.filter(p => p.produtoFichas.length > 0).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
             <div className="flex items-center">
               <div className="p-3 bg-white/20 rounded-xl mr-4">
                 <ShoppingCart className="h-8 w-8 text-white" />

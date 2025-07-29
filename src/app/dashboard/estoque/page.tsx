@@ -237,7 +237,6 @@ export default function EstoquePage() {
     mov.tipo === 'entrada' && 
     new Date(mov.createdAt).toDateString() === today
   ).length
-  
   const saidasHoje = currentMovimentacoes.filter(mov => 
     mov.tipo === 'saida' && 
     new Date(mov.createdAt).toDateString() === today
@@ -263,88 +262,58 @@ export default function EstoquePage() {
               className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
             >
               <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Nova Movimentação</span>
+              <span className="font-medium">Novo Item</span>
             </button>
           </div>
         </div>
 
-        {/* Cards de métricas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <TrendingUp className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Entradas Hoje</p>
-                  <p className="text-2xl font-bold text-gray-900">{entradasHoje}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <TrendingDown className="h-8 w-8 text-red-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Saídas Hoje</p>
-                  <p className="text-2xl font-bold text-gray-900">{saidasHoje}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <AlertTriangle className="h-8 w-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Movimentações</p>
-                  <p className="text-2xl font-bold text-gray-900">{currentMovimentacoes.length}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
+        {/* Card da tabela - estilo UXPilot */}
         <div className="uxpilot-card">
-          <div className="p-6 border-b border-slate-200">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setActiveTab('insumos')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === 'insumos'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Package className="h-4 w-4 inline mr-2" />
-                Insumos
-              </button>
-              <button
-                onClick={() => setActiveTab('produtos')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  activeTab === 'produtos'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <ShoppingCart className="h-4 w-4 inline mr-2" />
-                Produtos
-              </button>
-            </div>
-          </div>
-
           <div className="p-6 border-b border-slate-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
               <input
                 type="text"
-                placeholder={`Buscar movimentações de ${activeTab}...`}
+                placeholder="Buscar itens do estoque..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="uxpilot-input pl-10"
+              />
+            </div>
+          </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <TrendingDown className="h-8 w-8 text-red-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Saídas Hoje</p>
+                <p className="text-2xl font-bold text-gray-900">{saidasHoje}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <AlertTriangle className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Movimentações</p>
+                <p className="text-2xl font-bold text-gray-900">{currentMovimentacoes.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-all duration-200 group-focus-within:text-orange-500 group-focus-within:scale-110" />
+              <input
+                type="text"
+                placeholder={`Buscar movimentações de ${activeTab}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-3 w-full border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
               />
             </div>
           </div>
@@ -478,12 +447,12 @@ export default function EstoquePage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {loading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  <span className="font-medium">Salvando...</span>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Salvando...</span>
                 </>
               ) : (
                 <span className="font-medium">Salvar</span>
@@ -495,4 +464,3 @@ export default function EstoquePage() {
     </DashboardLayout>
   )
 }
-
