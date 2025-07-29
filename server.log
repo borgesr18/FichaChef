@@ -1,0 +1,482 @@
+nohup: ignoring input
+
+> fichachef@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3001
+   - Network:      http://169.254.0.21:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1647ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1094ms (180 modules)
+ ○ Compiling / ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (100kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled / in 5.6s (896 modules)
+(node:2882) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET / 200 in 6114ms
+ ⚠ Cross origin request detected from 3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2.2s (1038 modules)
+ GET /dashboard 200 in 2675ms
+ GET /dashboard 200 in 2544ms
+ GET / 200 in 2547ms
+ GET /dashboard 200 in 39ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1588ms (1194 modules)
+[2025-07-29T10:08:46.414Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.415Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.419Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.419Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.420Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/fichas-tecnicas 401 in 1883ms
+[2025-07-29T10:08:46.432Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.432Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.433Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.433Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.433Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/producao 401 in 1893ms
+[2025-07-29T10:08:46.440Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.440Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.441Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.441Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.441Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/produtos 401 in 1878ms
+[2025-07-29T10:08:46.455Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.455Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.455Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.456Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.456Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/insumos 401 in 1925ms
+ GET /login 200 in 1944ms
+[2025-07-29T10:08:46.579Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.579Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.580Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.580Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.580Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/fichas-tecnicas 401 in 36ms
+[2025-07-29T10:08:46.588Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.588Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.588Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.589Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.589Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/producao 401 in 44ms
+[2025-07-29T10:08:46.592Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.592Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.593Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.593Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.593Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/produtos 401 in 47ms
+[2025-07-29T10:08:46.595Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.595Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.596Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.596Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:46.596Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/insumos 401 in 50ms
+ GET /login 200 in 34ms
+[2025-07-29T10:08:51.776Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.776Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.778Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.778Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.778Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/insumos 401 in 28ms
+[2025-07-29T10:08:51.798Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.799Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.800Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.800Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.800Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/fichas-tecnicas 401 in 32ms
+[2025-07-29T10:08:51.806Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.806Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.807Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.807Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.807Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/producao 401 in 23ms
+[2025-07-29T10:08:51.812Z] INFO [frontend]: api_auth_config_check | Context: {
+  "hasUrl": true,
+  "hasKey": true,
+  "urlPrefix": "https://qaomdfwvaxmy",
+  "keyPrefix": "eyJhbGciOiJIUzI1NiIs",
+  "nodeEnv": "development",
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.813Z] INFO [frontend]: api_auth_cookies_debug | Context: {
+  "cookieCount": 1,
+  "cookieNames": [
+    "__next_hmr_refresh_hash__"
+  ],
+  "hasAuthCookies": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.813Z] INFO [frontend]: api_auth_session_attempt | Context: {
+  "hasUser": false,
+  "errorMessage": "Auth session missing!",
+  "errorCode": 400,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.813Z] INFO [frontend]: api_auth_header_check | Context: {
+  "hasAuthHeader": false,
+  "userAgent": "Node.js/22"
+}
+[2025-07-29T10:08:51.813Z] WARN [frontend]: Security: api_auth_failed | Context: {
+  "sessionError": "Auth session missing!",
+  "hasAuthHeader": false,
+  "cookieCount": 1,
+  "userAgent": "Node.js/22",
+  "referer": "https://3001-i23tgw9r7y5iy5dadicj0-36e4cdc7.manusvm.computer/dashboard",
+  "event": "api_auth_failed",
+  "type": "security"
+}
+ GET /api/produtos 401 in 22ms
+ GET /login 200 in 18ms
+ ✓ Compiled in 826ms (976 modules)
+ GET /login 200 in 233ms
+ ✓ Compiled in 317ms (475 modules)
+ GET /login 200 in 34ms
+ ✓ Compiled in 452ms (475 modules)
+ ✓ Compiled in 266ms (475 modules)
+ ✓ Compiled in 250ms (475 modules)
+ ✓ Compiled in 295ms (475 modules)
+ ✓ Compiled in 376ms (475 modules)
+ ✓ Compiled in 321ms (475 modules)
+ ✓ Compiled in 386ms (475 modules)
+ ✓ Compiled in 321ms (475 modules)
+ ✓ Compiled in 443ms (475 modules)
+ ✓ Compiled in 281ms (475 modules)
+ ✓ Compiled in 243ms (475 modules)
+ ✓ Compiled in 241ms (475 modules)
