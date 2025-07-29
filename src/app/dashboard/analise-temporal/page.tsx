@@ -2,169 +2,146 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
-import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils'
+import { Calendar, Plus, Search, Edit, Trash2, TrendingUp, BarChart3, Clock, Filter } from 'lucide-react'
 
-interface Insumo {
+interface AnaliseItem {
   id: string
-  nome: string
-  _count?: { fornecedorPrecos: number }
-}
-
-interface Fornecedor {
-  id: string
-  nome: string
-  _count?: { precos: number }
-}
-
-interface PricePoint {
-  date: string
-  price: number
-  fornecedor: { nome: string }
-}
-
-interface TrendAnalysis {
-  trend: 'increasing' | 'decreasing' | 'stable'
-  slope: number
-  correlation: number
-  averageMonthlyChange: number
-  volatility: number
-}
-
-interface CostProjection {
-  date: string
-  projectedPrice: number
-  confidence: number
-}
-
-interface VolatilityAnalysis {
-  volatility: number
-  riskLevel: 'low' | 'medium' | 'high'
-}
-
-interface InsumoAnalysis {
-  insumo: { id: string; nome: string }
-  priceHistory: PricePoint[]
-  trendAnalysis: TrendAnalysis
-  projections: CostProjection[]
-  groupedData: Array<{
-    period: string
-    averagePrice: number
-    priceCount: number
-    minPrice: number
-    maxPrice: number
-  }>
-  volatilityAnalysis: VolatilityAnalysis
-  statistics: {
-    totalPricePoints: number
-    priceRange: { min: number; max: number }
-    averagePrice: number
-    latestPrice: number
-  }
+  periodo: string
+  tipo: string
+  valor: number
+  variacao: number
+  status: string
+  createdAt: string
 }
 
 export default function AnaliseTemporalPage() {
-  const [insumos, setInsumos] = useState<Insumo[]>([])
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
-  const [analysisResults, setAnalysisResults] = useState<InsumoAnalysis[]>([])
+  const [analises, setAnalises] = useState<AnaliseItem[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingAnalise, setEditingAnalise] = useState<AnaliseItem | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('todos')
+  const [filtroPeriodo, setFiltroPeriodo] = useState('todos')
 
-  const [filters, setFilters] = useState({
-    insumoId: '',
-    fornecedorId: '',
-    dataInicio: '',
-    dataFim: '',
-    periodo: 'monthly' as 'monthly' | 'quarterly' | 'yearly',
-    mesesProjecao: 6
+  const [formData, setFormData] = useState({
+    periodo: '',
+    tipo: '',
+    valor: '',
+    observacoes: ''
   })
 
   useEffect(() => {
-    const now = new Date()
-    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
-    const dataInicio = oneYearAgo.toISOString().split('T')[0] as string
-    const dataFim = now.toISOString().split('T')[0] as string
-    setFilters(prev => ({
-      ...prev,
-      dataInicio,
-      dataFim
-    }))
-    fetchOptions()
+    fetchAnalises()
   }, [])
 
-  const fetchOptions = async () => {
+  const fetchAnalises = async () => {
     try {
       const response = await fetch('/api/analise-temporal')
       if (response.ok) {
         const data = await response.json()
-        setInsumos(data.insumos || [])
-        setFornecedores(data.fornecedores || [])
+        setAnalises(data)
       }
     } catch (error) {
-      console.error('Error fetching options:', error)
+      console.error('Error fetching analises:', error)
     }
   }
 
-  const handleAnalyze = async () => {
+  const handleOpenModal = (analise?: AnaliseItem) => {
+    if (analise) {
+      setEditingAnalise(analise)
+      setFormData({
+        periodo: analise.periodo,
+        tipo: analise.tipo,
+        valor: analise.valor.toString(),
+        observacoes: ''
+      })
+    } else {
+      setEditingAnalise(null)
+      setFormData({
+        periodo: '',
+        tipo: '',
+        valor: '',
+        observacoes: ''
+      })
+    }
+    setIsModalOpen(true)
+    setError('')
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setEditingAnalise(null)
+    setError('')
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      const response = await fetch('/api/analise-temporal', {
-        method: 'POST',
+      const url = editingAnalise ? `/api/analise-temporal/${editingAnalise.id}` : '/api/analise-temporal'
+      const method = editingAnalise ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(filters)
+        body: JSON.stringify({
+          ...formData,
+          valor: parseFloat(formData.valor)
+        })
       })
 
       if (response.ok) {
-        const result = await response.json()
-        setAnalysisResults(result.data || [])
+        handleCloseModal()
+        fetchAnalises()
       } else {
         const errorData = await response.json()
-        setError(errorData.error || 'Erro ao realizar análise')
+        setError(errorData.error || 'Erro ao salvar análise')
       }
     } catch {
-      setError('Erro ao realizar análise')
+      setError('Erro ao salvar análise')
     } finally {
       setLoading(false)
     }
   }
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'increasing':
-        return <TrendingUp className="h-5 w-5 text-red-600" />
-      case 'decreasing':
-        return <TrendingDown className="h-5 w-5 text-green-600" />
-      default:
-        return <Activity className="h-5 w-5 text-gray-600" />
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta análise?')) return
+
+    try {
+      const response = await fetch(`/api/analise-temporal/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        fetchAnalises()
+      }
+    } catch (error) {
+      console.error('Error deleting analise:', error)
     }
   }
 
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'increasing':
-        return 'text-red-600 bg-red-50'
-      case 'decreasing':
-        return 'text-green-600 bg-green-50'
-      default:
-        return 'text-gray-600 bg-gray-50'
-    }
+  const filteredAnalises = analises.filter(analise => {
+    const matchesSearch = analise.periodo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         analise.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesTipo = filtroTipo === 'todos' || analise.tipo === filtroTipo
+    const matchesPeriodo = filtroPeriodo === 'todos' || analise.periodo.includes(filtroPeriodo)
+    
+    return matchesSearch && matchesTipo && matchesPeriodo
+  })
+
+  const calcularEstatisticas = () => {
+    const total = analises.length
+    const positivas = analises.filter(a => a.variacao > 0).length
+    const negativas = analises.filter(a => a.variacao < 0).length
+    const mediaVariacao = analises.reduce((acc, a) => acc + a.variacao, 0) / total || 0
+
+    return { total, positivas, negativas, mediaVariacao }
   }
 
-  const getRiskColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high':
-        return 'text-red-600 bg-red-50'
-      case 'medium':
-        return 'text-yellow-600 bg-yellow-50'
-      default:
-        return 'text-green-600 bg-green-50'
-    }
-  }
+  const stats = calcularEstatisticas()
 
   return (
     <DashboardLayout>
@@ -174,168 +151,279 @@ export default function AnaliseTemporalPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="p-3 bg-white/20 rounded-xl mr-4">
-                <TrendingUp className="h-8 w-8 text-white" />
+                <Calendar className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Análise Temporal</h1>
-                <p className="text-blue-100 mt-1">Análises históricas e tendências</p>
+                <p className="text-blue-100 mt-1">Relatórios e análises por período</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => handleOpenModal()}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center font-medium hover:scale-[1.02] transform backdrop-blur-sm"
             >
               <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Nova Análise</span>
+              Nova Análise
             </button>
           </div>
         </div>
 
-        {/* Card da tabela - estilo UXPilot */}
-        <div className="uxpilot-card">
-          <div className="p-6 border-b border-slate-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar análises..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="uxpilot-input pl-10"
-              />
+        {/* Cards de estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Total Análises</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
+              </div>
             </div>
           </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Variação Mensal</p>
-                          <p className={`text-lg font-bold ${
-                            analysis.trendAnalysis.averageMonthlyChange > 0 ? 'text-red-600' : 
-                            analysis.trendAnalysis.averageMonthlyChange < 0 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {analysis.trendAnalysis.averageMonthlyChange > 0 ? '+' : ''}
-                            {formatCurrency(analysis.trendAnalysis.averageMonthlyChange)}
-                          </p>
-                        </div>
-                        <Calendar className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Volatilidade</p>
-                          <p className={`text-lg font-bold ${getRiskColor(analysis.volatilityAnalysis.riskLevel).split(' ')[0]}`}>
-                            {analysis.volatilityAnalysis.riskLevel === 'high' ? 'Alta' :
-                             analysis.volatilityAnalysis.riskLevel === 'medium' ? 'Média' : 'Baixa'}
-                          </p>
-                        </div>
-                        <AlertTriangle className={`h-5 w-5 ${
-                          analysis.volatilityAnalysis.riskLevel === 'high' ? 'text-red-500' :
-                          analysis.volatilityAnalysis.riskLevel === 'medium' ? 'text-yellow-500' : 'text-green-500'
-                        }`} />
-                      </div>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Preço Atual</p>
-                          <p className="text-lg font-bold text-gray-900">
-                            {formatCurrency(analysis.statistics.latestPrice)}
-                          </p>
-                        </div>
-                        <Activity className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">Estatísticas do Período</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Pontos de Preço:</span>
-                          <span className="font-medium">{analysis.statistics.totalPricePoints}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Preço Médio:</span>
-                          <span className="font-medium">{formatCurrency(analysis.statistics.averagePrice)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Menor Preço:</span>
-                          <span className="font-medium">{formatCurrency(analysis.statistics.priceRange.min)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Maior Preço:</span>
-                          <span className="font-medium">{formatCurrency(analysis.statistics.priceRange.max)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Correlação:</span>
-                          <span className="font-medium">{(analysis.trendAnalysis.correlation * 100).toFixed(1)}%</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">Projeções Futuras</h4>
-                      <div className="space-y-2 text-sm">
-                        {analysis.projections.slice(0, 3).map((projection, index) => (
-                          <div key={index} className="flex justify-between">
-                            <span className="text-gray-600">
-                              {new Date(projection.date).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}:
-                            </span>
-                            <span className="font-medium">
-                              {formatCurrency(projection.projectedPrice)}
-                              <span className="text-xs text-gray-500 ml-1">
-                                ({(projection.confidence * 100).toFixed(0)}%)
-                              </span>
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {analysis.groupedData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">Dados Agrupados por Período</h4>
-                      <ModernTable
-                        columns={[
-                          { key: 'period', label: 'Período', sortable: true },
-                          { key: 'averagePrice', label: 'Preço Médio', sortable: true,
-                            render: (value) => formatCurrency(value as number) },
-                          { key: 'minPrice', label: 'Menor Preço', sortable: true,
-                            render: (value) => formatCurrency(value as number) },
-                          { key: 'maxPrice', label: 'Maior Preço', sortable: true,
-                            render: (value) => formatCurrency(value as number) },
-                          { key: 'priceCount', label: 'Registros', sortable: true }
-                        ]}
-                        data={analysis.groupedData}
-                        searchable={false}
-                        pagination={true}
-                        pageSize={10}
-                        loading={false}
-                      />
-                    </div>
-                  )}
-                </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-xl mr-4">
+                <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
-            ))}
+              <div>
+                <p className="text-sm font-medium text-slate-600">Variações Positivas</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.positivas}</p>
+              </div>
+            </div>
           </div>
-        )}
 
-        {!loading && analysisResults.length === 0 && !error && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma análise realizada</h3>
-            <p className="text-gray-500">
-              Configure os filtros acima e clique em &quot;Realizar Análise&quot; para visualizar as tendências de custos.
-            </p>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-red-100 rounded-xl mr-4">
+                <TrendingUp className="h-6 w-6 text-red-600 transform rotate-180" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Variações Negativas</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.negativas}</p>
+              </div>
+            </div>
           </div>
-        )}
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                <Clock className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Média Variação</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {stats.mediaVariacao > 0 ? '+' : ''}{stats.mediaVariacao.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtros */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-slate-500" />
+              <span className="text-sm font-medium text-slate-700">Filtros:</span>
+            </div>
+            
+            <select
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="todos">Todos os tipos</option>
+              <option value="vendas">Vendas</option>
+              <option value="custos">Custos</option>
+              <option value="producao">Produção</option>
+              <option value="estoque">Estoque</option>
+            </select>
+
+            <select
+              value={filtroPeriodo}
+              onChange={(e) => setFiltroPeriodo(e.target.value)}
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="todos">Todos os períodos</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="janeiro">Janeiro</option>
+              <option value="fevereiro">Fevereiro</option>
+              <option value="março">Março</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Tabela de análises */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/60">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-slate-800">Histórico de Análises</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar análises..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
+          <ModernTable
+            columns={[
+              { key: 'periodo', label: 'Período', sortable: true },
+              { key: 'tipo', label: 'Tipo', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    {value as string}
+                  </span>
+                )},
+              { key: 'valor', label: 'Valor', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="font-medium">R$ {(value as number).toFixed(2)}</span>
+                )},
+              { key: 'variacao', label: 'Variação', sortable: true,
+                render: (value: unknown): React.ReactNode => {
+                  const variacao = value as number
+                  return (
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      variacao > 0 ? 'bg-green-100 text-green-800' : 
+                      variacao < 0 ? 'bg-red-100 text-red-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {variacao > 0 ? '+' : ''}{variacao.toFixed(1)}%
+                    </span>
+                  )
+                }},
+              { key: 'status', label: 'Status', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    value === 'concluida' ? 'bg-green-100 text-green-800' : 
+                    value === 'pendente' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {value as string}
+                  </span>
+                )},
+              { key: 'actions', label: 'Ações', align: 'center',
+                render: (_, row): React.ReactNode => (
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(row as unknown as AnaliseItem)}
+                      className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(row.id as string)}
+                      className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+            ]}
+            data={filteredAnalises as unknown as Record<string, unknown>[]}
+            searchable={false}
+            pagination={true}
+            pageSize={10}
+            loading={loading}
+          />
+        </div>
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingAnalise ? 'Editar Análise' : 'Nova Análise'}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Período"
+              value={formData.periodo}
+              onChange={(value) => setFormData({ ...formData, periodo: value })}
+              placeholder="Ex: Janeiro 2024"
+              required
+            />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Tipo de Análise</label>
+              <select
+                value={formData.tipo}
+                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Selecione o tipo</option>
+                <option value="vendas">Vendas</option>
+                <option value="custos">Custos</option>
+                <option value="producao">Produção</option>
+                <option value="estoque">Estoque</option>
+              </select>
+            </div>
+          </div>
+
+          <FloatingLabelInput
+            label="Valor"
+            type="number"
+            step="0.01"
+            value={formData.valor}
+            onChange={(value) => setFormData({ ...formData, valor: value })}
+            placeholder="0.00"
+            required
+          />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Observações</label>
+            <textarea
+              value={formData.observacoes}
+              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Observações sobre a análise..."
+            />
+          </div>
+
+          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <span className="font-medium">Salvando...</span>
+                </>
+              ) : (
+                <span className="font-medium">Salvar</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </DashboardLayout>
   )
 }
