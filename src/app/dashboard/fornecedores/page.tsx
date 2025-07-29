@@ -236,11 +236,11 @@ export default function FornecedoresPage() {
               { key: 'nome', label: 'Nome', sortable: true },
               { key: 'contato', label: 'Contato', sortable: true },
               { key: 'telefone', label: 'Telefone', sortable: true,
-                render: (value) => <span>{value || '-'}</span> },
+                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
               { key: 'email', label: 'Email', sortable: true,
-                render: (value) => <span>{value || '-'}</span> },
+                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
               { key: 'ativo', label: 'Status', sortable: true,
-                render: (value) => (
+                render: (value: unknown): React.ReactNode => (
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
@@ -248,9 +248,9 @@ export default function FornecedoresPage() {
                   </span>
                 )},
               { key: '_count.insumos', label: 'Insumos', sortable: true, align: 'center',
-                render: (_, row) => (row as unknown as Fornecedor)._count.insumos },
+                render: (_, row): React.ReactNode => (row as unknown as Fornecedor)._count.insumos },
               { key: 'actions', label: 'Ações', align: 'center',
-                render: (_, row) => (
+                render: (_, row): React.ReactNode => (
                   <div className="flex items-center justify-center space-x-2">
                     <button
                       onClick={() => handleOpenModal(row as unknown as Fornecedor)}
