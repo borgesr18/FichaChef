@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { Warehouse, Plus, Search, TrendingUp, TrendingDown, AlertTriangle, Package, Edit, Trash2, Download } from 'lucide-react'
+import { Warehouse, Plus, Search, TrendingUp, TrendingDown, Package, Edit, Trash2, Download } from 'lucide-react'
 import { convertFormDataToNumbers, convertFormDataToDates } from '@/lib/form-utils'
 
 interface MovimentacaoInsumo {
