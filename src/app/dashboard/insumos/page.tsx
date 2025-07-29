@@ -295,32 +295,39 @@ export default function InsumosPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center group">
-            <div className="p-2 bg-gradient-to-r from-orange-100 to-orange-200 rounded-xl mr-3 group-hover:shadow-lg transition-all duration-300 group-hover:scale-110">
-              <Package className="h-6 w-6 text-orange-600 transition-transform duration-200 group-hover:rotate-12" />
+        {/* Header com gradiente azul - estilo UXPilot */}
+        <div className="uxpilot-header-gradient">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="p-3 bg-white/20 rounded-xl mr-4">
+                <Package className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Insumos</h1>
+                <p className="text-blue-100 mt-1">Gerencie ingredientes e matérias-primas</p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Insumos</h1>
+            <button 
+              onClick={() => handleOpenModal()}
+              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Novo Insumo</span>
+            </button>
           </div>
-          <button 
-            onClick={() => handleOpenModal()}
-            className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 flex items-center transition-all duration-300 hover:shadow-lg hover:shadow-orange-200/50 hover:scale-[1.02] backdrop-blur-sm border border-orange-400/20"
-          >
-            <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-            <span className="font-medium">Novo Insumo</span>
-          </button>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 hover:shadow-2xl transition-all duration-300">
-          <div className="p-6 border-b border-slate-200/60">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 transition-all duration-200 group-focus-within:text-orange-500 group-focus-within:scale-110" />
+        {/* Card da tabela - estilo UXPilot */}
+        <div className="uxpilot-card">
+          <div className="p-6 border-b border-slate-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
               <input
                 type="text"
                 placeholder="Buscar insumos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 w-full border border-slate-300/60 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
+                className="uxpilot-input pl-10"
               />
             </div>
           </div>

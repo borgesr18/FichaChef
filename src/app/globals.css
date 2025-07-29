@@ -1,8 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #1e293b;
+  
+  /* UXPilot Design Colors */
+  --primary-blue: #3b82f6;
+  --primary-blue-dark: #1e40af;
+  --sidebar-bg: #334155;
+  --card-bg: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --success-green: #10b981;
+  --danger-red: #ef4444;
+  --warning-orange: #f59e0b;
 }
 
 @theme inline {
@@ -14,15 +25,44 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a;
+    --foreground: #f1f5f9;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* UXPilot Design System */
+.uxpilot-card {
+  @apply bg-white rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300;
+}
+
+.uxpilot-button-primary {
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl;
+}
+
+.uxpilot-button-secondary {
+  @apply bg-white text-slate-700 px-6 py-3 rounded-xl font-medium border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md;
+}
+
+.uxpilot-input {
+  @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 bg-white;
+}
+
+.uxpilot-metric-card {
+  @apply bg-white p-6 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300;
+}
+
+.uxpilot-sidebar {
+  @apply bg-slate-800 text-white;
+}
+
+.uxpilot-header-gradient {
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-8 shadow-lg;
 }
 
 /* Mobile-first responsive utilities */
