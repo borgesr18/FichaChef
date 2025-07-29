@@ -242,11 +242,12 @@ export default function EstoquePage() {
     new Date(mov.createdAt).toDateString() === today
   ).length
 
-  return (
+ return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
+
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="p-3 bg-white/20 rounded-xl mr-4">
