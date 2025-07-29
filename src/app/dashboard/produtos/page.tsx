@@ -47,7 +47,6 @@ export default function ProdutosPage() {
   const [error, setError] = useState('')
 
   // Estados para filtros
-  const [selectedCategory, setSelectedCategory] = useState('')
   const [sortOrder, setSortOrder] = useState('recent')
 
   const [formData, setFormData] = useState({
@@ -675,4 +674,3 @@ export default function ProdutosPage() {
     </DashboardLayout>
   )
 }
-
