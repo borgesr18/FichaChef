@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { BarChart3, Package, FileText, Factory, ShoppingCart, AlertTriangle } from 'lucide-react'
+import { BarChart3, Package, FileText, Factory, AlertTriangle } from 'lucide-react'
 
 interface DashboardStats {
   insumos: number
