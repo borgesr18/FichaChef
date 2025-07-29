@@ -169,7 +169,7 @@ export default function AnaliseTemporalPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-                {/* Header com gradiente azul - estilo UXPilot */}
+        {/* Header com gradiente azul - estilo UXPilot */}
         <div className="uxpilot-header-gradient">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
