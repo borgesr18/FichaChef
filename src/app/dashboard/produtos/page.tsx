@@ -4,60 +4,60 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
-import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import ModernTable from '@/components/ui/ModernTable'
-import { ShoppingCart, Plus, Search, Edit, Trash2, X, Package, TrendingUp, DollarSign, Target } from 'lucide-react'
-import { convertFormDataToNumbers } from '@/lib/form-utils'
-
-interface FichaTecnica {
-  id: string
-  nome: string
-  pesoFinalGramas: number
-  ingredientes: {
-    quantidadeGramas: number
-    insumo: {
-      precoUnidade: number
-      pesoLiquidoGramas: number
-    }
-  }[]
-}
-
-interface ProdutoFicha {
-  fichaTecnicaId: string
-  quantidadeGramas: number | string
-}
+import { ShoppingBag, Plus, Search, Edit, Trash2, Package, DollarSign, TrendingUp, Star } from 'lucide-react'
 
 interface Produto {
   id: string
   nome: string
-  precoVenda: number
+  descricao: string
+  categoria: string
+  preco: number
+  custoProducao: number
   margemLucro: number
-  produtoFichas: {
-    quantidadeGramas: number
-    fichaTecnica: FichaTecnica
-  }[]
+  tempoPreparoMinutos: number
+  porcoes: number
+  ativo: boolean
+  avaliacao: number
+  fichaTecnica?: {
+    id: string
+    nome: string
+  }
+  _count: {
+    fichasAssociadas: number
+  }
+  createdAt: string
+}
+
+interface FichaAssociada {
+  fichaTecnicaId: string
+  quantidade: string
 }
 
 export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([])
-  const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnica[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [filtroCategoria, setFiltroCategoria] = useState('todas')
+  const [fichasAssociadas, setFichasAssociadas] = useState<FichaAssociada[]>([])
 
   const [formData, setFormData] = useState({
     nome: '',
-    precoVenda: '',
-    margemLucro: ''
+    descricao: '',
+    categoria: '',
+    preco: '',
+    custoProducao: '',
+    tempoPreparoMinutos: '',
+    porcoes: '',
+    ativo: true,
+    avaliacao: 5
   })
-
-  const [produtoFichas, setProdutoFichas] = useState<ProdutoFicha[]>([])
 
   useEffect(() => {
     fetchProdutos()
-    fetchFichasTecnicas()
   }, [])
 
   const fetchProdutos = async () => {
@@ -72,38 +72,34 @@ export default function ProdutosPage() {
     }
   }
 
-  const fetchFichasTecnicas = async () => {
-    try {
-      const response = await fetch('/api/fichas-tecnicas')
-      if (response.ok) {
-        const data = await response.json()
-        setFichasTecnicas(data)
-      }
-    } catch (error) {
-      console.error('Error fetching fichas técnicas:', error)
-    }
-  }
-
   const handleOpenModal = (produto?: Produto) => {
     if (produto) {
       setEditingProduto(produto)
       setFormData({
         nome: produto.nome,
-        precoVenda: produto.precoVenda.toString(),
-        margemLucro: produto.margemLucro.toString()
+        descricao: produto.descricao,
+        categoria: produto.categoria,
+        preco: produto.preco.toString(),
+        custoProducao: produto.custoProducao.toString(),
+        tempoPreparoMinutos: produto.tempoPreparoMinutos.toString(),
+        porcoes: produto.porcoes.toString(),
+        ativo: produto.ativo,
+        avaliacao: produto.avaliacao
       })
-      setProdutoFichas(produto.produtoFichas.map(f => ({
-        fichaTecnicaId: f.fichaTecnica.id,
-        quantidadeGramas: f.quantidadeGramas
-      })))
     } else {
       setEditingProduto(null)
       setFormData({
         nome: '',
-        precoVenda: '',
-        margemLucro: ''
+        descricao: '',
+        categoria: '',
+        preco: '',
+        custoProducao: '',
+        tempoPreparoMinutos: '',
+        porcoes: '',
+        ativo: true,
+        avaliacao: 5
       })
-      setProdutoFichas([])
+      setFichasAssociadas([])
     }
     setIsModalOpen(true)
     setError('')
@@ -115,41 +111,23 @@ export default function ProdutosPage() {
     setError('')
   }
 
-  const addProdutoFicha = () => {
-    setProdutoFichas([...produtoFichas, { fichaTecnicaId: '', quantidadeGramas: 0 }])
+  const addFichaAssociada = () => {
+    setFichasAssociadas([...fichasAssociadas, { fichaTecnicaId: '', quantidade: '' }])
   }
 
-  const removeProdutoFicha = (index: number) => {
-    setProdutoFichas(produtoFichas.filter((_, i) => i !== index))
+  const removeFichaAssociada = (index: number) => {
+    setFichasAssociadas(fichasAssociadas.filter((_, i) => i !== index))
   }
 
-  const updateProdutoFicha = (index: number, field: keyof ProdutoFicha, value: string | number) => {
-    const updated = [...produtoFichas]
-    updated[index] = { ...updated[index], [field]: value } as ProdutoFicha
-    setProdutoFichas(updated)
-  }
-
-  const calculateProdutoCusto = () => {
-    return produtoFichas.reduce((total, produtoFicha) => {
-      const ficha = fichasTecnicas.find(f => f.id === produtoFicha.fichaTecnicaId)
-      if (ficha && produtoFicha.quantidadeGramas) {
-        const fichaCusto = ficha.ingredientes.reduce((fichaTotal, ing) => {
-          const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-          return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
-        }, 0)
-        const custoPorGramaFicha = fichaCusto / ficha.pesoFinalGramas
-        const quantidade = typeof produtoFicha.quantidadeGramas === 'string' ? parseFloat(produtoFicha.quantidadeGramas) || 0 : produtoFicha.quantidadeGramas
-        return total + (custoPorGramaFicha * quantidade)
-      }
-      return total
-    }, 0)
-  }
-
-  const calculateProdutoPeso = () => {
-    return produtoFichas.reduce((total, produtoFicha) => {
-      const quantidade = typeof produtoFicha.quantidadeGramas === 'string' ? parseFloat(produtoFicha.quantidadeGramas) || 0 : produtoFicha.quantidadeGramas
-      return total + (quantidade || 0)
-    }, 0)
+  const updateFichaAssociada = (index: number, field: string, value: string) => {
+    const updated = [...fichasAssociadas]
+    updated[index] = { 
+      ...updated[index], 
+      [field]: value,
+      fichaTecnicaId: updated[index]?.fichaTecnicaId || '',
+      quantidade: updated[index]?.quantidade || ''
+    }
+    setFichasAssociadas(updated)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,22 +139,17 @@ export default function ProdutosPage() {
       const url = editingProduto ? `/api/produtos/${editingProduto.id}` : '/api/produtos'
       const method = editingProduto ? 'PUT' : 'POST'
 
-      const convertedFormData = convertFormDataToNumbers(formData, ['precoVenda', 'margemLucro'])
-
-      const dataToSend = {
-        ...convertedFormData,
-        fichas: produtoFichas
-          .filter(f => f.fichaTecnicaId && f.quantidadeGramas && (typeof f.quantidadeGramas === 'string' ? parseFloat(f.quantidadeGramas) > 0 : f.quantidadeGramas > 0))
-          .map(f => ({
-            fichaTecnicaId: f.fichaTecnicaId,
-            quantidadeGramas: typeof f.quantidadeGramas === 'string' ? parseFloat(f.quantidadeGramas) || 0 : f.quantidadeGramas
-          }))
-      }
-
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
+        body: JSON.stringify({
+          ...formData,
+          preco: parseFloat(formData.preco),
+          custoProducao: parseFloat(formData.custoProducao),
+          tempoPreparoMinutos: parseInt(formData.tempoPreparoMinutos),
+          porcoes: parseInt(formData.porcoes),
+          fichasAssociadas
+        })
       })
 
       if (response.ok) {
@@ -206,9 +179,36 @@ export default function ProdutosPage() {
     }
   }
 
-  const filteredProdutos = produtos.filter(produto =>
-    produto.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProdutos = produtos.filter(produto => {
+    const matchesSearch = produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         produto.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         produto.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategoria = filtroCategoria === 'todas' || produto.categoria === filtroCategoria
+    
+    return matchesSearch && matchesCategoria
+  })
+
+  const calcularEstatisticas = () => {
+    const total = produtos.length
+    const ativos = produtos.filter(p => p.ativo).length
+    const precoMedio = produtos.reduce((acc, p) => acc + p.preco, 0) / total || 0
+    const margemMedia = produtos.reduce((acc, p) => acc + p.margemLucro, 0) / total || 0
+
+    return { total, ativos, precoMedio, margemMedia }
+  }
+
+  const stats = calcularEstatisticas()
+
+  const categorias = [...new Set(produtos.map(p => p.categoria))].filter(Boolean)
+
+  const renderStars = (avaliacao: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${i < avaliacao ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+      />
+    ))
+  }
 
   return (
     <DashboardLayout>
@@ -218,161 +218,153 @@ export default function ProdutosPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="p-3 bg-white/20 rounded-xl mr-4">
-                <ShoppingCart className="h-8 w-8 text-white" />
+                <ShoppingBag className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Produtos</h1>
-                <p className="text-blue-100 mt-1">Gestão de produtos e composições</p>
+                <p className="text-blue-100 mt-1">Gestão de produtos finais e cardápio</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => handleOpenModal()}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
+              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center font-medium hover:scale-[1.02] transform backdrop-blur-sm"
             >
               <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Novo Produto</span>
+              Novo Produto
             </button>
           </div>
         </div>
 
-        {/* Cards de métricas - estilo UXPilot */}
+        {/* Cards de estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-xl mr-4">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Total de Produtos</p>
-                  <p className="text-2xl font-bold text-slate-800">{produtos.length}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-xl mr-4">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Preço Médio</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    R$ {produtos.length > 0 ? (produtos.reduce((sum, p) => sum + p.precoVenda, 0) / produtos.length).toFixed(2) : '0.00'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-orange-100 rounded-xl mr-4">
-                  <TrendingUp className="h-6 w-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Margem Média</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {produtos.length > 0 ? (produtos.reduce((sum, p) => sum + p.margemLucro, 0) / produtos.length).toFixed(1) : '0.0'}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uxpilot-card">
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-xl mr-4">
-                  <Target className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Com Fichas</p>
-                  <p className="text-2xl font-bold text-slate-800">
-                    {produtos.filter(p => p.produtoFichas.length > 0).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
             <div className="flex items-center">
-              <div className="p-3 bg-white/20 rounded-xl mr-4">
-                <ShoppingCart className="h-8 w-8 text-white" />
+              <div className="p-3 bg-blue-100 rounded-xl mr-4">
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Produtos</h1>
-                <p className="text-blue-100 mt-1">Gerencie produtos finais e composições</p>
+                <p className="text-sm font-medium text-slate-600">Total Produtos</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
               </div>
             </div>
-            <button 
-              onClick={() => handleOpenModal()}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 flex items-center transition-all duration-300 border border-white/20"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              <span className="font-medium">Novo Produto</span>
-            </button>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-xl mr-4">
+                <ShoppingBag className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Produtos Ativos</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.ativos}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-xl mr-4">
+                <DollarSign className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Preço Médio</p>
+                <p className="text-2xl font-bold text-slate-800">R$ {stats.precoMedio.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-xl mr-4">
+                <TrendingUp className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600">Margem Média</p>
+                <p className="text-2xl font-bold text-slate-800">{stats.margemMedia.toFixed(1)}%</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Card da tabela - estilo UXPilot */}
-        <div className="uxpilot-card">
-          <div className="p-6 border-b border-slate-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="uxpilot-input pl-10"
-              />
+        {/* Filtros */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
+          <div className="flex flex-wrap gap-4 items-center">
+            <span className="text-sm font-medium text-slate-700">Filtrar por categoria:</span>
+            <select
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="todas">Todas as categorias</option>
+              {categorias.map(categoria => (
+                <option key={categoria} value={categoria}>{categoria}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Tabela de produtos */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/60">
+          <div className="p-6 border-b border-slate-200/60">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-slate-800">Lista de Produtos</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar produtos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
 
           <ModernTable
             columns={[
               { key: 'nome', label: 'Nome', sortable: true },
-              { key: 'fichasTecnicas', label: 'Fichas Técnicas', sortable: false,
-                render: (_, row) => {
-                  const produto = row as unknown as Produto
-                  return (
-                    <div className="text-sm text-slate-700">
-                      {produto.produtoFichas.map((f: { fichaTecnica: { nome: string }; quantidadeGramas: number }, index: number) => (
-                        <div key={index} className="mb-1 p-1 rounded bg-slate-50">
-                          {f.fichaTecnica.nome} ({f.quantidadeGramas}g)
-                        </div>
-                      ))}
-                    </div>
-                  )
-                }},
-              { key: 'pesoTotal', label: 'Peso Total', sortable: true, align: 'right',
-                render: (_, row) => {
-                  const produto = row as unknown as Produto
-                  const pesoTotal = produto.produtoFichas.reduce((total: number, f: { quantidadeGramas: number }) => total + f.quantidadeGramas, 0)
-                  return `${pesoTotal}g`
-                }},
-              { key: 'custoProducao', label: 'Custo Produção', sortable: true, align: 'right',
-                render: (_, row) => {
-                  const produto = row as unknown as Produto
-                  const custoTotal = produto.produtoFichas.reduce((total: number, produtoFicha: { fichaTecnica: { ingredientes: Array<{ insumo: { precoUnidade: number; pesoLiquidoGramas: number }; quantidadeGramas: number }>; pesoFinalGramas: number }; quantidadeGramas: number }) => {
-                    const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal: number, ing: { insumo: { precoUnidade: number; pesoLiquidoGramas: number }; quantidadeGramas: number }) => {
-                      const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-                      return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
-                    }, 0)
-                    const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
-                    return total + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
-                  }, 0)
-                  return <span className="font-semibold text-green-600">R$ {custoTotal.toFixed(2)}</span>
-                }},
-              { key: 'margemLucro', label: 'Margem Lucro', sortable: true, align: 'right',
-                render: (value) => `${value}%` },
-              { key: 'precoVenda', label: 'Preço Venda', sortable: true, align: 'right',
-                render: (value) => <span className="font-semibold text-blue-600">R$ {Number(value).toFixed(2)}</span> },
+              { key: 'categoria', label: 'Categoria', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    {value as string}
+                  </span>
+                )},
+              { key: 'preco', label: 'Preço', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="font-medium text-green-600">R$ {(value as number).toFixed(2)}</span>
+                )},
+              { key: 'custoProducao', label: 'Custo', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="font-medium text-red-600">R$ {(value as number).toFixed(2)}</span>
+                )},
+              { key: 'margemLucro', label: 'Margem', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className={`font-medium ${(value as number) > 30 ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {(value as number).toFixed(1)}%
+                  </span>
+                )},
+              { key: 'tempoPreparoMinutos', label: 'Tempo', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className="text-sm text-slate-600">{value as number} min</span>
+                )},
+              { key: 'porcoes', label: 'Porções', sortable: true, align: 'center' },
+              { key: 'avaliacao', label: 'Avaliação', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <div className="flex items-center space-x-1">
+                    {renderStars(value as number)}
+                  </div>
+                )},
+              { key: 'ativo', label: 'Status', sortable: true,
+                render: (value: unknown): React.ReactNode => (
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {value ? 'Ativo' : 'Inativo'}
+                  </span>
+                )},
               { key: 'actions', label: 'Ações', align: 'center',
-                render: (_, row) => (
+                render: (_, row): React.ReactNode => (
                   <div className="flex items-center justify-center space-x-2">
                     <button
                       onClick={() => handleOpenModal(row as unknown as Produto)}
@@ -398,143 +390,205 @@ export default function ProdutosPage() {
             loading={loading}
           />
         </div>
+      </div>
 
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          title={editingProduto ? 'Editar Produto' : 'Novo Produto'}
-          size="xl"
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingProduto ? 'Editar Produto' : 'Novo Produto'}
+        size="xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FloatingLabelInput
-                label="Nome do Produto"
-                value={formData.nome}
-                onChange={(value) => setFormData({ ...formData, nome: value })}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Nome do Produto"
+              value={formData.nome}
+              onChange={(value) => setFormData({ ...formData, nome: value })}
+              required
+            />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Categoria</label>
+              <select
+                value={formData.categoria}
+                onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
-                error={error && !formData.nome ? 'Nome é obrigatório' : ''}
-              />
+              >
+                <option value="">Selecione a categoria</option>
+                <option value="Pratos Principais">Pratos Principais</option>
+                <option value="Entradas">Entradas</option>
+                <option value="Sobremesas">Sobremesas</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Lanches">Lanches</option>
+                <option value="Saladas">Saladas</option>
+                <option value="Massas">Massas</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Peixes">Peixes</option>
+                <option value="Vegetariano">Vegetariano</option>
+              </select>
+            </div>
+          </div>
 
-              <FloatingLabelInput
-                label="Preço de Venda (R$)"
-                type="number"
-                step="0.01"
-                value={formData.precoVenda}
-                onChange={(value) => setFormData({ ...formData, precoVenda: value })}
-                required
-                error={error && !formData.precoVenda ? 'Preço é obrigatório' : ''}
-              />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Descrição</label>
+            <textarea
+              value={formData.descricao}
+              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Descrição detalhada do produto..."
+              required
+            />
+          </div>
 
-              <FloatingLabelInput
-                label="Margem de Lucro (%)"
-                type="number"
-                step="0.01"
-                value={formData.margemLucro}
-                onChange={(value) => setFormData({ ...formData, margemLucro: value })}
-                required
-                error={error && !formData.margemLucro ? 'Margem é obrigatória' : ''}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Preço de Venda"
+              type="number"
+              step="0.01"
+              value={formData.preco}
+              onChange={(value) => setFormData({ ...formData, preco: value })}
+              placeholder="0.00"
+              required
+            />
+
+            <FloatingLabelInput
+              label="Custo de Produção"
+              type="number"
+              step="0.01"
+              value={formData.custoProducao}
+              onChange={(value) => setFormData({ ...formData, custoProducao: value })}
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FloatingLabelInput
+              label="Tempo de Preparo (minutos)"
+              type="number"
+              value={formData.tempoPreparoMinutos}
+              onChange={(value) => setFormData({ ...formData, tempoPreparoMinutos: value })}
+              required
+            />
+
+            <FloatingLabelInput
+              label="Número de Porções"
+              type="number"
+              value={formData.porcoes}
+              onChange={(value) => setFormData({ ...formData, porcoes: value })}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Avaliação</label>
+              <select
+                value={formData.avaliacao}
+                onChange={(e) => setFormData({ ...formData, avaliacao: parseInt(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value={5}>⭐⭐⭐⭐⭐ (5 estrelas)</option>
+                <option value={4}>⭐⭐⭐⭐ (4 estrelas)</option>
+                <option value={3}>⭐⭐⭐ (3 estrelas)</option>
+                <option value={2}>⭐⭐ (2 estrelas)</option>
+                <option value={1}>⭐ (1 estrela)</option>
+              </select>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Fichas Técnicas</h3>
-                <button
-                  type="button"
-                  onClick={addProdutoFicha}
-                  className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 text-sm flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Adicionar Ficha
-                </button>
-              </div>
-
-              {produtoFichas.map((produtoFicha, index) => (
-                <div key={index} className="flex items-center space-x-3 mb-3 p-4 border border-slate-200 rounded-xl bg-slate-50/50">
-                  <div className="flex-1">
-                    <FloatingLabelSelect
-                      label="Ficha Técnica"
-                      value={produtoFicha.fichaTecnicaId}
-                      onChange={(value) => updateProdutoFicha(index, 'fichaTecnicaId', value)}
-                      options={fichasTecnicas.map(ficha => ({ 
-                        value: ficha.id, 
-                        label: `${ficha.nome} (${ficha.pesoFinalGramas}g)` 
-                      }))}
-                      required
-                    />
-                  </div>
-                  <div className="w-32">
-                    <FloatingLabelInput
-                      label="Quantidade (g)"
-                      type="number"
-                      step="0.01"
-                      value={produtoFicha.quantidadeGramas.toString()}
-                      onChange={(value) => updateProdutoFicha(index, 'quantidadeGramas', parseFloat(value) || 0)}
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeProdutoFicha(index)}
-                    className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-
-              {produtoFichas.length === 0 && (
-                <p className="text-gray-500 text-sm">
-                  Nenhuma ficha técnica adicionada. Clique em &quot;Adicionar Ficha&quot; para começar.
-                </p>
-              )}
+            <div className="flex items-center pt-8">
+              <input
+                type="checkbox"
+                id="ativo"
+                checked={formData.ativo}
+                onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="ativo" className="ml-2 block text-sm text-gray-900">
+                Produto ativo no cardápio
+              </label>
             </div>
+          </div>
 
-            {produtoFichas.length > 0 && (
-              <div className="bg-gray-50 p-4 rounded-md">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium">Peso Total:</span> {calculateProdutoPeso()}g
-                  </div>
-                  <div>
-                    <span className="font-medium">Custo Total:</span> R$ {calculateProdutoCusto().toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
+          {/* Fichas Técnicas Associadas */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Fichas Técnicas Associadas</h3>
               <button
                 type="button"
-                onClick={handleCloseModal}
-                className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
+                onClick={addFichaAssociada}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
               >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>Salvando...</span>
-                  </>
-                ) : (
-                  <span className="font-medium">{editingProduto ? 'Atualizar' : 'Criar Produto'}</span>
-                )}
+                Adicionar Ficha
               </button>
             </div>
-          </form>
-        </Modal>
-      </div>
+
+            {fichasAssociadas.map((ficha, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Ficha Técnica</label>
+                  <select
+                    value={ficha.fichaTecnicaId}
+                    onChange={(e) => updateFichaAssociada(index, 'fichaTecnicaId', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Selecione uma ficha</option>
+                    {/* Aqui você carregaria as fichas técnicas disponíveis */}
+                  </select>
+                </div>
+
+                <FloatingLabelInput
+                  label="Quantidade"
+                  value={ficha.quantidade}
+                  onChange={(value) => updateFichaAssociada(index, 'quantidade', value)}
+                />
+
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeFichaAssociada(index)}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    Remover
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
+            <button
+              type="button"
+              onClick={handleCloseModal}
+              className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <span className="font-medium">Salvando...</span>
+                </>
+              ) : (
+                <span className="font-medium">Salvar</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </DashboardLayout>
   )
 }
