@@ -183,7 +183,12 @@ export default function ProdutosPage() {
 
   const updateFichaAssociada = (index: number, field: string, value: string) => {
     const updated = [...fichasAssociadas]
-    updated[index] = { ...updated[index], [field]: value }
+    updated[index] = { 
+      ...updated[index], 
+      [field]: value,
+      fichaTecnicaId: updated[index]?.fichaTecnicaId || '',
+      quantidade: updated[index]?.quantidade || ''
+    }
     setFichasAssociadas(updated)
   }
 
@@ -490,4 +495,3 @@ export default function ProdutosPage() {
     </DashboardLayout>
   )
 }
-
