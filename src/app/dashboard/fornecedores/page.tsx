@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import ModernTable from '@/components/ui/ModernTable'
-import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, Phone } from 'lucide-react'
+import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin } from 'lucide-react'
 
 interface Fornecedor {
   id: string
@@ -372,4 +372,5 @@ export default function FornecedoresPage() {
     </DashboardLayout>
   )
 }
+
 
