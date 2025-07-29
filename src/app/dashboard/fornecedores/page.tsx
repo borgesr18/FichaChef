@@ -4,49 +4,53 @@ import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
-import ModernTable from '@/components/ui/ModernTable'
-import { Truck, Plus, Search, Edit, Trash2, Users, Package, MapPin, Star } from 'lucide-react'
+import { Truck, Plus, Search, Edit, Trash2, Package, Users, MapPin, Building, TrendingUp, TrendingDown, Download, Crown } from 'lucide-react'
 
 interface Fornecedor {
   id: string
   nome: string
-  contato: string
-  telefone: string
-  email: string
-  endereco: string
-  cidade: string
-  estado: string
-  cep: string
-  cnpj: string
+  razaoSocial?: string
+  cnpj?: string
+  telefone?: string
+  email?: string
+  endereco?: string
+  cidade?: string
+  estado?: string
+  cep?: string
+  contato?: string
+  observacoes?: string
   ativo: boolean
-  avaliacao: number
   _count: {
     insumos: number
+    precos: number
   }
-  createdAt: string
 }
 
 export default function FornecedoresPage() {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [filtroStatus, setFiltroStatus] = useState('todos')
+
+  // Estados para filtros
+  const [selectedStatus, setSelectedStatus] = useState('')
+  const [sortOrder, setSortOrder] = useState('recent')
 
   const [formData, setFormData] = useState({
     nome: '',
-    contato: '',
+    razaoSocial: '',
+    cnpj: '',
     telefone: '',
     email: '',
     endereco: '',
     cidade: '',
     estado: '',
     cep: '',
-    cnpj: '',
-    ativo: true,
-    avaliacao: 5
+    contato: '',
+    observacoes: '',
+    ativo: true
   })
 
   useEffect(() => {
@@ -66,35 +70,36 @@ export default function FornecedoresPage() {
   }
 
   const handleOpenModal = (fornecedor?: Fornecedor) => {
+    setEditingFornecedor(fornecedor || null)
     if (fornecedor) {
-      setEditingFornecedor(fornecedor)
       setFormData({
-        nome: fornecedor.nome,
-        contato: fornecedor.contato,
-        telefone: fornecedor.telefone,
-        email: fornecedor.email,
-        endereco: fornecedor.endereco,
-        cidade: fornecedor.cidade,
-        estado: fornecedor.estado,
-        cep: fornecedor.cep,
-        cnpj: fornecedor.cnpj,
-        ativo: fornecedor.ativo,
-        avaliacao: fornecedor.avaliacao
+        nome: fornecedor.nome || '',
+        razaoSocial: fornecedor.razaoSocial || '',
+        cnpj: fornecedor.cnpj || '',
+        telefone: fornecedor.telefone || '',
+        email: fornecedor.email || '',
+        endereco: fornecedor.endereco || '',
+        cidade: fornecedor.cidade || '',
+        estado: fornecedor.estado || '',
+        cep: fornecedor.cep || '',
+        contato: fornecedor.contato || '',
+        observacoes: fornecedor.observacoes || '',
+        ativo: fornecedor.ativo ?? true
       })
     } else {
-      setEditingFornecedor(null)
       setFormData({
         nome: '',
-        contato: '',
+        razaoSocial: '',
+        cnpj: '',
         telefone: '',
         email: '',
         endereco: '',
         cidade: '',
         estado: '',
         cep: '',
-        cnpj: '',
-        ativo: true,
-        avaliacao: 5
+        contato: '',
+        observacoes: '',
+        ativo: true
       })
     }
     setIsModalOpen(true)
@@ -149,370 +154,486 @@ export default function FornecedoresPage() {
     }
   }
 
+  // Funções auxiliares para o design
+  const getFornecedorIcon = (nome: string) => {
+    const nomeLower = nome.toLowerCase()
+    if (nomeLower.includes('distribuid') || nomeLower.includes('atacad')) return '🏪'
+    if (nomeLower.includes('fazenda') || nomeLower.includes('rural')) return '🚜'
+    if (nomeLower.includes('frigorif') || nomeLower.includes('carne')) return '🥩'
+    if (nomeLower.includes('laticin') || nomeLower.includes('leite')) return '🥛'
+    if (nomeLower.includes('hortifrut') || nomeLower.includes('verdur')) return '🥬'
+    if (nomeLower.includes('padari') || nomeLower.includes('panific')) return '🍞'
+    if (nomeLower.includes('pescad') || nomeLower.includes('peixe')) return '🐟'
+    if (nomeLower.includes('tempero') || nomeLower.includes('condiment')) return '🧂'
+    if (nomeLower.includes('bebida') || nomeLower.includes('refriger')) return '🥤'
+    if (nomeLower.includes('embalag') || nomeLower.includes('descart')) return '📦'
+    return '🏢'
+  }
+
+  const getFornecedorGradient = (nome: string) => {
+    const nomeLower = nome.toLowerCase()
+    if (nomeLower.includes('distribuid') || nomeLower.includes('atacad')) return 'from-blue-400 to-blue-600'
+    if (nomeLower.includes('fazenda') || nomeLower.includes('rural')) return 'from-green-400 to-green-600'
+    if (nomeLower.includes('frigorif') || nomeLower.includes('carne')) return 'from-red-400 to-red-600'
+    if (nomeLower.includes('laticin') || nomeLower.includes('leite')) return 'from-yellow-400 to-yellow-600'
+    if (nomeLower.includes('hortifrut') || nomeLower.includes('verdur')) return 'from-emerald-400 to-emerald-600'
+    if (nomeLower.includes('padari') || nomeLower.includes('panific')) return 'from-amber-400 to-amber-600'
+    if (nomeLower.includes('pescad') || nomeLower.includes('peixe')) return 'from-cyan-400 to-cyan-600'
+    if (nomeLower.includes('tempero') || nomeLower.includes('condiment')) return 'from-orange-400 to-orange-600'
+    if (nomeLower.includes('bebida') || nomeLower.includes('refriger')) return 'from-indigo-400 to-indigo-600'
+    if (nomeLower.includes('embalag') || nomeLower.includes('descart')) return 'from-gray-400 to-gray-600'
+    return 'from-purple-400 to-purple-600'
+  }
+
+  // Filtros e ordenação
   const filteredFornecedores = fornecedores.filter(fornecedor => {
     const matchesSearch = fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         fornecedor.contato.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         fornecedor.cidade.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filtroStatus === 'todos' || 
-                         (filtroStatus === 'ativo' && fornecedor.ativo) ||
-                         (filtroStatus === 'inativo' && !fornecedor.ativo)
+      fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fornecedor.cidade?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesStatus = selectedStatus === '' || 
+      (selectedStatus === 'ativo' && fornecedor.ativo) ||
+      (selectedStatus === 'inativo' && !fornecedor.ativo)
     
     return matchesSearch && matchesStatus
   })
 
-  const calcularEstatisticas = () => {
-    const total = fornecedores.length
-    const ativos = fornecedores.filter(f => f.ativo).length
-    const inativos = fornecedores.filter(f => !f.ativo).length
-    const totalInsumos = fornecedores.reduce((acc, f) => acc + f._count.insumos, 0)
-    const avaliacaoMedia = fornecedores.reduce((acc, f) => acc + f.avaliacao, 0) / total || 0
+  const sortedFornecedores = [...filteredFornecedores].sort((a, b) => {
+    switch (sortOrder) {
+      case 'name':
+        return a.nome.localeCompare(b.nome)
+      case 'insumos':
+        return b._count.insumos - a._count.insumos
+      case 'cidade':
+        return (a.cidade || '').localeCompare(b.cidade || '')
+      default:
+        return 0
+    }
+  })
 
-    return { total, ativos, inativos, totalInsumos, avaliacaoMedia }
+  // Estatísticas
+  const getStats = () => {
+    const totalFornecedores = fornecedores.length
+    const fornecedoresAtivos = fornecedores.filter(f => f.ativo).length
+    const totalInsumos = fornecedores.reduce((sum, f) => sum + f._count.insumos, 0)
+    const totalPrecos = fornecedores.reduce((sum, f) => sum + f._count.precos, 0)
+
+    return { totalFornecedores, fornecedoresAtivos, totalInsumos, totalPrecos }
   }
 
-  const stats = calcularEstatisticas()
+  const stats = getStats()
 
-  const renderStars = (avaliacao: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-4 w-4 ${i < avaliacao ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-      />
-    ))
+  if (loading && fornecedores.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B2E4B]"></div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header com gradiente azul - estilo UXPilot */}
-        <div className="uxpilot-header-gradient">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="p-3 bg-white/20 rounded-xl mr-4">
-                <Truck className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Fornecedores</h1>
-                <p className="text-blue-100 mt-1">Gestão de fornecedores e parcerias comerciais</p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
+                Fornecedores
+              </h1>
+              <p className="text-gray-600 text-lg">Gestão de fornecedores e parcerias</p>
             </div>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition-all duration-200 flex items-center font-medium hover:scale-[1.02] transform backdrop-blur-sm"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Novo Fornecedor
-            </button>
-          </div>
-        </div>
-
-        {/* Cards de estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-xl mr-4">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Fornecedores</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-xl mr-4">
-                <Users className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Fornecedores Ativos</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.ativos}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-orange-100 rounded-xl mr-4">
-                <Package className="h-6 w-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Total Insumos</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.totalInsumos}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-            <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-xl mr-4">
-                <Star className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Avaliação Média</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.avaliacaoMedia.toFixed(1)}</p>
-              </div>
+            
+            <div className="flex items-center space-x-3">
+              <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </button>
+              <button
+                onClick={() => handleOpenModal()}
+                className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Fornecedor
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200/60">
-          <div className="flex flex-wrap gap-4 items-center">
-            <span className="text-sm font-medium text-slate-700">Filtrar por status:</span>
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="todos">Todos</option>
-              <option value="ativo">Ativos</option>
-              <option value="inativo">Inativos</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Tabela de fornecedores */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/60">
-          <div className="p-6 border-b border-slate-200/60">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-slate-800">Lista de Fornecedores</h2>
+        {/* Filters */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Buscar Fornecedor</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="Buscar fornecedores..."
+                  placeholder="Nome, razão social ou cidade..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                 />
               </div>
             </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="">Todos os status</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Ordenar</label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="name">Nome A-Z</option>
+                <option value="insumos">Mais insumos</option>
+                <option value="cidade">Cidade A-Z</option>
+              </select>
+            </div>
           </div>
+        </div>
 
-          <ModernTable
-            columns={[
-              { key: 'nome', label: 'Nome', sortable: true },
-              { key: 'contato', label: 'Contato', sortable: true },
-              { key: 'telefone', label: 'Telefone', sortable: true,
-                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
-              { key: 'email', label: 'Email', sortable: true,
-                render: (value: unknown): React.ReactNode => <span>{(value as string) || '-'}</span> },
-              { key: 'cidade', label: 'Cidade', sortable: true,
-                render: (value: unknown, row: Record<string, unknown>): React.ReactNode => {
-                  const fornecedor = row as unknown as Fornecedor
-                  return (
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-slate-400 mr-1" />
-                      <span className="text-sm">{value as string}, {fornecedor.estado}</span>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Fornecedores</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalFornecedores}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +8% este mês
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Users className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Fornecedores Ativos</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.fornecedoresAtivos}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <Crown className="h-3 w-3 mr-1" />
+                  {((stats.fornecedoresAtivos / stats.totalFornecedores) * 100).toFixed(0)}% ativos
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Truck className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Insumos</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
+                <p className="text-xs text-blue-600 flex items-center">
+                  <Package className="h-3 w-3 mr-1" />
+                  Produtos fornecidos
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Package className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Preços Cadastrados</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalPrecos}</p>
+                <p className="text-xs text-purple-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Cotações ativas
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <MapPin className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fornecedores Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          {sortedFornecedores.map((fornecedor) => (
+            <div key={fornecedor.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              <div className={`h-2 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)}`}></div>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-14 h-14 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)} rounded-2xl flex items-center justify-center shadow-lg`}>
+                      <span className="text-white text-xl">{getFornecedorIcon(fornecedor.nome)}</span>
                     </div>
-                  )
-                }},
-              { key: 'avaliacao', label: 'Avaliação', sortable: true,
-                render: (value: unknown): React.ReactNode => (
-                  <div className="flex items-center space-x-1">
-                    {renderStars(value as number)}
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">{fornecedor.nome}</h3>
+                      {fornecedor.razaoSocial && (
+                        <p className="text-sm text-gray-500">{fornecedor.razaoSocial}</p>
+                      )}
+                      <div className="flex items-center mt-1">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          fornecedor.ativo 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )},
-              { key: '_count.insumos', label: 'Insumos', sortable: true, align: 'center',
-                render: (_, row): React.ReactNode => {
-                  const fornecedor = row as unknown as Fornecedor
-                  return (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                      {fornecedor._count.insumos}
-                    </span>
-                  )
-                }},
-              { key: 'ativo', label: 'Status', sortable: true,
-                render: (value: unknown): React.ReactNode => (
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {value ? 'Ativo' : 'Inativo'}
-                  </span>
-                )},
-              { key: 'actions', label: 'Ações', align: 'center',
-                render: (_, row): React.ReactNode => (
-                  <div className="flex items-center justify-center space-x-2">
+                  <div className="flex space-x-2">
                     <button
-                      onClick={() => handleOpenModal(row as unknown as Fornecedor)}
-                      className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                      title="Editar"
+                      onClick={() => handleOpenModal(fornecedor)}
+                      className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-white/50 rounded-lg transition-all"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(row.id as string)}
-                      className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg"
-                      title="Excluir"
+                      onClick={() => handleDelete(fornecedor.id)}
+                      className="p-2 text-gray-400 hover:text-[#E74C3C] hover:bg-white/50 rounded-lg transition-all"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+                
+                {/* Informações de Contato */}
+                <div className="space-y-3 mb-6">
+                  {fornecedor.telefone && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-blue-600">📞</span>
+                      </div>
+                      <span>{fornecedor.telefone}</span>
+                    </div>
+                  )}
+                  {fornecedor.email && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                        <span className="text-green-600">📧</span>
+                      </div>
+                      <span>{fornecedor.email}</span>
+                    </div>
+                  )}
+                  {(fornecedor.cidade || fornecedor.estado) && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <MapPin className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <span>{fornecedor.cidade}{fornecedor.cidade && fornecedor.estado ? ', ' : ''}{fornecedor.estado}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Estatísticas do Fornecedor */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white/50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-1">Insumos</p>
+                    <p className="font-semibold text-gray-900 flex items-center">
+                      <Package className="h-4 w-4 mr-1 text-blue-600" />
+                      {fornecedor._count.insumos}
+                    </p>
+                  </div>
+                  <div className="bg-white/50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-1">Preços</p>
+                    <p className="font-semibold text-gray-900 flex items-center">
+                      <span className="text-green-600 mr-1">💰</span>
+                      {fornecedor._count.precos}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Informações Adicionais */}
+                {(fornecedor.cnpj || fornecedor.contato) && (
+                  <div className="bg-white/50 rounded-xl p-4 space-y-2">
+                    {fornecedor.cnpj && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">CNPJ:</span>
+                        <span className="font-medium text-gray-900">{fornecedor.cnpj}</span>
+                      </div>
+                    )}
+                    {fornecedor.contato && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Contato:</span>
+                        <span className="font-medium text-gray-900">{fornecedor.contato}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
-            ]}
-            data={filteredFornecedores as unknown as Record<string, unknown>[]}
-            searchable={false}
-            pagination={true}
-            pageSize={10}
-            loading={loading}
-          />
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title={editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}
-        size="xl"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
+        {sortedFornecedores.length === 0 && (
+          <div className="text-center py-12">
+            <Truck className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum fornecedor encontrado</h3>
+            <p className="text-gray-500 mb-6">Cadastre seu primeiro fornecedor para começar</p>
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2 inline" />
+              Cadastrar Primeiro Fornecedor
+            </button>
+          </div>
+        )}
+
+        {/* Modal de Criação/Edição */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          title={editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}
+          size="xl"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FloatingLabelInput
+                label="Nome"
+                value={formData.nome}
+                onChange={(value) => setFormData({ ...formData, nome: value })}
+                required
+                error={error && !formData.nome ? 'Nome é obrigatório' : ''}
+              />
+
+              <FloatingLabelInput
+                label="Razão Social"
+                value={formData.razaoSocial}
+                onChange={(value) => setFormData({ ...formData, razaoSocial: value })}
+              />
+
+              <FloatingLabelInput
+                label="CNPJ"
+                value={formData.cnpj}
+                onChange={(value) => setFormData({ ...formData, cnpj: value })}
+              />
+
+              <FloatingLabelInput
+                label="Telefone"
+                value={formData.telefone}
+                onChange={(value) => setFormData({ ...formData, telefone: value })}
+              />
+
+              <FloatingLabelInput
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(value) => setFormData({ ...formData, email: value })}
+              />
+
+              <FloatingLabelInput
+                label="Contato"
+                value={formData.contato}
+                onChange={(value) => setFormData({ ...formData, contato: value })}
+              />
             </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FloatingLabelInput
-              label="Nome da Empresa"
-              value={formData.nome}
-              onChange={(value) => setFormData({ ...formData, nome: value })}
-              required
-            />
 
             <FloatingLabelInput
-              label="Pessoa de Contato"
-              value={formData.contato}
-              onChange={(value) => setFormData({ ...formData, contato: value })}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FloatingLabelInput
-              label="Telefone"
-              value={formData.telefone}
-              onChange={(value) => setFormData({ ...formData, telefone: value })}
-              placeholder="(11) 99999-9999"
+              label="Endereço"
+              value={formData.endereco}
+              onChange={(value) => setFormData({ ...formData, endereco: value })}
             />
 
-            <FloatingLabelInput
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(value) => setFormData({ ...formData, email: value })}
-              placeholder="contato@empresa.com"
-            />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FloatingLabelInput
+                label="Cidade"
+                value={formData.cidade}
+                onChange={(value) => setFormData({ ...formData, cidade: value })}
+              />
 
-          <FloatingLabelInput
-            label="CNPJ"
-            value={formData.cnpj}
-            onChange={(value) => setFormData({ ...formData, cnpj: value })}
-            placeholder="00.000.000/0000-00"
-          />
-
-          <FloatingLabelInput
-            label="Endereço"
-            value={formData.endereco}
-            onChange={(value) => setFormData({ ...formData, endereco: value })}
-            placeholder="Rua, número, bairro"
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FloatingLabelInput
-              label="Cidade"
-              value={formData.cidade}
-              onChange={(value) => setFormData({ ...formData, cidade: value })}
-            />
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Estado</label>
-              <select
+              <FloatingLabelInput
+                label="Estado"
                 value={formData.estado}
-                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Selecione</option>
-                <option value="SP">São Paulo</option>
-                <option value="RJ">Rio de Janeiro</option>
-                <option value="MG">Minas Gerais</option>
-                <option value="RS">Rio Grande do Sul</option>
-                <option value="PR">Paraná</option>
-                <option value="SC">Santa Catarina</option>
-                <option value="BA">Bahia</option>
-                <option value="GO">Goiás</option>
-                <option value="PE">Pernambuco</option>
-                <option value="CE">Ceará</option>
-              </select>
+                onChange={(value) => setFormData({ ...formData, estado: value })}
+              />
+
+              <FloatingLabelInput
+                label="CEP"
+                value={formData.cep}
+                onChange={(value) => setFormData({ ...formData, cep: value })}
+              />
             </div>
 
-            <FloatingLabelInput
-              label="CEP"
-              value={formData.cep}
-              onChange={(value) => setFormData({ ...formData, cep: value })}
-              placeholder="00000-000"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Avaliação</label>
-              <select
-                value={formData.avaliacao}
-                onChange={(e) => setFormData({ ...formData, avaliacao: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value={5}>⭐⭐⭐⭐⭐ (5 estrelas)</option>
-                <option value={4}>⭐⭐⭐⭐ (4 estrelas)</option>
-                <option value={3}>⭐⭐⭐ (3 estrelas)</option>
-                <option value={2}>⭐⭐ (2 estrelas)</option>
-                <option value={1}>⭐ (1 estrela)</option>
-              </select>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Observações
+              </label>
+              <textarea
+                value={formData.observacoes}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                placeholder="Informações adicionais sobre o fornecedor..."
+              />
             </div>
 
-            <div className="flex items-center pt-8">
+            <div className="flex items-center">
               <input
                 type="checkbox"
                 id="ativo"
                 checked={formData.ativo}
                 onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="rounded border-gray-300 text-[#1B2E4B] shadow-sm focus:border-[#5AC8FA] focus:ring focus:ring-[#5AC8FA] focus:ring-opacity-50"
               />
-              <label htmlFor="ativo" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="ativo" className="ml-3 text-sm text-gray-700">
                 Fornecedor ativo
               </label>
             </div>
-          </div>
 
-          <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200/60">
-            <button
-              type="button"
-              onClick={handleCloseModal}
-              className="px-6 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 font-medium hover:scale-[1.02] transform"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium hover:scale-[1.02] transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  <span className="font-medium">Salvando...</span>
-                </>
-              ) : (
-                <span className="font-medium">Salvar</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </Modal>
+            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="px-6 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-xl hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <span className="font-medium">{editingFornecedor ? 'Atualizar' : 'Criar'} Fornecedor</span>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </div>
     </DashboardLayout>
   )
 }
-
