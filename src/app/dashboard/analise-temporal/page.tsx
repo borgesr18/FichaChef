@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity, Search, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown, BarChart3, Calendar, AlertTriangle, Target, Activity, Search } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface Insumo {
@@ -73,6 +73,7 @@ const FloatingLabelInput = ({ label, value, onChange, type = "text", required = 
 }) => {
   const [focused, setFocused] = useState(false)
   const hasValue = value.length > 0
+  const isDateInput = type === "date"
   
   return (
     <div className={`relative ${className}`}>
@@ -86,7 +87,7 @@ const FloatingLabelInput = ({ label, value, onChange, type = "text", required = 
         className="peer w-full px-4 py-3 border border-gray-200 rounded-lg bg-white/50 backdrop-blur-sm focus:border-[#5AC8FA] focus:ring-2 focus:ring-[#5AC8FA]/20 focus:outline-none transition-all duration-200"
       />
       <label className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-        focused || hasValue 
+        focused || hasValue || isDateInput
           ? 'top-1 text-xs text-[#5AC8FA] font-medium' 
           : 'top-3 text-gray-500'
       }`}>
