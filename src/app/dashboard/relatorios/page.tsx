@@ -229,8 +229,9 @@ export default function RelatoriosPage() {
                       }
                     </p>
                   </div>
-                  <div className={`bg-gradient-to-br ${color.bg} p-3 rounded-xl`}>
-                    <IconComponent className="text-white" size={24} />
+                 {color && (
+                 <div className={`bg-gradient-to-br ${color.bg} p-3 rounded-xl`}>
+                 <IconComponent className="text-white" size={24} />
                   </div>
                 </div>
               </div>
