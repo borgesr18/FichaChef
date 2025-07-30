@@ -1,7 +1,5 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
-
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
@@ -14,13 +12,6 @@ export default function LoadingSpinner({ size = 'md', className = '', variant = 
     md: 'h-6 w-6',
     lg: 'h-8 w-8',
     xl: 'h-12 w-12'
-  }
-
-  const borderSizes = {
-    sm: 'border-2',
-    md: 'border-2',
-    lg: 'border-3',
-    xl: 'border-4'
   }
 
   if (variant === 'dots') {
@@ -49,17 +40,14 @@ export default function LoadingSpinner({ size = 'md', className = '', variant = 
   if (variant === 'ring') {
     return (
       <div className={`${sizeClasses[size]} ${className}`}>
-        <div className={`animate-spin rounded-full ${sizeClasses[size]} ${borderSizes[size]} border-gray-200`}>
-          <div className={`rounded-full ${sizeClasses[size]} ${borderSizes[size]} border-transparent border-t-[#5AC8FA] border-r-[#1B2E4B]`}></div>
-        </div>
+        <div className="animate-spin rounded-full h-full w-full border-4 border-gray-200/30 border-t-[#5AC8FA] border-r-[#1B2E4B]"></div>
       </div>
     )
   }
 
-  // Variant 'default' - Spinner moderno UXPilot
+  // Default variant - spinner moderno UXPilot
   return (
-    <div className={`${sizeClasses[size]} ${className}`}>
-      <div className={`animate-spin rounded-full ${sizeClasses[size]} ${borderSizes[size]} border-gray-200/30 border-t-[#5AC8FA] border-r-[#1B2E4B]`}></div>
-    </div>
+    <div className={`animate-spin rounded-full ${sizeClasses[size]} border-2 border-gray-200/30 border-t-[#5AC8FA] border-r-[#1B2E4B] ${className}`}></div>
   )
 }
+
