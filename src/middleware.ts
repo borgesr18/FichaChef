@@ -1,14 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ CORRIGIDO: Middleware que usa interface correta do Supabase
+// ✅ DEFINITIVO: Middleware baseado nas melhores práticas Supabase + Next.js 15
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
+  // ✅ CORRIGIDO: Usar const em vez de let (ESLint prefer-const)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -47,7 +42,7 @@ export async function middleware(request: NextRequest) {
   // ✅ CRÍTICO: Permitir acesso direto a arquivos PWA
   if (isPublicRoute) {
     console.log('🌐 Middleware: Rota pública permitida:', request.nextUrl.pathname)
-    return response
+    return NextResponse.next()
   }
 
   // ✅ CRÍTICO: Verificar se é arquivo estático PWA
@@ -65,17 +60,22 @@ export async function middleware(request: NextRequest) {
 
   if (isPwaFile) {
     console.log('📱 Middleware: Arquivo PWA permitido:', request.nextUrl.pathname)
-    return response
+    return NextResponse.next()
   }
 
   // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
   if (!isSupabaseConfigured) {
     console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
-    return response
+    return NextResponse.next()
   }
 
+  // ✅ CORRIGIDO: Padrão oficial Supabase para middleware
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
   try {
-    // ✅ CORRIGIDO: Criar cliente Supabase com interface correta
+    // ✅ CORRIGIDO: Interface oficial Supabase SSR
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
@@ -87,14 +87,14 @@ export async function middleware(request: NextRequest) {
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
               request.cookies.set(name, value)
-              response.cookies.set(name, value, options)
+              supabaseResponse.cookies.set(name, value, options)
             })
           },
         },
       }
     )
 
-    // ✅ Verificar autenticação
+    // ✅ IMPORTANTE: Refresh da sessão (padrão oficial)
     const { data: { user }, error } = await supabase.auth.getUser()
 
     // ✅ Se há erro ou usuário não autenticado, redirecionar para login
@@ -111,14 +111,14 @@ export async function middleware(request: NextRequest) {
 
     // ✅ Usuário autenticado, permitir acesso
     console.log('✅ Middleware: Usuário autenticado:', user?.email)
-    return response
+    return supabaseResponse
 
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
     
     // ✅ Em caso de erro, permitir acesso para não quebrar o sistema
     console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
-    return response
+    return supabaseResponse
   }
 }
 
