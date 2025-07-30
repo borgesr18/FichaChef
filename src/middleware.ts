@@ -1,7 +1,20 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ CORRIGIDO: Middleware que permite acesso ao PWA
+// ✅ CORRIGIDO: Tipos específicos para cookies
+interface CookieOptions {
+  name: string
+  value: string
+  domain?: string
+  path?: string
+  expires?: Date
+  maxAge?: number
+  httpOnly?: boolean
+  secure?: boolean
+  sameSite?: 'strict' | 'lax' | 'none'
+}
+
+// ✅ CORRIGIDO: Middleware que permite acesso ao PWA e corrige tipos
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -75,7 +88,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // ✅ Criar cliente Supabase para servidor
+    // ✅ CORRIGIDO: Criar cliente Supabase com tipos específicos
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
@@ -84,7 +97,7 @@ export async function middleware(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: any) {
+          set(name: string, value: string, options: Partial<CookieOptions>) {
             request.cookies.set({
               name,
               value,
@@ -101,7 +114,7 @@ export async function middleware(request: NextRequest) {
               ...options,
             })
           },
-          remove(name: string, options: any) {
+          remove(name: string, options: Partial<CookieOptions>) {
             request.cookies.set({
               name,
               value: '',
