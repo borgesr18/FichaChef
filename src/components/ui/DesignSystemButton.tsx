@@ -58,7 +58,7 @@ export default function DesignSystemButton({
       `}
     >
       {loading && (
-        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
       )}
       {Icon && iconPosition === 'left' && !loading && <Icon className="h-4 w-4" />}
       {children}
