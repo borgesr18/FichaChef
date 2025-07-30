@@ -378,7 +378,7 @@ export default function RelatoriosPage() {
             <p className="text-gray-600 mt-1">Análises detalhadas e insights do seu negócio</p>
           </div>
         </div>
-
+      
         {/* Filtros e Controles */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
