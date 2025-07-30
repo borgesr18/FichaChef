@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Users, Shield, Plus, Mail, Key, Trash2, UserCheck, UserPlus, Settings, TrendingUp } from 'lucide-react'
+import { Users, Shield, Plus, Mail, Key, Trash2, UserCheck, Settings, TrendingUp } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 
