@@ -212,7 +212,7 @@ export default function RelatoriosPage() {
               { bg: 'from-orange-400 to-orange-600', text: 'text-orange-600', bgLight: 'bg-orange-50' },
               { bg: 'from-purple-400 to-purple-600', text: 'text-purple-600', bgLight: 'bg-purple-50' }
             ]
-            const color = colors[index % 4]
+            const color = colors[index % 4] || colors[0]
 
             return (
               <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
