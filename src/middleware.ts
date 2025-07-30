@@ -1,20 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ CORRIGIDO: Tipos específicos para cookies
-interface CookieOptions {
-  name: string
-  value: string
-  domain?: string
-  path?: string
-  expires?: Date
-  maxAge?: number
-  httpOnly?: boolean
-  secure?: boolean
-  sameSite?: 'strict' | 'lax' | 'none'
-}
-
-// ✅ CORRIGIDO: Middleware que permite acesso ao PWA e corrige tipos
+// ✅ CORRIGIDO: Middleware que usa interface correta do Supabase
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -88,47 +75,19 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // ✅ CORRIGIDO: Criar cliente Supabase com tipos específicos
+    // ✅ CORRIGIDO: Criar cliente Supabase com interface correta
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value
+          getAll() {
+            return request.cookies.getAll()
           },
-          set(name: string, value: string, options: Partial<CookieOptions>) {
-            request.cookies.set({
-              name,
-              value,
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            })
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            })
-          },
-          remove(name: string, options: Partial<CookieOptions>) {
-            request.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            })
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value)
+              response.cookies.set(name, value, options)
             })
           },
         },
