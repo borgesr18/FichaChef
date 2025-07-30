@@ -206,13 +206,14 @@ export default function RelatoriosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {Object.entries(reportData.summary).map(([key, value], index) => {
             const IconComponent = getReportIcon(index)
-            const colors = [
+            const colorOptions = [
               { bg: 'from-blue-400 to-blue-600', text: 'text-blue-600', bgLight: 'bg-blue-50' },
               { bg: 'from-green-400 to-green-600', text: 'text-green-600', bgLight: 'bg-green-50' },
               { bg: 'from-orange-400 to-orange-600', text: 'text-orange-600', bgLight: 'bg-orange-50' },
               { bg: 'from-purple-400 to-purple-600', text: 'text-purple-600', bgLight: 'bg-purple-50' }
             ]
-            const color = colors[index % 4] || colors[0]
+            const colorIndex = index % colorOptions.length
+            const color = colorOptions[colorIndex]!
 
             return (
               <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
