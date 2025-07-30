@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { FileText, Shield, Activity, Eye, TrendingUp, Users, Clock, Database } from 'lucide-react'
+import { FileText, Shield, Activity, TrendingUp, Users, Clock, Database } from 'lucide-react'
 
 interface AuditoriaAcao {
   id: string
