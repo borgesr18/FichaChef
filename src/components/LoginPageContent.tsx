@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { Eye, EyeOff, ChefHat, Lock, Mail, AlertCircle } from 'lucide-react'
 
 export default function LoginPageContent() {
@@ -98,10 +97,10 @@ export default function LoginPageContent() {
   // ✅ LOADING: Durante hidratação ou carregamento de auth
   if (!isHydrated || authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Carregando sistema...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5AC8FA] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Carregando sistema...</p>
         </div>
       </div>
     )
@@ -110,30 +109,32 @@ export default function LoginPageContent() {
   // ✅ Se usuário já está logado, mostrar redirecionamento
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Redirecionando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5AC8FA] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Redirecionando...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* ✅ Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl mb-4 shadow-lg">
-            <ChefHat className="h-8 w-8 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#1B2E4B] to-[#5AC8FA] rounded-3xl mb-6 shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <ChefHat className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">FichaChef</h1>
-          <p className="text-slate-600">Sistema de Gestão Gastronômica</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent mb-3">
+            FichaChef
+          </h1>
+          <p className="text-gray-600 text-lg font-medium">Sistema de Gestão Gastronômica</p>
           
           {/* ✅ Indicador de modo */}
           {!isConfigured && (
-            <div className="mt-4 p-3 bg-blue-100 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 font-medium">
+            <div className="mt-6 p-4 bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-2xl shadow-lg">
+              <p className="text-sm text-blue-800 font-semibold">
                 🔧 Modo Desenvolvimento
               </p>
               <p className="text-xs text-blue-600 mt-1">
@@ -144,23 +145,23 @@ export default function LoginPageContent() {
         </div>
 
         {/* ✅ Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20 hover:shadow-3xl transition-all duration-300">
           <form onSubmit={handleLogin} className="space-y-6">
             {/* ✅ Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
                 Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  className="block w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl bg-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#5AC8FA]/50 focus:border-[#5AC8FA] transition-all duration-300 hover:bg-white/80"
                   placeholder="seu@email.com"
                   disabled={loading}
                   autoComplete="email"
@@ -170,19 +171,19 @@ export default function LoginPageContent() {
 
             {/* ✅ Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3">
                 Senha
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-12 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  className="block w-full pl-12 pr-14 py-4 border border-gray-200 rounded-2xl bg-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#5AC8FA]/50 focus:border-[#5AC8FA] transition-all duration-300 hover:bg-white/80"
                   placeholder="Sua senha"
                   disabled={loading}
                   autoComplete="current-password"
@@ -190,13 +191,13 @@ export default function LoginPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center hover:bg-gray-100/50 rounded-r-2xl transition-colors duration-200"
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
@@ -204,9 +205,9 @@ export default function LoginPageContent() {
 
             {/* ✅ Error */}
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-2xl shadow-lg">
                 <div className="flex items-center">
-                  <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
                   <span className="text-sm text-red-700 font-medium">{error}</span>
                 </div>
               </div>
@@ -216,11 +217,11 @@ export default function LoginPageContent() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center"
+              className="w-full bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] hover:from-[#0F1B2E] hover:to-[#4A9FE7] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <>
-                  <LoadingSpinner size="sm" className="mr-2" />
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                   Entrando...
                 </>
               ) : (
@@ -231,14 +232,20 @@ export default function LoginPageContent() {
 
           {/* ✅ Dados de teste */}
           {!isConfigured && (
-            <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="text-sm font-semibold text-slate-700 mb-2">
+            <div className="mt-8 p-6 bg-gray-50/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-lg">
+              <p className="text-sm font-semibold text-gray-700 mb-3">
                 🧪 Dados para teste:
               </p>
-              <div className="text-xs text-slate-600 space-y-1">
-                <p><strong>Email:</strong> qualquer@email.com</p>
-                <p><strong>Senha:</strong> qualquer senha</p>
-                <p className="text-slate-500 mt-2">
+              <div className="text-sm text-gray-600 space-y-2">
+                <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl">
+                  <span className="font-medium">Email:</span>
+                  <span className="text-gray-500">qualquer@email.com</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white/60 rounded-xl">
+                  <span className="font-medium">Senha:</span>
+                  <span className="text-gray-500">qualquer senha</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 text-center">
                   (Modo desenvolvimento - qualquer credencial funciona)
                 </p>
               </div>
@@ -248,7 +255,7 @@ export default function LoginPageContent() {
 
         {/* ✅ Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-gray-500">
             © 2025 FichaChef. Sistema de Gestão Gastronômica.
           </p>
         </div>
@@ -256,4 +263,3 @@ export default function LoginPageContent() {
     </div>
   )
 }
-
