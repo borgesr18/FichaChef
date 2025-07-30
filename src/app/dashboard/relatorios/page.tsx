@@ -22,6 +22,7 @@ const FloatingLabelInput = ({ label, value, onChange, type = "text", required = 
 }) => {
   const [focused, setFocused] = useState(false)
   const hasValue = value.length > 0
+  const isDateInput = type === "date"
   
   return (
     <div className={`relative ${className}`}>
@@ -35,7 +36,7 @@ const FloatingLabelInput = ({ label, value, onChange, type = "text", required = 
         className="peer w-full px-4 py-3 border border-gray-200 rounded-lg bg-white/50 backdrop-blur-sm focus:border-[#5AC8FA] focus:ring-2 focus:ring-[#5AC8FA]/20 focus:outline-none transition-all duration-200"
       />
       <label className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-        focused || hasValue 
+        focused || hasValue || isDateInput
           ? 'top-1 text-xs text-[#5AC8FA] font-medium' 
           : 'top-3 text-gray-500'
       }`}>
@@ -370,18 +371,11 @@ export default function RelatoriosPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-xl">
-                <FileBarChart className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
-                  Relatórios Gerenciais
-                </h1>
-                <p className="text-gray-600 mt-1">Análises detalhadas e insights do seu negócio</p>
-              </div>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
+              Relatórios Gerenciais
+            </h1>
+            <p className="text-gray-600 mt-1">Análises detalhadas e insights do seu negócio</p>
           </div>
         </div>
 
@@ -463,3 +457,4 @@ export default function RelatoriosPage() {
     </DashboardLayout>
   )
 }
+
