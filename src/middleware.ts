@@ -1,9 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ DEFINITIVO: Middleware baseado nas melhores práticas Supabase + Next.js 15
+// ✅ FINAL: Middleware que resolve TODOS os erros ESLint
 export async function middleware(request: NextRequest) {
-  // ✅ CORRIGIDO: Usar const em vez de let (ESLint prefer-const)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -69,12 +68,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // ✅ CORRIGIDO: Padrão oficial Supabase para middleware
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
   try {
+    // ✅ CORRIGIDO: Criar response que será modificado
+    let response = NextResponse.next({
+      request,
+    })
+
     // ✅ CORRIGIDO: Interface oficial Supabase SSR
     const supabase = createServerClient(
       supabaseUrl!,
@@ -87,14 +86,14 @@ export async function middleware(request: NextRequest) {
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
               request.cookies.set(name, value)
-              supabaseResponse.cookies.set(name, value, options)
+              response.cookies.set(name, value, options)
             })
           },
         },
       }
     )
 
-    // ✅ IMPORTANTE: Refresh da sessão (padrão oficial)
+    // ✅ Verificar autenticação
     const { data: { user }, error } = await supabase.auth.getUser()
 
     // ✅ Se há erro ou usuário não autenticado, redirecionar para login
@@ -111,14 +110,14 @@ export async function middleware(request: NextRequest) {
 
     // ✅ Usuário autenticado, permitir acesso
     console.log('✅ Middleware: Usuário autenticado:', user?.email)
-    return supabaseResponse
+    return response
 
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
     
     // ✅ Em caso de erro, permitir acesso para não quebrar o sistema
     console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
-    return supabaseResponse
+    return NextResponse.next()
   }
 }
 
