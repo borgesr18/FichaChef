@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     images: [
       {
-        url: "/icons/icon.png",
+        url: "/icon.png",
         width: 512,
         height: 512,
         alt: "FichaChef Logo"
@@ -60,8 +60,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ea580c' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' }
+    { media: '(prefers-color-scheme: light)', color: '#5AC8FA' },
+    { media: '(prefers-color-scheme: dark)', color: '#1B2E4B' }
   ],
   colorScheme: 'light dark',
   viewportFit: 'cover'
@@ -75,15 +75,46 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
+        {/* Favicon tradicional */}
+        <link rel="icon" href="/favicon.ico" />
+        
+        {/* Favicons PNG para diferentes tamanhos */}
+        <link rel="icon" type="image/png" sizes="16x16" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="144x144" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/icon.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon.png" />
+        
+        {/* Android Chrome Icons */}
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+        
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* Theme Colors UXPilot */}
+        <meta name="theme-color" content="#5AC8FA" />
+        <meta name="msapplication-TileColor" content="#1B2E4B" />
+        <meta name="msapplication-TileImage" content="/icon.png" />
+        
+        {/* Metadados PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="FichaChef" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#ea580c" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <link rel="apple-touch-icon" href="/icons/icon.png" />
-        <link rel="icon" type="image/png+xml" href="/icons/icon.png" />
-        <link rel="mask-icon" href="/icons/icon.png" color="#ea580c" />
+        
+        {/* Metadados adicionais */}
+        <meta name="application-name" content="FichaChef" />
+        
+        {/* Service Worker */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -115,4 +146,3 @@ export default function RootLayout({
     </html>
   );
 }
-
