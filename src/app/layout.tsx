@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     images: [
       {
-        url: "/icons/icon.svg",
+        url: "/icons/icon.png",
         width: 512,
         height: 512,
         alt: "FichaChef Logo"
@@ -81,9 +81,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#ea580c" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <link rel="apple-touch-icon" href="/icons/icon.svg" />
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
-        <link rel="mask-icon" href="/icons/icon.svg" color="#ea580c" />
+        <link rel="apple-touch-icon" href="/icons/icon.png" />
+        <link rel="icon" type="image/png+xml" href="/icons/icon.png" />
+        <link rel="mask-icon" href="/icons/icon.png" color="#ea580c" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
