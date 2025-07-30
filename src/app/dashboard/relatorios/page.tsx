@@ -195,7 +195,7 @@ export default function RelatoriosPage() {
         <div className="text-center py-12">
           <FileBarChart className="h-16 w-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum relatório gerado</h3>
-          <p className="text-gray-600">Selecione um período e clique em "Gerar Relatório" para visualizar os dados</p>
+          <p className="text-gray-600">Selecione um período e clique em &quot;Gerar Relatório&quot; para visualizar os dados</p>
         </div>
       )
     }
