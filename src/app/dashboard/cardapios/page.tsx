@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import { Calendar, Plus, Search, Edit, Trash2, X, Clock, TrendingUp, ChefHat, DollarSign } from 'lucide-react'
 import { calculateMenuCost } from '@/lib/utils'
-import { calculateTotalNutrition, formatNutritionalValue } from '@/lib/nutritional-utils'
+import { calculateTotalNutrition } from '@/lib/nutritional-utils'
 
 interface Produto {
   id: string
@@ -659,19 +659,19 @@ export default function CardapiosPage() {
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <span className="text-gray-600">Calorias:</span>
-                            <span className="ml-1 font-medium">{formatNutritionalValue(nutrition.calorias)} kcal</span>
+                            <span className="ml-1 font-medium">{nutrition.calorias.toFixed(1)} kcal</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Proteínas:</span>
-                            <span className="ml-1 font-medium">{formatNutritionalValue(nutrition.proteinas)}g</span>
+                            <span className="ml-1 font-medium">{nutrition.proteinas.toFixed(1)}g</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Carboidratos:</span>
-                            <span className="ml-1 font-medium">{formatNutritionalValue(nutrition.carboidratos)}g</span>
+                            <span className="ml-1 font-medium">{nutrition.carboidratos.toFixed(1)}g</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Gorduras:</span>
-                            <span className="ml-1 font-medium">{formatNutritionalValue(nutrition.gorduras)}g</span>
+                            <span className="ml-1 font-medium">{nutrition.gorduras.toFixed(1)}g</span>
                           </div>
                         </div>
                       </div>
@@ -908,4 +908,3 @@ export default function CardapiosPage() {
     </DashboardLayout>
   )
 }
-
