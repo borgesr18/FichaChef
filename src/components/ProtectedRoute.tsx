@@ -6,8 +6,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200/30 border-t-[#5AC8FA] border-r-[#1B2E4B] mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Verificando autenticação...</p>
+        </div>
       </div>
     );
   }
@@ -23,3 +26,4 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default ProtectedRoute;
+
