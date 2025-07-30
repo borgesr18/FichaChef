@@ -38,6 +38,50 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // ✅ CRÍTICO: Headers específicos para arquivos PWA
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400', // 24 horas
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate', // Sempre verificar atualizações
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
+      {
+        source: '/(icon\\.png|favicon\\.ico)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable', // 1 ano
+          },
+        ],
+      },
     ]
   },
   
@@ -54,54 +98,65 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Configuração específica para @jridgewell modules apenas em produção
-    if (!dev) {
-      config.module.rules.push({
-        test: /\.m?js$/,
-        include: /node_modules\/@jridgewell/,
-        type: 'javascript/auto',
-        resolve: {
-          fullySpecified: false,
-        },
-      })
-    }
-
-    return config
-  },
-
+  // ✅ Configurações PWA
   experimental: {
-    optimizePackageImports: ['lucide-react', '@supabase/supabase-js'],
+    optimizePackageImports: ['@supabase/supabase-js'],
   },
 
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
-
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-
-  // Configurações de performance
-  poweredByHeader: false,
-  compress: true,
-  
-  // Configurações de build (apenas para produção)
-  ...(process.env.NODE_ENV === 'production' && { output: 'standalone' }),
-  
-  // Configurações de TypeScript
+  // ✅ Configurações de build
   typescript: {
     ignoreBuildErrors: false,
   },
   
-  // Configurações de ESLint
   eslint: {
     ignoreDuringBuilds: false,
+  },
+
+  // ✅ Configurações de performance
+  compress: true,
+  
+  poweredByHeader: false,
+
+  // ✅ Configurações de rewrite para PWA
+  async rewrites() {
+    return [
+      // ✅ Garantir que manifest.json seja servido corretamente
+      {
+        source: '/manifest.json',
+        destination: '/manifest.json',
+      },
+      // ✅ Garantir que service worker seja servido corretamente
+      {
+        source: '/sw.js',
+        destination: '/sw.js',
+      },
+    ]
+  },
+
+  // ✅ Configurações de redirect
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/dashboard',
+        permanent: true,
+      },
+    ]
+  },
+
+  // ✅ Webpack config para PWA
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // ✅ Configurações específicas para PWA
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    return config;
   },
 };
 
