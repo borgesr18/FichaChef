@@ -38,19 +38,25 @@ const FloatingLabelSelect = ({ label, value, onChange, options, required = false
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         required={required}
-        className="peer w-full px-4 py-3 border border-gray-200 rounded-lg bg-white/50 backdrop-blur-sm focus:border-[#5AC8FA] focus:ring-2 focus:ring-[#5AC8FA]/20 focus:outline-none transition-all duration-200 appearance-none"
+        className="peer w-full px-4 pt-6 pb-3 border border-gray-200 rounded-lg bg-white/80 backdrop-blur-sm focus:border-[#5AC8FA] focus:ring-2 focus:ring-[#5AC8FA]/20 focus:outline-none transition-all duration-200 appearance-none text-gray-900 font-medium"
       >
         {options.map(option => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
-      <label className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+      <label className={`absolute left-4 transition-all duration-200 pointer-events-none bg-white/80 px-1 rounded ${
         focused || hasValue 
-          ? 'top-1 text-xs text-[#5AC8FA] font-medium' 
-          : 'top-3 text-gray-500'
+          ? 'top-1 text-xs text-[#5AC8FA] font-semibold' 
+          : 'top-4 text-gray-500 font-medium'
       }`}>
         {label}
       </label>
+      {/* Ícone de dropdown customizado */}
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -164,45 +170,67 @@ export default function AuditoriaPage() {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
-          <div className="flex items-center gap-3 mb-6">
+        {/* Filtros - CORRIGIDOS */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-8">
+          <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 bg-gradient-to-b from-[#1B2E4B] to-[#5AC8FA] rounded-full"></div>
             <h2 className="text-2xl font-semibold text-gray-900">Filtros de Auditoria</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FloatingLabelSelect
-              label="Filtrar por Módulo"
-              value={filtroModulo}
-              onChange={(value: string) => setFiltroModulo(value)}
-              options={[
-                { value: '', label: 'Todos os módulos' },
-                { value: 'insumos', label: 'Insumos' },
-                { value: 'fichas-tecnicas', label: 'Fichas Técnicas' },
-                { value: 'produtos', label: 'Produtos' },
-                { value: 'producao', label: 'Produção' },
-                { value: 'estoque', label: 'Estoque' }
-              ]}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-2">
+              <FloatingLabelSelect
+                label="Filtrar por Módulo"
+                value={filtroModulo}
+                onChange={(value: string) => setFiltroModulo(value)}
+                options={[
+                  { value: '', label: 'Todos os módulos' },
+                  { value: 'insumos', label: 'Insumos' },
+                  { value: 'fichas-tecnicas', label: 'Fichas Técnicas' },
+                  { value: 'produtos', label: 'Produtos' },
+                  { value: 'producao', label: 'Produção' },
+                  { value: 'estoque', label: 'Estoque' },
+                  { value: 'fornecedores', label: 'Fornecedores' },
+                  { value: 'usuarios', label: 'Usuários' },
+                  { value: 'cardapios', label: 'Cardápios' }
+                ]}
+              />
+            </div>
             
-            <FloatingLabelSelect
-              label="Filtrar por Ação"
-              value={filtroAcao}
-              onChange={(value: string) => setFiltroAcao(value)}
-              options={[
-                { value: '', label: 'Todas as ações' },
-                { value: 'create', label: 'Criar' },
-                { value: 'update', label: 'Atualizar' },
-                { value: 'delete', label: 'Excluir' },
-                { value: 'view', label: 'Visualizar' }
-              ]}
-            />
+            <div className="space-y-2">
+              <FloatingLabelSelect
+                label="Filtrar por Ação"
+                value={filtroAcao}
+                onChange={(value: string) => setFiltroAcao(value)}
+                options={[
+                  { value: '', label: 'Todas as ações' },
+                  { value: 'create', label: 'Criar' },
+                  { value: 'update', label: 'Atualizar' },
+                  { value: 'delete', label: 'Excluir' },
+                  { value: 'view', label: 'Visualizar' },
+                  { value: 'export', label: 'Exportar' },
+                  { value: 'import', label: 'Importar' }
+                ]}
+              />
+            </div>
+          </div>
+
+          {/* Botão de limpar filtros */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={() => {
+                setFiltroModulo('')
+                setFiltroAcao('')
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-[#5AC8FA] transition-colors duration-200"
+            >
+              Limpar Filtros
+            </button>
           </div>
         </div>
 
         {/* Tabela de Auditoria */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1 h-8 bg-gradient-to-b from-[#1B2E4B] to-[#5AC8FA] rounded-full"></div>
             <h2 className="text-2xl font-semibold text-gray-900">Registro de Ações</h2>
@@ -235,13 +263,13 @@ export default function AuditoriaPage() {
                   {acoes.map((acao) => (
                     <tr key={acao.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                       <td className="py-4 px-4">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-gray-900 font-medium">
                           {new Date(acao.createdAt).toLocaleString('pt-BR')}
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center mr-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-[#1B2E4B] to-[#5AC8FA] rounded-full flex items-center justify-center mr-3">
                             <Users className="text-white" size={16} />
                           </div>
                           <div>
@@ -252,21 +280,24 @@ export default function AuditoriaPage() {
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getAcaoColor(acao.acao)}`}>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getAcaoColor(acao.acao)}`}>
                           {acao.acao}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mr-2">
-                            <FileText className="text-white" size={12} />
-                          </div>
-                          <span className="text-gray-900 font-medium">{acao.modulo}</span>
-                        </div>
+                        <span className="text-sm font-medium text-gray-900 capitalize">
+                          {acao.modulo.replace('-', ' ')}
+                        </span>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="text-sm text-gray-500">
-                          {acao.itemTipo} {acao.itemId && `(${acao.itemId.slice(0, 8)}...)`}
+                        <div className="text-sm text-gray-600">
+                          {acao.itemTipo && acao.itemId ? (
+                            <span className="font-medium">
+                              {acao.itemTipo}: {acao.itemId}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </div>
                       </td>
                     </tr>
