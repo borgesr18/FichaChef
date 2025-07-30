@@ -44,10 +44,10 @@ const FloatingLabelSelect = ({ label, value, onChange, options, required = false
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
-      <label className={`absolute left-3 transition-all duration-200 pointer-events-none bg-white/80 px-1 rounded ${
+      <label className={`absolute left-2 transition-all duration-200 pointer-events-none bg-white/80 px-1 rounded ${
         focused || hasValue 
           ? 'top-1 text-xs text-[#5AC8FA] font-semibold' 
-          : 'top-3 text-gray-500 font-medium'
+          : 'top-2 text-gray-500 font-medium'
       }`}>
         {label}
       </label>
