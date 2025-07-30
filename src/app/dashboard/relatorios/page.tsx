@@ -196,21 +196,86 @@ export default function RelatoriosPage() {
 
     return (
       <div className="space-y-8">
+        {/* Cards de Resumo - Padrão fixo como no módulo de cardápios */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {Object.entries(reportData.summary).map(([key, value], index) => {
-            const iconOptions = [Package, TrendingUp, BarChart3, PieChart]
-            const colorOptions = [
-              { bg: 'from-blue-400 to-blue-600', text: 'text-blue-600', bgLight: 'bg-blue-50' },
-              { bg: 'from-green-400 to-green-600', text: 'text-green-600', bgLight: 'bg-green-50' },
-              { bg: 'from-orange-400 to-orange-600', text: 'text-orange-600', bgLight: 'bg-orange-50' },
-              { bg: 'from-purple-400 to-purple-600', text: 'text-purple-600', bgLight: 'bg-purple-50' }
-            ]
+            // Aplicando cores fixas como no módulo de cardápios que funcionou
+            if (index === 0) {
+              return (
+                <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium mb-1">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {typeof value === 'number' && (key.toLowerCase().includes('custo') || key.toLowerCase().includes('valor'))
+                          ? formatCurrency(value as number) 
+                          : typeof value === 'number' 
+                            ? (value as number).toFixed(key.includes('media') ? 1 : 0)
+                            : String(value)
+                        }
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-3 rounded-xl">
+                      <Package className="text-white" size={24} />
+                    </div>
+                  </div>
+                </div>
+              )
+            }
             
-            const iconIndex = index % iconOptions.length
-            const colorIndex = index % colorOptions.length
-            const IconComponent = iconOptions[iconIndex]
-            const color = colorOptions[colorIndex]
-
+            if (index === 1) {
+              return (
+                <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium mb-1">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {typeof value === 'number' && (key.toLowerCase().includes('custo') || key.toLowerCase().includes('valor'))
+                          ? formatCurrency(value as number) 
+                          : typeof value === 'number' 
+                            ? (value as number).toFixed(key.includes('media') ? 1 : 0)
+                            : String(value)
+                        }
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-400 to-green-600 p-3 rounded-xl">
+                      <TrendingUp className="text-white" size={24} />
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+            
+            if (index === 2) {
+              return (
+                <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm font-medium mb-1">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {typeof value === 'number' && (key.toLowerCase().includes('custo') || key.toLowerCase().includes('valor'))
+                          ? formatCurrency(value as number) 
+                          : typeof value === 'number' 
+                            ? (value as number).toFixed(key.includes('media') ? 1 : 0)
+                            : String(value)
+                        }
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-400 to-orange-600 p-3 rounded-xl">
+                      <BarChart3 className="text-white" size={24} />
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+            
+            // Default para índices maiores que 2
             return (
               <div key={key} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:-translate-y-1 transition-all duration-200">
                 <div className="flex items-center justify-between">
@@ -227,8 +292,8 @@ export default function RelatoriosPage() {
                       }
                     </p>
                   </div>
-                  <div className={`bg-gradient-to-br ${color.bg} p-3 rounded-xl`}>
-                    <IconComponent className="text-white" size={24} />
+                  <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-3 rounded-xl">
+                    <PieChart className="text-white" size={24} />
                   </div>
                 </div>
               </div>
@@ -236,6 +301,7 @@ export default function RelatoriosPage() {
           })}
         </div>
 
+        {/* Dados Detalhados */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-3">
             <BarChart3 className="text-[#5AC8FA]" size={24} />
@@ -302,6 +368,7 @@ export default function RelatoriosPage() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
+        {/* Header */}
         <div className="mb-8">
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
             <div className="flex items-center gap-4">
@@ -318,6 +385,7 @@ export default function RelatoriosPage() {
           </div>
         </div>
 
+        {/* Filtros e Controles */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <FloatingLabelSelect
@@ -359,6 +427,7 @@ export default function RelatoriosPage() {
             </button>
           </div>
 
+          {/* Botões de Export */}
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleExportPDF}
@@ -379,6 +448,7 @@ export default function RelatoriosPage() {
           </div>
         </div>
 
+        {/* Conteúdo do Relatório */}
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-1 h-8 bg-gradient-to-b from-[#1B2E4B] to-[#5AC8FA] rounded-full"></div>
