@@ -338,31 +338,6 @@ export default function CardapiosPage() {
     setMenuItens(prev => prev.filter((_, i) => i !== index))
   }
 
-  const updateMenuItem = (index: number, field: keyof MenuItem, value: string | number) => {
-    const updated = [...menuItens]
-    updated[index] = { ...updated[index], [field]: value } as MenuItem
-    setMenuItens(updated)
-  }
-
-  const calculateMenuCostTotal = () => {
-    return menuItens.reduce((total, menuItem) => {
-      const produto = produtos.find(p => p.id === menuItem.produtoId)
-      if (produto && menuItem.quantidade) {
-        const produtoCusto = produto.produtoFichas.reduce((produtoTotal, produtoFicha) => {
-          const fichaCusto = produtoFicha.fichaTecnica.ingredientes.reduce((fichaTotal, ing) => {
-            const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-            return fichaTotal + (custoPorGrama * ing.quantidadeGramas)
-          }, 0)
-          const custoPorGramaFicha = fichaCusto / produtoFicha.fichaTecnica.pesoFinalGramas
-          return produtoTotal + (custoPorGramaFicha * produtoFicha.quantidadeGramas)
-        }, 0)
-        const quantidade = typeof menuItem.quantidade === 'string' ? parseFloat(menuItem.quantidade) || 0 : menuItem.quantidade
-        return total + (produtoCusto * quantidade)
-      }
-      return total
-    }, 0)
-  }
-
   const calculateMenuNutritionalTotal = (menuItens: { quantidade: number; observacoes?: string; produto: Produto }[]) => {
     return menuItens.reduce((total, menuItem) => {
       const produto = menuItem.produto
@@ -499,13 +474,6 @@ export default function CardapiosPage() {
     menu.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     menu.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-
-  const tipoLabels = {
-    cafe_manha: 'Café da Manhã',
-    almoco: 'Almoço',
-    jantar: 'Jantar',
-    lanche: 'Lanche'
-  }
 
   if (loading && menus.length === 0) {
     return (
