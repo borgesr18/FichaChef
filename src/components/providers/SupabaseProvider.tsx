@@ -283,10 +283,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        console.log('🔄 Inicializando autenticação...', session ? 'Sessão encontrada' : 'Sem sessão')
+        console.log('🔄 Inicializando autenticação...', session ? `Sessão encontrada: ${session.user?.email}` : 'Sem sessão')
         
         if (session?.user) {
+          console.log('✅ SupabaseProvider: Setting user from initial session:', session.user.email)
           setUser(session.user)
+          setLoading(false) // Devin: Ensure loading is set to false when user is found
+        } else {
+          console.log('🚫 SupabaseProvider: No initial session found')
+          setLoading(false) // Devin: Set loading to false even when no user
         }
         
         setIsInitialized(true)
@@ -295,6 +300,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('❌ Erro na inicialização:', error)
         setIsInitialized(true)
+        setLoading(false) // Devin: Ensure loading is false on error
       }
     }
 
@@ -302,11 +308,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔐 Auth state changed:', event)
+        console.log('🔐 Auth state changed:', event, 'User:', session?.user?.email || 'null')
         
         if (session?.user) {
+          console.log('✅ SupabaseProvider: Setting user from auth state change:', session.user.email)
           setUser(session.user)
+          setLoading(false) // Devin: Ensure loading is set to false when user is set
         } else {
+          console.log('🚫 SupabaseProvider: Clearing user from auth state change')
           setUser(null)
           setUserRole(null)
           setLoading(false)

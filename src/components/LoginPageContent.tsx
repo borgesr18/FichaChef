@@ -25,13 +25,20 @@ export default function LoginPageContent() {
 
   // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
   useEffect(() => {
-    if (!isHydrated || authLoading) return
+    console.log('🔍 LoginPageContent useEffect:', { isHydrated, authLoading, user: !!user, userEmail: user?.email })
+    
+    if (!isHydrated || authLoading) {
+      console.log('🚫 LoginPageContent: Aguardando hidratação ou auth loading')
+      return
+    }
 
     // ✅ Se usuário já está logado, redirecionar
     if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
-      console.log('✅ Login: Usuário já autenticado, redirecionando para:', redirect)
+      console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
       router.push(redirect)
+    } else {
+      console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login')
     }
   }, [isHydrated, authLoading, user, router, searchParams])
 
@@ -78,12 +85,17 @@ export default function LoginPageContent() {
 
       if (data.user) {
         console.log('✅ Login: Usuário autenticado com sucesso:', data.user.email)
+        console.log('🔍 Login: Session data:', data.session ? 'Session exists' : 'No session')
         
         // ✅ Aguardar um pouco para garantir que o estado seja atualizado
+        console.log('⏳ Login: Aguardando 500ms para sincronização de estado...')
         await new Promise(resolve => setTimeout(resolve, 500))
         
         const redirect = searchParams.get('redirect') || '/dashboard'
+        console.log('🚀 Login: Redirecionando para:', redirect)
         router.push(redirect)
+      } else {
+        console.warn('⚠️ Login: Supabase retornou sucesso mas sem usuário')
       }
 
     } catch (error) {
@@ -108,6 +120,7 @@ export default function LoginPageContent() {
 
   // ✅ Se usuário já está logado, mostrar redirecionamento
   if (user) {
+    console.log('🔄 LoginPageContent: Renderizando tela de redirecionamento para usuário:', user.email)
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
