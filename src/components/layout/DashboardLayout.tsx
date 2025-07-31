@@ -24,7 +24,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // ✅ CORRIGIDO: Redirecionamento apenas após hidratação e carregamento
   useEffect(() => {
-    if (!isHydrated || loading) return
+    console.log('🔍 DashboardLayout useEffect:', { isHydrated, loading, isConfigured, user: !!user, userEmail: user?.email })
+    
+    if (!isHydrated || loading) {
+      console.log('🚫 DashboardLayout: Aguardando hidratação ou loading')
+      return
+    }
 
     // ✅ Se Supabase está configurado mas usuário não está logado
     if (isConfigured && !user) {
@@ -36,6 +41,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
     if (!isConfigured) {
       console.log('🔧 DashboardLayout: Modo desenvolvimento - Supabase não configurado')
+    } else if (user) {
+      console.log('✅ DashboardLayout: Usuário autenticado, permitindo acesso ao dashboard:', user.email)
     }
   }, [isHydrated, loading, isConfigured, user, router])
 
