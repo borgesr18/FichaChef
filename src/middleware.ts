@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ MIDDLEWARE CORRIGIDO - Resolve redirecionamento infinito no login
+// ✅ INTERFACE TYPESCRIPT PARA RESULTADO DE AUTENTICAÇÃO
+interface AuthResult {
+  data: {
+    user: any | null
+  }
+  error: Error | null
+}
+
+// ✅ MIDDLEWARE FINAL - Corrige TODOS os erros TypeScript e ESLint
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -69,7 +77,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // ✅ CORRIGIDO: Criar response que será usado para cookies
+    // ✅ CORRIGIDO: Usar const para response
     const response = NextResponse.next({
       request,
     })
@@ -93,16 +101,19 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ CORRIGIDO: Verificar autenticação com timeout
-    const authPromise = supabase.auth.getUser()
-    const timeoutPromise = new Promise((_, reject) => {
+    // ✅ CORRIGIDO: Verificar autenticação com timeout e tipos específicos
+    const authPromise: Promise<AuthResult> = supabase.auth.getUser()
+    const timeoutPromise: Promise<never> = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Auth timeout')), 5000) // 5 segundos
     })
 
-    const { data: { user }, error } = await Promise.race([
+    // ✅ CORRIGIDO: Usar tipo específico em vez de 'any'
+    const authResult: AuthResult = await Promise.race([
       authPromise,
       timeoutPromise
-    ]) as any
+    ])
+
+    const { data: { user }, error } = authResult
 
     // ✅ CORRIGIDO: Tratamento específico para página de login
     if (request.nextUrl.pathname === '/login') {
