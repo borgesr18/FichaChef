@@ -1,25 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ Middleware robusto para Supabase Auth + Vercel compatível
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // ✅ Verificar se Supabase está corretamente configurado
-  const isSupabaseConfigured = !!(
-    supabaseUrl && 
-    supabaseKey && 
-    supabaseUrl !== 'https://placeholder.supabase.co' && 
-    supabaseKey !== 'placeholder-key' &&
-    !supabaseUrl.includes('placeholder') &&
-    !supabaseKey.includes('placeholder')
-  )
+  const pathname = request.nextUrl.pathname
 
-  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso
   const publicRoutes = [
     '/login',
-    '/register', 
+    '/register',
     '/reset-password',
     '/api/auth',
     '/favicon.ico',
@@ -30,31 +20,23 @@ export async function middleware(request: NextRequest) {
     '/browserconfig.xml',
     '/robots.txt',
     '/sitemap.xml',
-    '/_next' // arquivos internos do Next.js
+    '/_next'
   ]
 
-  const pathname = request.nextUrl.pathname
-
-  const isPublicRoute = publicRoutes.some(route => 
+  const isPublicRoute = publicRoutes.some(route =>
     pathname === route || pathname.startsWith(route)
   )
 
-  if (isPublicRoute) {
-    console.log('🌐 Middleware: Rota pública permitida:', pathname)
-    return NextResponse.next()
-  }
+  const isSupabaseConfigured = !!(
+    supabaseUrl &&
+    supabaseKey &&
+    !supabaseUrl.includes('placeholder') &&
+    !supabaseKey.includes('placeholder')
+  )
 
-  // ✅ Segurança adicional: permitir arquivos PWA mesmo se estiverem fora da lista
-  const pwaFiles = ['manifest.json', 'sw.js', 'favicon.ico', 'icon.png', 'browserconfig.xml']
-  const isPwaFile = pwaFiles.some(file => pathname.endsWith(file))
-  if (isPwaFile) {
-    console.log('📱 Middleware: Arquivo PWA permitido:', pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ Se Supabase não está configurado, liberar acesso no modo dev
-  if (!isSupabaseConfigured) {
-    console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
+  // ✅ Permitir imediatamente rotas públicas
+  if (isPublicRoute || !isSupabaseConfigured) {
+    console.log('🌐 Middleware: Rota pública liberada ou Supabase desconfigurado:', pathname)
     return NextResponse.next()
   }
 
@@ -82,8 +64,7 @@ export async function middleware(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.getUser()
 
     if (error || !user) {
-      console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
-
+      console.log('🔒 Middleware: Usuário não autenticado')
       if (pathname !== '/login') {
         const redirectUrl = new URL('/login', request.url)
         redirectUrl.searchParams.set('redirect', pathname)
@@ -95,16 +76,13 @@ export async function middleware(request: NextRequest) {
     return response
 
   } catch (error) {
-    console.error('❌ Middleware: Erro de autenticação:', error)
-    console.warn('⚠️ Permissão temporária concedida por erro')
+    console.error('❌ Middleware: Erro crítico:', error)
     return NextResponse.next()
   }
 }
 
-// ✅ Configuração limpa e compatível com Next.js App Router e Vercel
 export const config = {
-  matcher: [
-    '/dashboard/:path*',       // todas as rotas protegidas no sistema
-  ],
+  matcher: ['/dashboard/:path*'],
 }
+
 
