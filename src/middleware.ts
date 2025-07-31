@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ SOLUÇÃO DEFINITIVA: Middleware que resolve TODOS os erros ESLint
+// ✅ MIDDLEWARE CORRIGIDO - Resolve redirecionamento infinito no login
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -69,12 +69,12 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // ✅ SOLUÇÃO: Criar response inicial
+    // ✅ CORRIGIDO: Criar response que será usado para cookies
     const response = NextResponse.next({
       request,
     })
 
-    // ✅ SOLUÇÃO: Interface oficial Supabase SSR
+    // ✅ Interface oficial Supabase SSR
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
@@ -93,19 +93,47 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ Verificar autenticação
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // ✅ CORRIGIDO: Verificar autenticação com timeout
+    const authPromise = supabase.auth.getUser()
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Auth timeout')), 5000) // 5 segundos
+    })
 
-    // ✅ Se há erro ou usuário não autenticado, redirecionar para login
+    const { data: { user }, error } = await Promise.race([
+      authPromise,
+      timeoutPromise
+    ]) as any
+
+    // ✅ CORRIGIDO: Tratamento específico para página de login
+    if (request.nextUrl.pathname === '/login') {
+      // Se usuário já está autenticado, redirecionar para dashboard
+      if (user && !error) {
+        console.log('✅ Middleware: Usuário já autenticado, redirecionando para dashboard')
+        const redirectUrl = new URL('/dashboard', request.url)
+        return NextResponse.redirect(redirectUrl)
+      }
+      
+      // Se não está autenticado, permitir acesso à página de login
+      console.log('🔓 Middleware: Permitindo acesso à página de login')
+      return response
+    }
+
+    // ✅ CORRIGIDO: Para outras rotas, verificar autenticação
     if (error || !user) {
       console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
       
-      // ✅ Evitar loop de redirecionamento
+      // ✅ CRÍTICO: Evitar loop de redirecionamento
       if (request.nextUrl.pathname !== '/login') {
         const redirectUrl = new URL('/login', request.url)
-        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        // ✅ Adicionar parâmetro de redirect apenas se não for a home
+        if (request.nextUrl.pathname !== '/') {
+          redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        }
         return NextResponse.redirect(redirectUrl)
       }
+      
+      // Se já está na página de login, permitir
+      return response
     }
 
     // ✅ Usuário autenticado, permitir acesso
@@ -115,9 +143,17 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
     
-    // ✅ Em caso de erro, permitir acesso para não quebrar o sistema
-    console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
-    return NextResponse.next()
+    // ✅ CORRIGIDO: Em caso de erro, comportamento específico por rota
+    if (request.nextUrl.pathname === '/login') {
+      // Se erro na página de login, permitir acesso
+      console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso ao login')
+      return NextResponse.next()
+    }
+    
+    // Para outras rotas, redirecionar para login em caso de erro
+    console.warn('🔧 Middleware: Erro na autenticação, redirecionando para login')
+    const redirectUrl = new URL('/login', request.url)
+    return NextResponse.redirect(redirectUrl)
   }
 }
 
