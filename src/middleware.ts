@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ FINAL: Middleware que resolve TODOS os erros ESLint
+// ✅ SOLUÇÃO DEFINITIVA: Middleware que resolve TODOS os erros ESLint
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -69,12 +69,12 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // ✅ CORRIGIDO: Criar response que será modificado
-    let response = NextResponse.next({
+    // ✅ SOLUÇÃO: Criar response inicial
+    const response = NextResponse.next({
       request,
     })
 
-    // ✅ CORRIGIDO: Interface oficial Supabase SSR
+    // ✅ SOLUÇÃO: Interface oficial Supabase SSR
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
