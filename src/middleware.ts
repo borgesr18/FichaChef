@@ -1,10 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ INTERFACE TYPESCRIPT PARA RESULTADO DE AUTENTICAÇÃO
+// ✅ INTERFACE TYPESCRIPT ESPECÍFICA - SEM ANY
+interface SupabaseUser {
+  id: string
+  email?: string
+  user_metadata?: Record<string, unknown>
+  app_metadata?: Record<string, unknown>
+  aud?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// ✅ INTERFACE PARA RESULTADO DE AUTENTICAÇÃO - SEM ANY
 interface AuthResult {
   data: {
-    user: any | null
+    user: SupabaseUser | null  // ✅ CORRIGIDO: Tipo específico em vez de 'any'
   }
   error: Error | null
 }
@@ -107,7 +118,7 @@ export async function middleware(request: NextRequest) {
       setTimeout(() => reject(new Error('Auth timeout')), 5000) // 5 segundos
     })
 
-    // ✅ CORRIGIDO: Usar tipo específico em vez de 'any'
+    // ✅ CORRIGIDO: Usar tipo específico
     const authResult: AuthResult = await Promise.race([
       authPromise,
       timeoutPromise
