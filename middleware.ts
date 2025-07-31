@@ -2,23 +2,6 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-  
-  // ✅ CRÍTICO: SEMPRE permitir arquivos PWA (resolve erro 401 em produção)
-  if (pathname === '/manifest.json' || 
-      pathname === '/sw.js' || 
-      pathname === '/favicon.ico' || 
-      pathname.startsWith('/icon') ||
-      pathname.startsWith('/_next/') || 
-      pathname.startsWith('/api/')) {
-    return NextResponse.next()
-  }
-  
-  // ✅ CRÍTICO: SEMPRE permitir página de login
-  if (pathname === '/login') {
-    return NextResponse.next()
-  }
-
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -38,6 +21,27 @@ export async function middleware(request: NextRequest) {
     !supabaseKey.includes('placeholder')
   )
 
+  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso
+  const publicRoutes = [
+    '/login',
+    '/register', 
+    '/reset-password',
+    '/api/auth',
+    '/_next',
+    '/favicon.ico',
+    '/manifest.json',
+    '/sw.js',
+    '/icon'
+  ]
+
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+
+  if (isPublicRoute) {
+    return response
+  }
+
   // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
   if (!isSupabaseConfigured) {
     console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
@@ -45,63 +49,93 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-
-    // ✅ Apenas proteger dashboard quando Supabase está configurado
-    if (pathname.startsWith('/dashboard')) {
-      try {
-        const supabase = createServerClient(
-          supabaseUrl!,
-          supabaseKey!,
-          {
-            cookies: {
-              get(name: string) {
-                return request.cookies.get(name)?.value
+    // ✅ Criar cliente Supabase para servidor
+    const supabase = createServerClient(
+      supabaseUrl!,
+      supabaseKey!,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
               },
-              set(name: string, value: string, options: any) {
-                request.cookies.set({ name, value, ...options })
-                response = NextResponse.next({ request: { headers: request.headers } })
-                response.cookies.set({ name, value, ...options })
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name: string, options: any) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
               },
-              remove(name: string, options: any) {
-                request.cookies.set({ name, value: '', ...options })
-                response = NextResponse.next({ request: { headers: request.headers } })
-                response.cookies.set({ name, value: '', ...options })
-              },
-            },
-          }
-        )
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+          },
+        },
+      }
+    )
 
-        const { data: { user }, error } = await supabase.auth.getUser()
+    // ✅ Verificar autenticação para TODAS as rotas protegidas
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-        if (error || !user) {
-          console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
-          const redirectUrl = new URL('/login', request.url)
-          redirectUrl.searchParams.set('redirect', pathname)
-          return NextResponse.redirect(redirectUrl)
-        }
-
-        console.log('✅ Middleware: Usuário autenticado:', user?.email)
-      } catch (error) {
-        console.error('❌ Middleware: Erro na verificação de autenticação:', error)
-        console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
+    // ✅ Se há erro ou usuário não autenticado, redirecionar para login
+    if (error || !user) {
+      console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
+      
+      // ✅ Evitar loop de redirecionamento
+      if (request.nextUrl.pathname !== '/login') {
+        const redirectUrl = new URL('/login', request.url)
+        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        return NextResponse.redirect(redirectUrl)
       }
     }
 
-  } catch (error) {
-    console.error('❌ Middleware: Erro geral no middleware:', error)
-    console.warn('🔧 Middleware: Erro geral, permitindo acesso temporário')
-  }
+    // ✅ Usuário autenticado, permitir acesso
+    console.log('✅ Middleware: Usuário autenticado:', user?.email)
+    return response
 
-  return response
+  } catch (error) {
+    console.error('❌ Middleware: Erro na verificação de autenticação:', error)
+    
+    // ✅ Em caso de erro, permitir acesso para não quebrar o sistema
+    console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
+    return response
+  }
 }
 
-// ✅ CONFIGURAÇÃO MÍNIMA - Não interceptar arquivos estáticos
+// ✅ CORRIGIDO: Configuração de rotas mais específica
 export const config = {
   matcher: [
     /*
-     * Match all request paths except static files
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     * - api routes that don't need auth
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api/auth).*)',
   ],
 }
 
