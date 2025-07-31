@@ -1,69 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ✅ INTERFACE TYPESCRIPT ESPECÍFICA - SEM ANY
-interface SupabaseUser {
-  id: string
-  email?: string
-  user_metadata?: Record<string, unknown>
-  app_metadata?: Record<string, unknown>
-  aud?: string
-  created_at?: string
-  updated_at?: string
-}
-
-// ✅ INTERFACE PARA RESULTADO DE AUTENTICAÇÃO - SEM ANY
-interface AuthResult {
-  data: {
-    user: SupabaseUser | null
-  }
-  error: Error | null
-}
-
-// ✅ MIDDLEWARE DEFINITIVO - Solução que REALMENTE funciona
+// ✅ Middleware com verificação de autenticação e suporte a rotas públicas
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-
-  // ✅ CRÍTICO: Lista completa de rotas que NUNCA devem ser interceptadas
-  const NEVER_INTERCEPT = [
-    '/manifest.json',
-    '/sw.js',
-    '/favicon.ico',
-    '/icon.png',
-    '/robots.txt',
-    '/sitemap.xml',
-    '/browserconfig.xml',
-    '/_next/static',
-    '/_next/image',
-    '/api/auth',
-    '/login',           // ✅ CRÍTICO: Login nunca interceptado
-    '/register',
-    '/reset-password'
-  ]
-
-  // ✅ CRÍTICO: Se é uma rota que nunca deve ser interceptada, permitir imediatamente
-  const shouldNeverIntercept = NEVER_INTERCEPT.some(route => {
-    if (route.endsWith('/')) {
-      return pathname.startsWith(route)
-    }
-    return pathname === route || pathname.startsWith(route + '/')
-  })
-
-  if (shouldNeverIntercept) {
-    console.log('🚫 Middleware: Rota nunca interceptada:', pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ CRÍTICO: Verificar se é arquivo estático (extensões)
-  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot']
-  const isStaticFile = staticExtensions.some(ext => pathname.endsWith(ext))
-  
-  if (isStaticFile) {
-    console.log('📁 Middleware: Arquivo estático permitido:', pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ Verificar configuração do Supabase
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -76,48 +15,57 @@ export async function middleware(request: NextRequest) {
     !supabaseKey.includes('placeholder')
   )
 
-  // ✅ Se Supabase não configurado, permitir tudo
+  const publicRoutes = [
+    '/login',
+    '/register', 
+    '/reset-password',
+    '/api/auth',
+    '/_next',
+    '/favicon.ico',
+    '/manifest.json',
+    '/sw.js',
+    '/icon.png',
+    '/icons/',
+    '/browserconfig.xml',
+    '/robots.txt',
+    '/sitemap.xml'
+  ]
+
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route) || 
+    request.nextUrl.pathname === route
+  )
+
+  if (isPublicRoute) {
+    console.log('🌐 Middleware: Rota pública permitida:', request.nextUrl.pathname)
+    return NextResponse.next()
+  }
+
+  const pwaFiles = [
+    'manifest.json',
+    'sw.js', 
+    'favicon.ico',
+    'icon.png',
+    'browserconfig.xml'
+  ]
+
+  const isPwaFile = pwaFiles.some(file => 
+    request.nextUrl.pathname.endsWith(file)
+  )
+
+  if (isPwaFile) {
+    console.log('📱 Middleware: Arquivo PWA permitido:', request.nextUrl.pathname)
+    return NextResponse.next()
+  }
+
   if (!isSupabaseConfigured) {
     console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
     return NextResponse.next()
   }
 
-  // ✅ CRÍTICO: Para rotas protegidas, verificar autenticação
-  const PROTECTED_ROUTES = [
-    '/dashboard',
-    '/cardapios',
-    '/fichas-tecnicas',
-    '/insumos',
-    '/fornecedores',
-    '/estoque',
-    '/producao',
-    '/relatorios',
-    '/usuarios',
-    '/auditoria',
-    '/analise-temporal',
-    '/alertas',
-    '/configuracoes'
-  ]
-
-  const isProtectedRoute = PROTECTED_ROUTES.some(route => 
-    pathname === route || pathname.startsWith(route + '/')
-  )
-
-  // ✅ Se não é rota protegida, permitir acesso
-  if (!isProtectedRoute) {
-    console.log('🌐 Middleware: Rota pública permitida:', pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ VERIFICAÇÃO DE AUTENTICAÇÃO apenas para rotas protegidas
   try {
-    console.log('🔒 Middleware: Verificando autenticação para rota protegida:', pathname)
+    const response = NextResponse.next({ request })
 
-    const response = NextResponse.next({
-      request,
-    })
-
-    // ✅ Interface oficial Supabase SSR
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
@@ -136,65 +84,30 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ Verificação rápida de autenticação (timeout reduzido)
-    const authPromise: Promise<AuthResult> = supabase.auth.getUser()
-    const timeoutPromise: Promise<never> = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Auth timeout')), 2000) // ✅ 2 segundos apenas
-    })
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-    const authResult: AuthResult = await Promise.race([
-      authPromise,
-      timeoutPromise
-    ])
-
-    const { data: { user }, error } = authResult
-
-    // ✅ Se não autenticado, redirecionar para login
     if (error || !user) {
       console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
-      const redirectUrl = new URL('/login', request.url)
-      
-      // ✅ Adicionar parâmetro de redirect apenas se não for a home
-      if (pathname !== '/') {
-        redirectUrl.searchParams.set('redirect', pathname)
+      if (request.nextUrl.pathname !== '/login') {
+        const redirectUrl = new URL('/login', request.url)
+        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        return NextResponse.redirect(redirectUrl)
       }
-      
-      return NextResponse.redirect(redirectUrl)
     }
 
-    // ✅ Usuário autenticado, permitir acesso
-    console.log('✅ Middleware: Usuário autenticado para rota protegida:', user?.email)
+    console.log('✅ Middleware: Usuário autenticado:', user?.email)
     return response
 
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
-    
-    // ✅ Em caso de erro, redirecionar para login
-    console.warn('🔧 Middleware: Erro na autenticação, redirecionando para login')
-    const redirectUrl = new URL('/login', request.url)
-    return NextResponse.redirect(redirectUrl)
+    console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
+    return NextResponse.next()
   }
 }
 
-// ✅ CONFIGURAÇÃO DEFINITIVA: Matcher que exclui TUDO que não deve ser interceptado
+// ✅ Configuração compatível com Vercel e App Router
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest) ← CRÍTICO
-     * - sw.js (service worker) ← CRÍTICO
-     * - icon.png (PWA icons) ← CRÍTICO
-     * - icons/ (PWA icons directory) ← CRÍTICO
-     * - public folder
-     * - api routes that don't need auth
-     * - login page ← CRÍTICO
-     * - register page
-     * - reset-password page
-     * - All static file extensions
-     */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png|icons/|public|api/auth|login|register|reset-password|browserconfig.xml|robots.txt|sitemap.xml|.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)).*)',
+    '/dashboard/:path*',
   ],
 }
