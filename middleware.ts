@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
     !supabaseKey.includes('placeholder')
   )
 
-  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso
+  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso (incluindo PWA)
   const publicRoutes = [
     '/login',
     '/register', 
@@ -124,18 +124,10 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-// ✅ CORRIGIDO: Configuração de rotas mais específica
+// ✅ CONFIGURAÇÃO: Não interceptar arquivos estáticos e PWA
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes that don't need auth
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|api/auth).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png).*)',
   ],
 }
 
