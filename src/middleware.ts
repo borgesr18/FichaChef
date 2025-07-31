@@ -15,15 +15,21 @@ interface SupabaseUser {
 // ✅ INTERFACE PARA RESULTADO DE AUTENTICAÇÃO - SEM ANY
 interface AuthResult {
   data: {
-    user: SupabaseUser | null  // ✅ CORRIGIDO: Tipo específico em vez de 'any'
+    user: SupabaseUser | null
   }
   error: Error | null
 }
 
-// ✅ MIDDLEWARE FINAL - Corrige TODOS os erros TypeScript e ESLint
+// ✅ MIDDLEWARE CORRIGIDO - Resolve redirecionamento infinito baseado no log
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // ✅ CRÍTICO: Permitir manifest.json SEMPRE (resolve erro 401)
+  if (request.nextUrl.pathname === '/manifest.json') {
+    console.log('📱 Middleware: Permitindo manifest.json (resolve erro 401)')
+    return NextResponse.next()
+  }
 
   // ✅ Verificar se Supabase está configurado
   const isSupabaseConfigured = !!(
@@ -87,6 +93,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // ✅ CRÍTICO: Para página de login, permitir acesso SEM verificar autenticação
+  // Isso resolve o problema de redirecionamento infinito
+  if (request.nextUrl.pathname === '/login') {
+    console.log('🔓 Middleware: Permitindo acesso direto à página de login (sem verificar auth)')
+    return NextResponse.next()
+  }
+
   try {
     // ✅ CORRIGIDO: Usar const para response
     const response = NextResponse.next({
@@ -115,7 +128,7 @@ export async function middleware(request: NextRequest) {
     // ✅ CORRIGIDO: Verificar autenticação com timeout e tipos específicos
     const authPromise: Promise<AuthResult> = supabase.auth.getUser()
     const timeoutPromise: Promise<never> = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Auth timeout')), 5000) // 5 segundos
+      setTimeout(() => reject(new Error('Auth timeout')), 3000) // ✅ Reduzido para 3 segundos
     })
 
     // ✅ CORRIGIDO: Usar tipo específico
@@ -126,21 +139,7 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user }, error } = authResult
 
-    // ✅ CORRIGIDO: Tratamento específico para página de login
-    if (request.nextUrl.pathname === '/login') {
-      // Se usuário já está autenticado, redirecionar para dashboard
-      if (user && !error) {
-        console.log('✅ Middleware: Usuário já autenticado, redirecionando para dashboard')
-        const redirectUrl = new URL('/dashboard', request.url)
-        return NextResponse.redirect(redirectUrl)
-      }
-      
-      // Se não está autenticado, permitir acesso à página de login
-      console.log('🔓 Middleware: Permitindo acesso à página de login')
-      return response
-    }
-
-    // ✅ CORRIGIDO: Para outras rotas, verificar autenticação
+    // ✅ CORRIGIDO: Para outras rotas (não login), verificar autenticação
     if (error || !user) {
       console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
       
@@ -179,7 +178,7 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-// ✅ CORRIGIDO: Configuração que exclui arquivos PWA
+// ✅ CORRIGIDO: Configuração que exclui arquivos PWA E permite manifest.json
 export const config = {
   matcher: [
     /*
@@ -187,7 +186,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest)
+     * - manifest.json (PWA manifest) ← CRÍTICO: Excluído para evitar erro 401
      * - sw.js (service worker)
      * - icon.png (PWA icons)
      * - icons/ (PWA icons directory)
