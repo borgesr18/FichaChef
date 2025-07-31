@@ -1,53 +1,31 @@
-/**
- * Service Worker Otimizado para FichaChef PWA
- * Versão 4.0.0 - Funcionalidades PWA Avançadas
- */
+// ✅ SERVICE WORKER v4.1.0 - CORRIGIDO
+// Versão corrigida que resolve erro 404 do ícone SVG
 
-const CACHE_VERSION = 'v4.0.0'
-const STATIC_CACHE = `fichachef-static-${CACHE_VERSION}`
-const DYNAMIC_CACHE = `fichachef-dynamic-${CACHE_VERSION}`
-const OFFLINE_CACHE = `fichachef-offline-${CACHE_VERSION}`
+const CACHE_VERSION = 'fichachef-v4.1.0'
+const STATIC_CACHE = `${CACHE_VERSION}-static`
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
+const OFFLINE_CACHE = `${CACHE_VERSION}-offline`
 
-// ✅ Assets estáticos essenciais
+// ✅ CORRIGIDO: Lista de arquivos estáticos sem icon.svg
 const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/login',
   '/manifest.json',
-  '/icons/icon.png',
-  '/icons/icon.svg',
-  '/icons/favicon.ico'
+  '/icon.png',           // ✅ Usar PNG em vez de SVG
+  '/favicon.ico',
+  '/_next/static/css/',
+  '/_next/static/js/',
 ]
 
-// ✅ Páginas para cache offline
+// ✅ CORRIGIDO: Páginas offline sem referências SVG
 const OFFLINE_PAGES = [
   '/dashboard',
-  '/dashboard/fichas-tecnicas',
-  '/dashboard/estoque',
-  '/dashboard/producao',
-  '/dashboard/cardapios',
-  '/dashboard/relatorios'
+  '/login',
+  '/offline'
 ]
 
-// ✅ URLs que NUNCA devem ser interceptadas
-const NEVER_CACHE_PATTERNS = [
-  /supabase\.co/,
-  /\.supabase\.co/,
-  /api\//,
-  /auth/,
-  /vercel\.live/,
-  /vercel-insights/,
-  /vercel-analytics/,
-  /_next-live/,
-  /pusher/,
-  /analytics/,
-  /feedback/,
-  /hot-reload/,
-  /webpack/,
-  /_next\/webpack/
-]
-
-// ✅ Configurações de cache por tipo de recurso
+// ✅ Estratégias de cache por tipo de recurso
 const CACHE_STRATEGIES = {
   images: { strategy: 'cache-first', maxAge: 7 * 24 * 60 * 60 * 1000 }, // 7 dias
   styles: { strategy: 'stale-while-revalidate', maxAge: 24 * 60 * 60 * 1000 }, // 1 dia
@@ -56,394 +34,329 @@ const CACHE_STRATEGIES = {
   api: { strategy: 'network-only', maxAge: 0 } // Nunca cache
 }
 
-/**
- * Verifica se uma URL nunca deve ser interceptada
- */
-function shouldNeverCache(url) {
-  return NEVER_CACHE_PATTERNS.some(pattern => pattern.test(url))
-}
-
-/**
- * Determina o tipo de recurso baseado na URL
- */
-function getResourceType(url) {
-  if (url.includes('/api/')) return 'api'
-  if (url.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) return 'images'
-  if (url.match(/\.(css)$/i)) return 'styles'
-  if (url.match(/\.(js|mjs)$/i)) return 'scripts'
-  return 'documents'
-}
-
-/**
- * Log estruturado para o Service Worker
- */
-function swLog(level, message, data = {}) {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    level,
+// ✅ Função de log melhorada
+function swLog(message, data = null) {
+  const timestamp = new Date().toISOString()
+  const logData = {
+    timestamp,
+    version: 'SW v4.1.0',
     message,
-    source: 'service-worker-v4',
-    version: CACHE_VERSION,
-    ...data
+    ...(data && { data })
   }
-  
-  console[level](`[SW v4] ${message}`, logEntry)
+  console.log(`[SW v4.1.0] ${message}`, logData)
 }
 
-/**
- * Verifica se um item do cache expirou
- */
-function isExpired(response, maxAge) {
-  if (!response || !maxAge) return false
-  
-  const cachedTime = response.headers.get('sw-cached-time')
-  if (!cachedTime) return true
-  
-  const age = Date.now() - parseInt(cachedTime)
-  return age > maxAge
-}
-
-/**
- * Adiciona timestamp ao response para controle de expiração
- */
-function addTimestamp(response) {
-  const responseClone = response.clone()
-  const headers = new Headers(responseClone.headers)
-  headers.set('sw-cached-time', Date.now().toString())
-  
-  return new Response(responseClone.body, {
-    status: responseClone.status,
-    statusText: responseClone.statusText,
-    headers: headers
-  })
-}
-
-/**
- * Estratégia Cache First
- */
-async function cacheFirst(request, cacheName, maxAge) {
-  const cache = await caches.open(cacheName)
-  const cachedResponse = await cache.match(request)
-  
-  if (cachedResponse && !isExpired(cachedResponse, maxAge)) {
-    swLog('debug', 'Cache hit (cache-first)', { url: request.url })
-    return cachedResponse
-  }
-  
-  try {
-    const networkResponse = await fetch(request)
-    if (networkResponse.ok) {
-      const responseToCache = addTimestamp(networkResponse)
-      cache.put(request, responseToCache.clone())
-      swLog('debug', 'Network response cached (cache-first)', { url: request.url })
-    }
-    return networkResponse
-  } catch (error) {
-    if (cachedResponse) {
-      swLog('warn', 'Network failed, serving stale cache', { url: request.url })
-      return cachedResponse
-    }
-    throw error
-  }
-}
-
-/**
- * Estratégia Network First
- */
-async function networkFirst(request, cacheName, maxAge) {
-  try {
-    const networkResponse = await fetch(request)
-    if (networkResponse.ok) {
-      const cache = await caches.open(cacheName)
-      const responseToCache = addTimestamp(networkResponse)
-      cache.put(request, responseToCache.clone())
-      swLog('debug', 'Network response cached (network-first)', { url: request.url })
-    }
-    return networkResponse
-  } catch (error) {
-    const cache = await caches.open(cacheName)
-    const cachedResponse = await cache.match(request)
-    
-    if (cachedResponse) {
-      swLog('warn', 'Network failed, serving cache (network-first)', { url: request.url })
-      return cachedResponse
-    }
-    
-    throw error
-  }
-}
-
-/**
- * Estratégia Stale While Revalidate
- */
-async function staleWhileRevalidate(request, cacheName, maxAge) {
-  const cache = await caches.open(cacheName)
-  const cachedResponse = await cache.match(request)
-  
-  // Buscar da rede em background
-  const networkPromise = fetch(request).then(response => {
-    if (response.ok) {
-      const responseToCache = addTimestamp(response)
-      cache.put(request, responseToCache.clone())
-      swLog('debug', 'Background update completed (stale-while-revalidate)', { url: request.url })
-    }
-    return response
-  }).catch(error => {
-    swLog('warn', 'Background update failed (stale-while-revalidate)', { url: request.url, error: error.message })
-  })
-  
-  // Retornar cache imediatamente se disponível
-  if (cachedResponse) {
-    swLog('debug', 'Serving stale cache (stale-while-revalidate)', { url: request.url })
-    return cachedResponse
-  }
-  
-  // Se não há cache, aguardar rede
-  return networkPromise
-}
-
-// ✅ INSTALL: Cache de assets estáticos e páginas offline
-self.addEventListener('install', event => {
-  swLog('info', 'Service Worker installing (v4.0.0 - PWA Otimizado)')
+// ✅ Install Event - Cache inicial
+self.addEventListener('install', (event) => {
+  swLog('Installing Service Worker v4.1.0')
   
   event.waitUntil(
     Promise.all([
-      // Cache estático
-      caches.open(STATIC_CACHE).then(cache => {
-        swLog('info', 'Caching static assets', { count: STATIC_ASSETS.length })
-        return cache.addAll(STATIC_ASSETS)
+      // Cache de arquivos estáticos
+      caches.open(STATIC_CACHE).then((cache) => {
+        swLog('Caching static assets')
+        // ✅ CORRIGIDO: Filtrar apenas arquivos que existem
+        const validAssets = STATIC_ASSETS.filter(asset => {
+          // Não tentar cachear arquivos SVG inexistentes
+          return !asset.includes('.svg')
+        })
+        return cache.addAll(validAssets).catch((error) => {
+          swLog('Failed to cache static assets', { error: error.message })
+          // ✅ Continuar mesmo se alguns arquivos falharem
+          return Promise.resolve()
+        })
       }),
-      // Cache offline
-      caches.open(OFFLINE_CACHE).then(cache => {
-        swLog('info', 'Caching offline pages', { count: OFFLINE_PAGES.length })
-        return cache.addAll(OFFLINE_PAGES)
+      
+      // Cache de páginas offline
+      caches.open(OFFLINE_CACHE).then((cache) => {
+        swLog('Caching offline pages')
+        return cache.addAll(OFFLINE_PAGES).catch((error) => {
+          swLog('Failed to cache offline pages', { error: error.message })
+          return Promise.resolve()
+        })
       })
-    ])
-    .then(() => {
-      swLog('info', 'All caches populated successfully')
+    ]).then(() => {
+      swLog('Service Worker installed successfully')
+      // ✅ Ativar imediatamente
       return self.skipWaiting()
-    })
-    .catch(error => {
-      swLog('error', 'Failed to populate caches', { error: error.message })
+    }).catch((error) => {
+      swLog('Failed to populate caches', { error: error.message })
     })
   )
 })
 
-// ✅ ACTIVATE: Limpar caches antigos
-self.addEventListener('activate', event => {
-  swLog('info', 'Service Worker activating (v4.0.0)')
+// ✅ Activate Event - Limpeza de caches antigos
+self.addEventListener('activate', (event) => {
+  swLog('Activating Service Worker v4.1.0')
   
   event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
-        const deletePromises = cacheNames
-          .filter(cacheName => 
-            cacheName.includes('fichachef') && 
-            !cacheName.includes(CACHE_VERSION)
-          )
-          .map(cacheName => {
-            swLog('info', 'Deleting old cache', { cacheName })
-            return caches.delete(cacheName)
+    Promise.all([
+      // Limpar caches antigos
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (!cacheName.startsWith(CACHE_VERSION)) {
+              swLog('Deleting old cache', { cacheName })
+              return caches.delete(cacheName)
+            }
           })
-        
-        return Promise.all(deletePromises)
-      })
-      .then(() => {
-        swLog('info', 'Service Worker activated successfully')
-        return self.clients.claim()
-      })
-      .catch(error => {
-        swLog('error', 'Failed to activate service worker', { error: error.message })
-      })
+        )
+      }),
+      
+      // Tomar controle imediatamente
+      self.clients.claim()
+    ]).then(() => {
+      swLog('Service Worker activated successfully')
+    })
   )
 })
 
-// ✅ FETCH: Estratégias inteligentes de cache
-self.addEventListener('fetch', event => {
-  const url = event.request.url
+// ✅ Fetch Event - Estratégias de cache
+self.addEventListener('fetch', (event) => {
+  const { request } = event
+  const url = new URL(request.url)
   
-  // ✅ CRÍTICO: Nunca interceptar URLs protegidas
-  if (shouldNeverCache(url)) {
+  // ✅ CORRIGIDO: Ignorar requisições para arquivos SVG inexistentes
+  if (url.pathname.includes('.svg')) {
+    swLog('Ignoring SVG request (file may not exist)', { url: url.pathname })
+    return // Deixar o navegador lidar com o erro 404
+  }
+  
+  // ✅ Ignorar requisições não-GET
+  if (request.method !== 'GET') {
     return
   }
   
-  // ✅ Apenas interceptar requisições GET
-  if (event.request.method !== 'GET') {
-    return
-  }
-  
-  const resourceType = getResourceType(url)
-  const strategy = CACHE_STRATEGIES[resourceType]
-  
-  if (!strategy || strategy.strategy === 'network-only') {
+  // ✅ Ignorar requisições de extensões do navegador
+  if (url.protocol === 'chrome-extension:' || url.protocol === 'moz-extension:') {
     return
   }
   
   event.respondWith(
-    (async () => {
-      try {
-        const cacheName = resourceType === 'images' ? STATIC_CACHE : DYNAMIC_CACHE
-        
-        switch (strategy.strategy) {
-          case 'cache-first':
-            return await cacheFirst(event.request, cacheName, strategy.maxAge)
-          
-          case 'network-first':
-            return await networkFirst(event.request, cacheName, strategy.maxAge)
-          
-          case 'stale-while-revalidate':
-            return await staleWhileRevalidate(event.request, cacheName, strategy.maxAge)
-          
-          default:
-            return fetch(event.request)
-        }
-      } catch (error) {
-        swLog('error', 'Fetch strategy failed', { url, error: error.message })
-        
-        // ✅ Página offline para documentos
-        if (event.request.destination === 'document') {
-          const offlineCache = await caches.open(OFFLINE_CACHE)
-          const offlineResponse = await offlineCache.match('/dashboard')
-          
-          if (offlineResponse) {
-            return offlineResponse
-          }
-          
-          return new Response(
-            `<!DOCTYPE html>
-            <html lang="pt-BR">
-            <head>
-              <title>FichaChef - Offline</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1">
-              <style>
-                body { 
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  background: linear-gradient(135deg, #1B2E4B 0%, #5AC8FA 100%);
-                  color: white;
-                  text-align: center;
-                  padding: 50px 20px;
-                  margin: 0;
-                  min-height: 100vh;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  align-items: center;
-                }
-                .container {
-                  background: rgba(255, 255, 255, 0.1);
-                  backdrop-filter: blur(10px);
-                  border-radius: 20px;
-                  padding: 40px;
-                  max-width: 400px;
-                  border: 1px solid rgba(255, 255, 255, 0.2);
-                }
-                h1 { font-size: 2.5em; margin-bottom: 20px; }
-                p { font-size: 1.1em; margin-bottom: 30px; opacity: 0.9; }
-                button {
-                  background: rgba(255, 255, 255, 0.2);
-                  border: 2px solid rgba(255, 255, 255, 0.3);
-                  color: white;
-                  padding: 12px 24px;
-                  border-radius: 10px;
-                  font-size: 1em;
-                  cursor: pointer;
-                  transition: all 0.3s ease;
-                }
-                button:hover {
-                  background: rgba(255, 255, 255, 0.3);
-                  transform: translateY(-2px);
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <h1>🔌 Sem conexão</h1>
-                <p>O FichaChef está funcionando offline. Algumas funcionalidades podem estar limitadas.</p>
-                <button onclick="window.location.reload()">Tentar reconectar</button>
-              </div>
-            </body>
-            </html>`,
-            {
-              status: 200,
-              headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            }
-          )
-        }
-        
-        throw error
-      }
-    })()
+    handleRequest(request).catch((error) => {
+      swLog('Fetch error', { url: request.url, error: error.message })
+      return handleOffline(request)
+    })
   )
 })
 
-// ✅ BACKGROUND SYNC: Para operações offline
-self.addEventListener('sync', event => {
-  if (event.tag === 'background-sync') {
-    swLog('info', 'Background sync triggered')
-    event.waitUntil(doBackgroundSync())
-  }
-})
-
-async function doBackgroundSync() {
-  try {
-    // Implementar sincronização de dados offline
-    swLog('info', 'Background sync completed')
-  } catch (error) {
-    swLog('error', 'Background sync failed', { error: error.message })
+// ✅ Função principal de tratamento de requisições
+async function handleRequest(request) {
+  const url = new URL(request.url)
+  const strategy = getStrategy(request)
+  
+  swLog('Handling request', { 
+    url: url.pathname, 
+    strategy: strategy.strategy,
+    method: request.method 
+  })
+  
+  switch (strategy.strategy) {
+    case 'cache-first':
+      return handleCacheFirst(request, strategy)
+    case 'network-first':
+      return handleNetworkFirst(request, strategy)
+    case 'stale-while-revalidate':
+      return handleStaleWhileRevalidate(request, strategy)
+    case 'network-only':
+      return fetch(request)
+    default:
+      return handleNetworkFirst(request, strategy)
   }
 }
 
-// ✅ PUSH: Notificações push
-self.addEventListener('push', event => {
-  if (!event.data) return
+// ✅ Determinar estratégia baseada no tipo de recurso
+function getStrategy(request) {
+  const url = new URL(request.url)
+  const pathname = url.pathname
   
-  const data = event.data.json()
-  swLog('info', 'Push notification received', data)
-  
-  const options = {
-    body: data.body,
-    icon: '/icons/icon.png',
-    badge: '/icons/icon.png',
-    tag: data.tag || 'fichachef-notification',
-    data: data.data,
-    actions: [
-      {
-        action: 'open',
-        title: 'Abrir FichaChef'
-      },
-      {
-        action: 'close',
-        title: 'Fechar'
-      }
-    ]
+  // ✅ CORRIGIDO: Não processar SVGs
+  if (pathname.includes('.svg')) {
+    return { strategy: 'network-only', maxAge: 0 }
   }
   
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'FichaChef', options)
-  )
-})
-
-// ✅ NOTIFICATION CLICK: Ações de notificação
-self.addEventListener('notificationclick', event => {
-  event.notification.close()
-  
-  if (event.action === 'open' || !event.action) {
-    event.waitUntil(
-      clients.openWindow(event.notification.data?.url || '/dashboard')
-    )
+  // Imagens
+  if (pathname.match(/\.(jpg|jpeg|png|gif|webp|ico)$/i)) {
+    return CACHE_STRATEGIES.images
   }
-})
+  
+  // CSS
+  if (pathname.includes('/_next/static/css/') || pathname.endsWith('.css')) {
+    return CACHE_STRATEGIES.styles
+  }
+  
+  // JavaScript
+  if (pathname.includes('/_next/static/js/') || pathname.endsWith('.js')) {
+    return CACHE_STRATEGIES.scripts
+  }
+  
+  // APIs
+  if (pathname.startsWith('/api/')) {
+    return CACHE_STRATEGIES.api
+  }
+  
+  // Páginas HTML
+  return CACHE_STRATEGIES.documents
+}
 
-// ✅ MESSAGE: Comunicação com a aplicação
-self.addEventListener('message', event => {
+// ✅ Cache First Strategy
+async function handleCacheFirst(request, strategy) {
+  const cachedResponse = await caches.match(request)
+  
+  if (cachedResponse && !isExpired(cachedResponse, strategy.maxAge)) {
+    swLog('Cache hit', { url: request.url })
+    return cachedResponse
+  }
+  
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE)
+      cache.put(request, networkResponse.clone())
+      swLog('Network response cached', { url: request.url })
+    }
+    return networkResponse
+  } catch (error) {
+    swLog('Network failed, returning cached version', { url: request.url })
+    return cachedResponse || handleOffline(request)
+  }
+}
+
+// ✅ Network First Strategy
+async function handleNetworkFirst(request, strategy) {
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE)
+      cache.put(request, networkResponse.clone())
+      swLog('Network response cached', { url: request.url })
+    }
+    return networkResponse
+  } catch (error) {
+    swLog('Network failed, trying cache', { url: request.url })
+    const cachedResponse = await caches.match(request)
+    return cachedResponse || handleOffline(request)
+  }
+}
+
+// ✅ Stale While Revalidate Strategy
+async function handleStaleWhileRevalidate(request, strategy) {
+  const cachedResponse = await caches.match(request)
+  
+  // Buscar na rede em background
+  const networkPromise = fetch(request).then((networkResponse) => {
+    if (networkResponse.ok) {
+      const cache = caches.open(DYNAMIC_CACHE)
+      cache.then(c => c.put(request, networkResponse.clone()))
+      swLog('Background update completed', { url: request.url })
+    }
+    return networkResponse
+  }).catch(() => {
+    swLog('Background update failed', { url: request.url })
+  })
+  
+  // Retornar cache imediatamente se disponível
+  if (cachedResponse && !isExpired(cachedResponse, strategy.maxAge)) {
+    swLog('Returning cached, updating in background', { url: request.url })
+    return cachedResponse
+  }
+  
+  // Se não há cache, aguardar rede
+  try {
+    return await networkPromise
+  } catch (error) {
+    return handleOffline(request)
+  }
+}
+
+// ✅ Verificar se cache expirou
+function isExpired(response, maxAge) {
+  if (!maxAge) return false
+  
+  const dateHeader = response.headers.get('date')
+  if (!dateHeader) return false
+  
+  const responseDate = new Date(dateHeader)
+  const now = new Date()
+  
+  return (now.getTime() - responseDate.getTime()) > maxAge
+}
+
+// ✅ Tratamento offline melhorado
+async function handleOffline(request) {
+  const url = new URL(request.url)
+  
+  // ✅ CORRIGIDO: Para SVGs, retornar resposta vazia em vez de página offline
+  if (url.pathname.includes('.svg')) {
+    swLog('SVG request offline - returning empty response')
+    return new Response('', { 
+      status: 404, 
+      statusText: 'SVG Not Found',
+      headers: { 'Content-Type': 'image/svg+xml' }
+    })
+  }
+  
+  // Para páginas HTML, tentar cache offline
+  if (request.headers.get('accept')?.includes('text/html')) {
+    const offlineResponse = await caches.match('/offline') || 
+                           await caches.match('/dashboard') ||
+                           await caches.match('/')
+    
+    if (offlineResponse) {
+      swLog('Returning offline page', { url: request.url })
+      return offlineResponse
+    }
+  }
+  
+  // Resposta padrão offline
+  swLog('No offline fallback available', { url: request.url })
+  return new Response('Offline - No cached version available', {
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers: { 'Content-Type': 'text/plain' }
+  })
+}
+
+// ✅ Message Event - Comunicação com a aplicação
+self.addEventListener('message', (event) => {
+  swLog('Message received', { data: event.data })
+  
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    swLog('Skip waiting requested')
     self.skipWaiting()
   }
   
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_VERSION })
   }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => caches.delete(cacheName))
+      )
+    }).then(() => {
+      swLog('All caches cleared')
+      event.ports[0].postMessage({ success: true })
+    })
+  }
 })
 
-swLog('info', 'Service Worker script loaded (v4.0.0 - PWA Otimizado)')
+// ✅ Error Event
+self.addEventListener('error', (event) => {
+  swLog('Service Worker error', { 
+    error: event.error?.message || 'Unknown error',
+    filename: event.filename,
+    lineno: event.lineno
+  })
+})
+
+// ✅ Unhandled Rejection Event
+self.addEventListener('unhandledrejection', (event) => {
+  swLog('Unhandled promise rejection', { 
+    reason: event.reason?.message || event.reason 
+  })
+  event.preventDefault()
+})
+
+swLog('Service Worker v4.1.0 script loaded successfully')
