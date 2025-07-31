@@ -16,7 +16,7 @@ export function clearAuthCache() {
   
   document.cookie.split(";").forEach(function(c) { 
     const cookieName = c.replace(/^ +/, "").split("=")[0]
-    if (cookieName.includes('sb-') || cookieName.includes('supabase') || cookieName.includes('fichachef')) {
+    if (cookieName && (cookieName.includes('sb-') || cookieName.includes('supabase') || cookieName.includes('fichachef'))) {
       document.cookie = cookieName + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/"
     }
   })
