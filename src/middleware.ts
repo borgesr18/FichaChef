@@ -20,18 +20,53 @@ interface AuthResult {
   error: Error | null
 }
 
-// ✅ MIDDLEWARE CORRIGIDO - Resolve redirecionamento infinito baseado no log
+// ✅ MIDDLEWARE DEFINITIVO - Solução que REALMENTE funciona
 export async function middleware(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const pathname = request.nextUrl.pathname
 
-  // ✅ CRÍTICO: Permitir manifest.json SEMPRE (resolve erro 401)
-  if (request.nextUrl.pathname === '/manifest.json') {
-    console.log('📱 Middleware: Permitindo manifest.json (resolve erro 401)')
+  // ✅ CRÍTICO: Lista completa de rotas que NUNCA devem ser interceptadas
+  const NEVER_INTERCEPT = [
+    '/manifest.json',
+    '/sw.js',
+    '/favicon.ico',
+    '/icon.png',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/browserconfig.xml',
+    '/_next/static',
+    '/_next/image',
+    '/api/auth',
+    '/login',           // ✅ CRÍTICO: Login nunca interceptado
+    '/register',
+    '/reset-password'
+  ]
+
+  // ✅ CRÍTICO: Se é uma rota que nunca deve ser interceptada, permitir imediatamente
+  const shouldNeverIntercept = NEVER_INTERCEPT.some(route => {
+    if (route.endsWith('/')) {
+      return pathname.startsWith(route)
+    }
+    return pathname === route || pathname.startsWith(route + '/')
+  })
+
+  if (shouldNeverIntercept) {
+    console.log('🚫 Middleware: Rota nunca interceptada:', pathname)
     return NextResponse.next()
   }
 
-  // ✅ Verificar se Supabase está configurado
+  // ✅ CRÍTICO: Verificar se é arquivo estático (extensões)
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot']
+  const isStaticFile = staticExtensions.some(ext => pathname.endsWith(ext))
+  
+  if (isStaticFile) {
+    console.log('📁 Middleware: Arquivo estático permitido:', pathname)
+    return NextResponse.next()
+  }
+
+  // ✅ Verificar configuração do Supabase
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
   const isSupabaseConfigured = !!(
     supabaseUrl && 
     supabaseKey && 
@@ -41,67 +76,43 @@ export async function middleware(request: NextRequest) {
     !supabaseKey.includes('placeholder')
   )
 
-  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso (incluindo PWA)
-  const publicRoutes = [
-    '/login',
-    '/register', 
-    '/reset-password',
-    '/api/auth',
-    '/_next',
-    '/favicon.ico',
-    '/manifest.json',
-    '/sw.js',
-    '/icon.png',
-    '/icons/',
-    '/browserconfig.xml',
-    '/robots.txt',
-    '/sitemap.xml'
-  ]
-
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route) || 
-    request.nextUrl.pathname === route
-  )
-
-  // ✅ CRÍTICO: Permitir acesso direto a arquivos PWA
-  if (isPublicRoute) {
-    console.log('🌐 Middleware: Rota pública permitida:', request.nextUrl.pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ CRÍTICO: Verificar se é arquivo estático PWA
-  const pwaFiles = [
-    'manifest.json',
-    'sw.js', 
-    'favicon.ico',
-    'icon.png',
-    'browserconfig.xml'
-  ]
-
-  const isPwaFile = pwaFiles.some(file => 
-    request.nextUrl.pathname.endsWith(file)
-  )
-
-  if (isPwaFile) {
-    console.log('📱 Middleware: Arquivo PWA permitido:', request.nextUrl.pathname)
-    return NextResponse.next()
-  }
-
-  // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
+  // ✅ Se Supabase não configurado, permitir tudo
   if (!isSupabaseConfigured) {
     console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
     return NextResponse.next()
   }
 
-  // ✅ CRÍTICO: Para página de login, permitir acesso SEM verificar autenticação
-  // Isso resolve o problema de redirecionamento infinito
-  if (request.nextUrl.pathname === '/login') {
-    console.log('🔓 Middleware: Permitindo acesso direto à página de login (sem verificar auth)')
+  // ✅ CRÍTICO: Para rotas protegidas, verificar autenticação
+  const PROTECTED_ROUTES = [
+    '/dashboard',
+    '/cardapios',
+    '/fichas-tecnicas',
+    '/insumos',
+    '/fornecedores',
+    '/estoque',
+    '/producao',
+    '/relatorios',
+    '/usuarios',
+    '/auditoria',
+    '/analise-temporal',
+    '/alertas',
+    '/configuracoes'
+  ]
+
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  )
+
+  // ✅ Se não é rota protegida, permitir acesso
+  if (!isProtectedRoute) {
+    console.log('🌐 Middleware: Rota pública permitida:', pathname)
     return NextResponse.next()
   }
 
+  // ✅ VERIFICAÇÃO DE AUTENTICAÇÃO apenas para rotas protegidas
   try {
-    // ✅ CORRIGIDO: Usar const para response
+    console.log('🔒 Middleware: Verificando autenticação para rota protegida:', pathname)
+
     const response = NextResponse.next({
       request,
     })
@@ -125,13 +136,12 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ CORRIGIDO: Verificar autenticação com timeout e tipos específicos
+    // ✅ Verificação rápida de autenticação (timeout reduzido)
     const authPromise: Promise<AuthResult> = supabase.auth.getUser()
     const timeoutPromise: Promise<never> = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Auth timeout')), 3000) // ✅ Reduzido para 3 segundos
+      setTimeout(() => reject(new Error('Auth timeout')), 2000) // ✅ 2 segundos apenas
     })
 
-    // ✅ CORRIGIDO: Usar tipo específico
     const authResult: AuthResult = await Promise.race([
       authPromise,
       timeoutPromise
@@ -139,60 +149,52 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user }, error } = authResult
 
-    // ✅ CORRIGIDO: Para outras rotas (não login), verificar autenticação
+    // ✅ Se não autenticado, redirecionar para login
     if (error || !user) {
       console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
+      const redirectUrl = new URL('/login', request.url)
       
-      // ✅ CRÍTICO: Evitar loop de redirecionamento
-      if (request.nextUrl.pathname !== '/login') {
-        const redirectUrl = new URL('/login', request.url)
-        // ✅ Adicionar parâmetro de redirect apenas se não for a home
-        if (request.nextUrl.pathname !== '/') {
-          redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
-        }
-        return NextResponse.redirect(redirectUrl)
+      // ✅ Adicionar parâmetro de redirect apenas se não for a home
+      if (pathname !== '/') {
+        redirectUrl.searchParams.set('redirect', pathname)
       }
       
-      // Se já está na página de login, permitir
-      return response
+      return NextResponse.redirect(redirectUrl)
     }
 
     // ✅ Usuário autenticado, permitir acesso
-    console.log('✅ Middleware: Usuário autenticado:', user?.email)
+    console.log('✅ Middleware: Usuário autenticado para rota protegida:', user?.email)
     return response
 
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
     
-    // ✅ CORRIGIDO: Em caso de erro, comportamento específico por rota
-    if (request.nextUrl.pathname === '/login') {
-      // Se erro na página de login, permitir acesso
-      console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso ao login')
-      return NextResponse.next()
-    }
-    
-    // Para outras rotas, redirecionar para login em caso de erro
+    // ✅ Em caso de erro, redirecionar para login
     console.warn('🔧 Middleware: Erro na autenticação, redirecionando para login')
     const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 }
 
-// ✅ CORRIGIDO: Configuração que exclui arquivos PWA E permite manifest.json
+// ✅ CONFIGURAÇÃO DEFINITIVA: Matcher que exclui TUDO que não deve ser interceptado
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Match all request paths except:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - manifest.json (PWA manifest) ← CRÍTICO: Excluído para evitar erro 401
-     * - sw.js (service worker)
-     * - icon.png (PWA icons)
-     * - icons/ (PWA icons directory)
+     * - manifest.json (PWA manifest) ← CRÍTICO
+     * - sw.js (service worker) ← CRÍTICO
+     * - icon.png (PWA icons) ← CRÍTICO
+     * - icons/ (PWA icons directory) ← CRÍTICO
      * - public folder
      * - api routes that don't need auth
+     * - login page ← CRÍTICO
+     * - register page
+     * - reset-password page
+     * - All static file extensions
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png|icons/|public|api/auth|browserconfig.xml|robots.txt|sitemap.xml).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png|icons/|public|api/auth|login|register|reset-password|browserconfig.xml|robots.txt|sitemap.xml|.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)).*)',
   ],
 }
