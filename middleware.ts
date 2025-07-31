@@ -8,6 +8,28 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  const pathname = request.nextUrl.pathname
+  
+  // ✅ CRÍTICO: NUNCA interceptar manifest.json (resolve erro 401)
+  if (pathname === '/manifest.json') {
+    return NextResponse.next()
+  }
+  
+  // ✅ CRÍTICO: NUNCA interceptar arquivos PWA
+  if (pathname === '/sw.js' || pathname === '/favicon.ico' || pathname.startsWith('/icon')) {
+    return NextResponse.next()
+  }
+  
+  // ✅ CRÍTICO: NUNCA interceptar página de login (resolve loop infinito)
+  if (pathname === '/login') {
+    return NextResponse.next()
+  }
+  
+  // ✅ CRÍTICO: NUNCA interceptar arquivos Next.js
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -20,27 +42,6 @@ export async function middleware(request: NextRequest) {
     !supabaseUrl.includes('placeholder') &&
     !supabaseKey.includes('placeholder')
   )
-
-  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso (incluindo PWA)
-  const publicRoutes = [
-    '/login',
-    '/register', 
-    '/reset-password',
-    '/api/auth',
-    '/_next',
-    '/favicon.ico',
-    '/manifest.json',
-    '/sw.js',
-    '/icon'
-  ]
-
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  if (isPublicRoute) {
-    return response
-  }
 
   // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
   if (!isSupabaseConfigured) {
@@ -96,23 +97,19 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ Verificar autenticação para TODAS as rotas protegidas
-    const { data: { user }, error } = await supabase.auth.getUser()
+    if (pathname.startsWith('/dashboard')) {
+      const { data: { user }, error } = await supabase.auth.getUser()
 
-    // ✅ Se há erro ou usuário não autenticado, redirecionar para login
-    if (error || !user) {
-      console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
-      
-      // ✅ Evitar loop de redirecionamento
-      if (request.nextUrl.pathname !== '/login') {
+      if (error || !user) {
+        console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
         const redirectUrl = new URL('/login', request.url)
-        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        redirectUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(redirectUrl)
       }
+
+      console.log('✅ Middleware: Usuário autenticado:', user?.email)
     }
 
-    // ✅ Usuário autenticado, permitir acesso
-    console.log('✅ Middleware: Usuário autenticado:', user?.email)
     return response
 
   } catch (error) {
