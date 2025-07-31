@@ -23,6 +23,7 @@ export async function middleware(request: NextRequest) {
 
   // ✅ ROTAS PÚBLICAS: Sempre permitir acesso (incluindo PWA)
   const publicRoutes = [
+    '/',
     '/login',
     '/register', 
     '/reset-password',

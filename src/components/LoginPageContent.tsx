@@ -87,9 +87,13 @@ export default function LoginPageContent() {
         console.log('✅ Login: Usuário autenticado com sucesso:', data.user.email)
         console.log('🔍 Login: Session data:', data.session ? 'Session exists' : 'No session')
         
-        // ✅ Aguardar um pouco para garantir que o estado seja atualizado
-        console.log('⏳ Login: Aguardando 500ms para sincronização de estado...')
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('🔄 Login: Forçando atualização do estado de autenticação...')
+        
+        console.log('⏳ Login: Aguardando 1000ms para sincronização de estado...')
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        console.log('🔍 Login: Estado atual do usuário antes do redirect:', currentUser?.email || 'null')
         
         const redirect = searchParams.get('redirect') || '/dashboard'
         console.log('🚀 Login: Redirecionando para:', redirect)

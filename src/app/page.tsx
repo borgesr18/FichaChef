@@ -2,13 +2,30 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 
 export default function Home() {
   const router = useRouter()
+  const { user, loading, isConfigured } = useSupabase()
 
   useEffect(() => {
-    router.push('/dashboard')
-  }, [router])
+    if (loading) return
+    
+    if (user) {
+      router.push('/dashboard')
+      return
+    }
+    
+    if (isConfigured && !user) {
+      router.push('/login')
+      return
+    }
+    
+    if (!isConfigured) {
+      router.push('/dashboard')
+      return
+    }
+  }, [router, user, loading, isConfigured])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
