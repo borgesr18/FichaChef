@@ -8,49 +8,59 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  const pathname = request.nextUrl.pathname
+
+  // ✅ ROTAS QUE NUNCA DEVEM SER INTERCEPTADAS
+  const neverIntercept = [
+    '/manifest.json',
+    '/sw.js',
+    '/favicon.ico',
+    '/icon.png',
+    '/icon',
+    '/_next/',
+    '/api/',
+    '/login',
+    '/register',
+    '/reset-password',
+    '/auth/',
+    '/public/'
+  ]
+
+  // ✅ VERIFICAÇÃO IMEDIATA - PRIMEIRA COISA NO MIDDLEWARE
+  for (const route of neverIntercept) {
+    if (pathname.startsWith(route) || pathname === route) {
+      return response
+    }
+  }
+
+  // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // ✅ Verificar se Supabase está configurado
   const isSupabaseConfigured = !!(
     supabaseUrl && 
     supabaseKey && 
     supabaseUrl !== 'https://placeholder.supabase.co' && 
     supabaseKey !== 'placeholder-key' &&
-    !supabaseUrl.includes('placeholder') &&
-    !supabaseKey.includes('placeholder')
+    !supabaseUrl.includes('placeholder' ) &&
+    !supabaseKey.includes('placeholder') &&
+    supabaseUrl.length > 20 &&
+    supabaseKey.length > 20
   )
 
-  // ✅ ROTAS PÚBLICAS: Sempre permitir acesso (incluindo PWA)
-  const publicRoutes = [
-    '/',
-    '/login',
-    '/register', 
-    '/reset-password',
-    '/api/auth',
-    '/_next',
-    '/favicon.ico',
-    '/manifest.json',
-    '/sw.js',
-    '/icon'
-  ]
-
-  const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  if (isPublicRoute) {
+  // ✅ SE SUPABASE NÃO CONFIGURADO, PERMITIR ACESSO (MODO DESENVOLVIMENTO)
+  if (!isSupabaseConfigured) {
+    console.log('🔧 Middleware: Supabase não configurado - permitindo acesso (modo dev)')
     return response
   }
 
-  // ✅ Se Supabase não está configurado, permitir acesso (modo desenvolvimento)
-  if (!isSupabaseConfigured) {
-    console.log('🔧 Middleware: Supabase não configurado - permitindo acesso')
+  // ✅ APENAS DASHBOARD PRECISA DE AUTENTICAÇÃO
+  if (!pathname.startsWith('/dashboard')) {
     return response
   }
 
   try {
-    // ✅ Criar cliente Supabase para servidor
+    // ✅ CRIAR CLIENTE SUPABASE PARA SERVIDOR
     const supabase = createServerClient(
       supabaseUrl!,
       supabaseKey!,
@@ -97,38 +107,48 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // ✅ Verificar autenticação para TODAS as rotas protegidas
+    // ✅ VERIFICAR AUTENTICAÇÃO DO USUÁRIO
     const { data: { user }, error } = await supabase.auth.getUser()
 
-    // ✅ Se há erro ou usuário não autenticado, redirecionar para login
+    // ✅ SE HÁ ERRO OU USUÁRIO NÃO AUTENTICADO
     if (error || !user) {
       console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
       
-      // ✅ Evitar loop de redirecionamento
-      if (request.nextUrl.pathname !== '/login') {
+      // ✅ EVITAR LOOP DE REDIRECIONAMENTO
+      if (pathname !== '/login') {
         const redirectUrl = new URL('/login', request.url)
-        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        redirectUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(redirectUrl)
       }
     }
 
-    // ✅ Usuário autenticado, permitir acesso
+    // ✅ USUÁRIO AUTENTICADO, PERMITIR ACESSO
     console.log('✅ Middleware: Usuário autenticado:', user?.email)
     return response
 
   } catch (error) {
     console.error('❌ Middleware: Erro na verificação de autenticação:', error)
     
-    // ✅ Em caso de erro, permitir acesso para não quebrar o sistema
+    // ✅ EM CASO DE ERRO, PERMITIR ACESSO PARA NÃO QUEBRAR O SISTEMA
     console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
     return response
   }
 }
 
-// ✅ CONFIGURAÇÃO: Não interceptar arquivos estáticos e PWA
+// ✅ CONFIGURAÇÃO OTIMIZADA - NÃO INTERCEPTAR ARQUIVOS ESTÁTICOS E PWA
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - manifest.json (PWA manifest)
+     * - sw.js (service worker)
+     * - icon.png (PWA icon)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png).*)',
   ],
 }
 
