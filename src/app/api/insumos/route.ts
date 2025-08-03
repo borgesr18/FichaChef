@@ -70,8 +70,8 @@ async function verifyAuth() {
   }
 }
 
-// ✅ GET - LISTAR INSUMOS
-export async function GET(request: NextRequest) {
+// ✅ GET - LISTAR INSUMOS (CORRIGIDO - SEM PARÂMETRO request)
+export async function GET() {
   try {
     // ✅ VERIFICAR AUTENTICAÇÃO
     const user = await verifyAuth()
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ✅ POST - CRIAR INSUMO
+// ✅ POST - CRIAR INSUMO (MANTIDO - USA request)
 export async function POST(request: NextRequest) {
   try {
     // ✅ VERIFICAR AUTENTICAÇÃO
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ✅ PUT - ATUALIZAR INSUMO
+// ✅ PUT - ATUALIZAR INSUMO (MANTIDO - USA request)
 export async function PUT(request: NextRequest) {
   try {
     // ✅ VERIFICAR AUTENTICAÇÃO
@@ -330,7 +330,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// ✅ DELETE - EXCLUIR INSUMO
+// ✅ DELETE - EXCLUIR INSUMO (MANTIDO - USA request)
 export async function DELETE(request: NextRequest) {
   try {
     // ✅ VERIFICAR AUTENTICAÇÃO
@@ -412,3 +412,4 @@ export async function DELETE(request: NextRequest) {
 process.on('beforeExit', async () => {
   await prisma.$disconnect()
 })
+
