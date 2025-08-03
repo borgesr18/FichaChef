@@ -210,7 +210,8 @@ export default function InsumosPage() {
         'carboidratos',
         'gorduras',
         'fibras',
-        'sodio'
+        'sodio',
+        'codigoTaco'
       ])
 
       const response = await fetch(url, {
