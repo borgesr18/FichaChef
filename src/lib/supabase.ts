@@ -24,21 +24,6 @@ export const supabase = createClient(
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      storage: typeof window !== 'undefined' ? {
-        getItem: (key: string) => {
-          return document.cookie
-            .split('; ')
-            .find(row => row.startsWith(key + '='))
-            ?.split('=')[1] || null
-        },
-        setItem: (key: string, value: string) => {
-          document.cookie = `${key}=${value}; path=/; max-age=31536000; SameSite=Lax`
-        },
-        removeItem: (key: string) => {
-          document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
-        }
-      } : undefined,
-      storageKey: 'sb-access-token',
     },
     global: {
       headers: {
@@ -78,6 +63,15 @@ export async function getCurrentUser() {
     
     if (error) {
       console.error('❌ Erro ao obter usuário:', error.message)
+      
+      if (error.message.includes('refresh') || error.message.includes('Invalid')) {
+        console.log('🧹 Limpando tokens corrompidos detectados')
+        await supabase.auth.signOut()
+        if (typeof window !== 'undefined') {
+          localStorage.clear()
+        }
+      }
+      
       return null
     }
     
