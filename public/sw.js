@@ -1,10 +1,10 @@
-// ✅ SERVICE WORKER v5.0.0 - SOLUÇÃO DEFINITIVA
+// ✅ SERVICE WORKER v5.1.0 - FORÇA REFRESH DO CACHE
 // Corrige "body stream already read" não interceptando APIs problemáticas
 
-const CACHE_VERSION = 'fichachef-v5.0.0'
+const CACHE_VERSION = 'fichachef-v5.1.0'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
-const SW_VERSION = 'SW v5.0.0'
+const SW_VERSION = 'SW v5.1.0'
 
 // ✅ ARQUIVOS ESTÁTICOS PARA CACHE
 const STATIC_ASSETS = [
@@ -42,7 +42,7 @@ function swLog(message, data = null) {
 
 // ✅ INSTALL EVENT - CACHE INICIAL
 self.addEventListener('install', (event) => {
-  swLog('Installing Service Worker v5.0.0')
+  swLog('Installing Service Worker v5.1.0')
   
   event.waitUntil(
     Promise.all([
@@ -71,7 +71,7 @@ self.addEventListener('install', (event) => {
 
 // ✅ ACTIVATE EVENT - LIMPEZA DE CACHES ANTIGOS
 self.addEventListener('activate', (event) => {
-  swLog('Activating Service Worker v5.0.0')
+  swLog('Activating Service Worker v5.1.0')
   
   event.waitUntil(
     Promise.all([
@@ -279,5 +279,5 @@ self.addEventListener('push', (event) => {
   }
 })
 
-swLog('Service Worker v5.0.0 script loaded successfully')
+swLog('Service Worker v5.1.0 script loaded successfully')
 
