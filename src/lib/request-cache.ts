@@ -25,7 +25,12 @@ export function withRequestDeduplication<T>(
     if (firstKey) requestCache.delete(firstKey)
   }
 
-  const promise = requestFn().finally(() => {
+  const promise = requestFn().then(async (result) => {
+    if (result instanceof Response) {
+      return result.clone() as T
+    }
+    return result
+  }).finally(() => {
     setTimeout(() => {
       requestCache.delete(key)
     }, ttl)

@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { insumoSchema } from '@/lib/validations'
 import { 
-  createValidationErrorResponse, 
-  createSuccessResponse 
+  createValidationErrorResponse,
+  createSuccessResponse,
+  createServerErrorResponse
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
@@ -40,40 +41,46 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const auth = await requireApiAuthentication(request)
-  
-  if (!auth.authenticated) {
-    return auth.response!
-  }
-  
-  const user = auth.user!
+  try {
+    const auth = await requireApiAuthentication(request)
+    
+    if (!auth.authenticated) {
+      return auth.response!
+    }
+    
+    const user = auth.user!
 
-  const body = await request.json()
-  const parsedBody = insumoSchema.safeParse(body)
+    const body = await request.json()
+    const parsedBody = insumoSchema.safeParse(body)
 
-  if (!parsedBody.success) {
-    return createValidationErrorResponse(parsedBody.error.message)
-  }
+    if (!parsedBody.success) {
+      console.error('Validation error:', parsedBody.error.issues)
+      return createValidationErrorResponse(parsedBody.error.message)
+    }
 
-  const data = parsedBody.data
+    const data = parsedBody.data
 
-  const insumo = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.insumo.create({
-        data: {
-          ...data,
-          userId: user.id,
-        },
-        include: {
-          categoria: true,
-          unidadeCompra: true,
-          fornecedorRel: true,
-        },
+    const insumo = await withConnectionHealthCheck(async () => {
+      return await withDatabaseRetry(async () => {
+        return await prisma.insumo.create({
+          data: {
+            ...data,
+            userId: user.id,
+          },
+          include: {
+            categoria: true,
+            unidadeCompra: true,
+            fornecedorRel: true,
+          },
+        })
       })
     })
-  })
 
-  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', { nome: insumo.nome }, request)
+    await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', { nome: insumo.nome }, request)
 
-  return createSuccessResponse(insumo, 201)
+    return createSuccessResponse(insumo, 201)
+  } catch (error) {
+    console.error('Error in POST /api/insumos:', error)
+    return createServerErrorResponse('Erro interno do servidor. Verifique a configuração das variáveis de ambiente.')
+  }
 })
