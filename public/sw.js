@@ -1,12 +1,11 @@
-// ✅ SERVICE WORKER v5.1.0 - FORÇA REFRESH DO CACHE
-// Corrige "body stream already read" não interceptando APIs problemáticas
+// ✅ SERVICE WORKER v6.0.0 - SOLUÇÃO DEFINITIVA
+// NÃO INTERCEPTA NENHUMA API - RESOLVE "body stream already read"
 
-const CACHE_VERSION = 'fichachef-v5.1.0'
+const CACHE_VERSION = 'fichachef-v6.0.0'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
-const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
-const SW_VERSION = 'SW v5.1.0'
+const SW_VERSION = 'SW v6.0.0'
 
-// ✅ ARQUIVOS ESTÁTICOS PARA CACHE
+// ✅ APENAS ARQUIVOS ESTÁTICOS PARA CACHE
 const STATIC_ASSETS = [
   '/',
   '/dashboard',
@@ -16,19 +15,7 @@ const STATIC_ASSETS = [
   '/favicon.ico'
 ]
 
-// ✅ APIs QUE NUNCA DEVEM SER INTERCEPTADAS (RESOLVE BODY STREAM ALREADY READ)
-const NEVER_INTERCEPT_APIS = [
-  '/api/notifications',
-  '/api/insumos',
-  '/api/fichas-tecnicas',
-  '/api/produtos',
-  '/api/fornecedores',
-  '/api/dashboard-stats',
-  '/api/auth',
-  '/api/user-preferences'
-]
-
-// ✅ FUNÇÃO DE LOG PADRONIZADA
+// ✅ FUNÇÃO DE LOG SIMPLIFICADA
 function swLog(message, data = null) {
   const timestamp = new Date().toISOString()
   const logData = {
@@ -40,46 +27,40 @@ function swLog(message, data = null) {
   console.log(`[${SW_VERSION}] ${message}`, logData)
 }
 
-// ✅ INSTALL EVENT - CACHE INICIAL
+// ✅ INSTALL EVENT - CACHE INICIAL APENAS
 self.addEventListener('install', (event) => {
-  swLog('Installing Service Worker v5.1.0')
+  swLog('Installing Service Worker v6.0.0')
   
   event.waitUntil(
-    Promise.all([
-      // Cache de arquivos estáticos
-      caches.open(STATIC_CACHE).then(async (cache) => {
-        swLog('Caching static assets')
-        
-        const cachePromises = STATIC_ASSETS.map(async (asset) => {
-          try {
-            await cache.add(asset)
-            swLog('Cached successfully', { asset })
-          } catch (error) {
-            swLog('Failed to cache asset', { asset, error: error.message })
-          }
-        })
-        
-        await Promise.allSettled(cachePromises)
-        swLog('Static assets caching completed')
-      })
-    ]).then(() => {
+    caches.open(STATIC_CACHE).then(async (cache) => {
+      swLog('Caching static assets only')
+      
+      try {
+        await cache.addAll(STATIC_ASSETS)
+        swLog('Static assets cached successfully')
+      } catch (error) {
+        swLog('Error caching static assets', { error: error.message })
+      }
+      
       swLog('Service Worker installation completed')
-      return self.skipWaiting()
     })
   )
+  
+  // ✅ ATIVAR IMEDIATAMENTE
+  self.skipWaiting()
 })
 
-// ✅ ACTIVATE EVENT - LIMPEZA DE CACHES ANTIGOS
+// ✅ ACTIVATE EVENT - LIMPEZA DE CACHE ANTIGO
 self.addEventListener('activate', (event) => {
-  swLog('Activating Service Worker v5.1.0')
+  swLog('Activating Service Worker v6.0.0')
   
   event.waitUntil(
     Promise.all([
-      // Limpar caches antigos
+      // ✅ LIMPAR CACHES ANTIGOS
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (!cacheName.startsWith(CACHE_VERSION)) {
+            if (cacheName !== STATIC_CACHE) {
               swLog('Deleting old cache', { cacheName })
               return caches.delete(cacheName)
             }
@@ -87,7 +68,7 @@ self.addEventListener('activate', (event) => {
         )
       }),
       
-      // Tomar controle de todas as abas
+      // ✅ ASSUMIR CONTROLE IMEDIATAMENTE
       self.clients.claim()
     ]).then(() => {
       swLog('Service Worker activated successfully')
@@ -95,115 +76,66 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// ✅ FETCH EVENT - ESTRATÉGIA CORRIGIDA
+// ✅ FETCH EVENT - NÃO INTERCEPTAR APIS
 self.addEventListener('fetch', (event) => {
-  const { request } = event
-  const url = new URL(request.url)
+  const url = new URL(event.request.url)
   
-  // ✅ IGNORAR REQUESTS NÃO-GET
-  if (request.method !== 'GET') {
-    return
+  // ✅ NUNCA INTERCEPTAR APIS - RESOLVE "body stream already read"
+  if (url.pathname.startsWith('/api/')) {
+    swLog('Skipping API request (no interception)', { url: url.pathname })
+    return // ✅ DEIXAR FETCH NORMAL ACONTECER
   }
   
-  // ✅ IGNORAR REQUESTS EXTERNOS
-  if (url.origin !== self.location.origin) {
-    return
+  // ✅ NUNCA INTERCEPTAR REQUESTS POST/PUT/DELETE
+  if (event.request.method !== 'GET') {
+    swLog('Skipping non-GET request', { method: event.request.method, url: url.pathname })
+    return // ✅ DEIXAR FETCH NORMAL ACONTECER
   }
   
-  // ✅ CRÍTICO: NUNCA INTERCEPTAR APIs PROBLEMÁTICAS
-  const isProblematicAPI = NEVER_INTERCEPT_APIS.some(api => 
-    url.pathname.startsWith(api)
-  )
-  
-  if (isProblematicAPI) {
-    swLog('Skipping problematic API (prevents body stream already read)', { 
-      url: url.pathname 
-    })
-    return // ✅ DEIXAR FETCH NORMAL SEM INTERCEPTAÇÃO
+  // ✅ NUNCA INTERCEPTAR CHROME EXTENSIONS
+  if (url.protocol === 'chrome-extension:') {
+    return // ✅ DEIXAR FETCH NORMAL ACONTECER
   }
   
-  swLog('Handling request', { url: url.pathname })
-  
-  // ✅ ESTRATÉGIA POR TIPO DE RECURSO
-  if (url.pathname.startsWith('/_next/') || url.pathname.includes('.')) {
-    // ✅ ASSETS ESTÁTICOS - Cache First
+  // ✅ APENAS INTERCEPTAR NAVEGAÇÃO E ASSETS ESTÁTICOS
+  if (event.request.mode === 'navigate' || 
+      url.pathname.endsWith('.js') || 
+      url.pathname.endsWith('.css') || 
+      url.pathname.endsWith('.png') || 
+      url.pathname.endsWith('.jpg') || 
+      url.pathname.endsWith('.ico') ||
+      url.pathname === '/manifest.json') {
+    
+    swLog('Handling static request', { url: url.pathname })
+    
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
+      caches.match(event.request).then((response) => {
+        if (response) {
           swLog('Cache hit', { url: url.pathname })
-          
-          // ✅ BACKGROUND UPDATE SEGURO
-          fetch(request).then((response) => {
-            if (response.ok && response.status === 200) {
-              try {
-                const responseClone = response.clone()
-                caches.open(STATIC_CACHE).then((cache) => {
-                  cache.put(request, responseClone).catch(() => {
-                    // Ignorar erros de cache
-                  })
-                })
-                swLog('Background update completed', { url: url.pathname })
-              } catch (error) {
-                swLog('Failed to clone response for background update', { 
-                  url: url.pathname, 
-                  error: error.message 
-                })
-              }
-            }
-          }).catch(() => {
-            // Ignorar erros de background update
-          })
-          
-          return cachedResponse
+          return response
         }
         
-        // ✅ NETWORK FALLBACK COM TRATAMENTO SEGURO
-        return fetch(request).then((response) => {
-          if (response.ok && response.status === 200) {
-            try {
-              const responseClone = response.clone()
-              caches.open(STATIC_CACHE).then((cache) => {
-                cache.put(request, responseClone).catch(() => {
-                  // Ignorar erros de cache
-                })
-              })
+        swLog('Cache miss - fetching from network', { url: url.pathname })
+        return fetch(event.request).then((networkResponse) => {
+          // ✅ CACHE APENAS SE FOR SUCESSO
+          if (networkResponse.ok) {
+            const responseToCache = networkResponse.clone()
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(event.request, responseToCache)
               swLog('Network response cached', { url: url.pathname })
-            } catch (error) {
-              swLog('Failed to clone response for caching', { 
-                url: url.pathname, 
-                error: error.message 
-              })
-            }
+            })
           }
-          return response
+          
+          return networkResponse
         }).catch((error) => {
-          swLog('Network request failed', { url: url.pathname, error: error.message })
-          return new Response('Offline', { status: 503 })
-        })
-      })
-    )
-  } else {
-    // ✅ PÁGINAS DINÂMICAS - Network First
-    event.respondWith(
-      fetch(request).then((response) => {
-        swLog('Network response served', { url: url.pathname })
-        return response
-      }).catch((error) => {
-        swLog('Network request failed', { url: url.pathname, error: error.message })
-        
-        // ✅ FALLBACK PARA CACHE
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            swLog('Serving from cache', { url: url.pathname })
-            return cachedResponse
+          swLog('Network fetch failed', { url: url.pathname, error: error.message })
+          
+          // ✅ RETORNAR PÁGINA OFFLINE PARA NAVEGAÇÃO
+          if (event.request.mode === 'navigate') {
+            return caches.match('/') || new Response('Offline', { status: 503 })
           }
           
-          // ✅ FALLBACK PARA PÁGINA OFFLINE
-          if (url.pathname.startsWith('/dashboard')) {
-            return caches.match('/login')
-          }
-          
-          return new Response('Offline', { status: 503 })
+          throw error
         })
       })
     )
@@ -212,72 +144,50 @@ self.addEventListener('fetch', (event) => {
 
 // ✅ MESSAGE EVENT - COMUNICAÇÃO COM CLIENTE
 self.addEventListener('message', (event) => {
-  const { data } = event
+  swLog('Message received', { data: event.data })
   
-  if (data.type === 'SKIP_WAITING') {
-    swLog('Received skip waiting message')
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    swLog('Skip waiting requested')
     self.skipWaiting()
   }
   
-  if (data.type === 'CLEAR_CACHE') {
-    swLog('Received clear cache message')
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: SW_VERSION })
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    swLog('Cache clear requested')
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => caches.delete(cacheName))
       )
     }).then(() => {
       swLog('All caches cleared')
-      event.ports[0]?.postMessage({ success: true })
+      event.ports[0].postMessage({ success: true })
     })
-  }
-  
-  if (data.type === 'GET_VERSION') {
-    swLog('Received version request')
-    event.ports[0]?.postMessage({ version: SW_VERSION })
   }
 })
 
-// ✅ ERROR EVENT - TRATAMENTO DE ERROS
+// ✅ ERROR EVENT - LOG DE ERROS
 self.addEventListener('error', (event) => {
   swLog('Service Worker error', { 
     message: event.message,
     filename: event.filename,
-    lineno: event.lineno 
+    lineno: event.lineno,
+    colno: event.colno
   })
 })
 
-// ✅ UNHANDLED REJECTION - PREVENIR LOGS DESNECESSÁRIOS
+// ✅ UNHANDLED REJECTION - LOG DE PROMISES REJEITADAS
 self.addEventListener('unhandledrejection', (event) => {
-  swLog('Unhandled promise rejection handled', { 
-    reason: event.reason?.message || event.reason 
+  swLog('Unhandled promise rejection', { 
+    reason: event.reason,
+    promise: event.promise
   })
+  
   // ✅ PREVENIR QUE APAREÇA NO CONSOLE
   event.preventDefault()
 })
 
-// ✅ SYNC EVENT - BACKGROUND SYNC (FUTURO)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    swLog('Background sync triggered')
-    // Implementar sincronização em background no futuro
-  }
-})
-
-// ✅ PUSH EVENT - NOTIFICAÇÕES PUSH (FUTURO)
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json()
-    swLog('Push notification received', data)
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title, {
-        body: data.body,
-        icon: '/icon.png',
-        badge: '/icon.png'
-      })
-    )
-  }
-})
-
-swLog('Service Worker v5.1.0 script loaded successfully')
+swLog('Service Worker v6.0.0 script loaded successfully')
 
