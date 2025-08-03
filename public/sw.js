@@ -1,7 +1,7 @@
-// ✅ SERVICE WORKER v4.2.0 - CORRIGIDO
-// Versão que resolve "Unhandled promise rejection" do log
+// ✅ SERVICE WORKER v4.4.0 - CORRIGIDO
+// Versão que resolve "body stream already read" e "Unhandled promise rejection"
 
-const CACHE_VERSION = 'fichachef-v4.2.0'
+const CACHE_VERSION = 'fichachef-v4.4.0'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
 const OFFLINE_CACHE = `${CACHE_VERSION}-offline`
@@ -36,16 +36,16 @@ function swLog(message, data = null) {
   const timestamp = new Date().toISOString()
   const logData = {
     timestamp,
-    version: 'SW v4.2.0',
+    version: 'SW v4.4.0',
     message,
     ...(data && { data })
   }
-  console.log(`[SW v4.2.0] ${message}`, logData)
+  console.log(`[SW v4.4.0] ${message}`, logData)
 }
 
 // ✅ Install Event - Cache inicial com tratamento robusto de erros
 self.addEventListener('install', (event) => {
-  swLog('Installing Service Worker v4.2.0')
+  swLog('Installing Service Worker v4.4.0')
   
   event.waitUntil(
     Promise.allSettled([
@@ -103,7 +103,7 @@ self.addEventListener('install', (event) => {
 
 // ✅ Activate Event - Limpeza de caches antigos
 self.addEventListener('activate', (event) => {
-  swLog('Activating Service Worker v4.2.0')
+  swLog('Activating Service Worker v4.4.0')
   
   event.waitUntil(
     Promise.allSettled([
@@ -138,6 +138,12 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('.svg')) {
     swLog('Ignoring SVG request (file may not exist)', { url: url.pathname })
     return // Deixar o navegador lidar com o erro 404
+  }
+  
+  if (url.pathname.startsWith('/api/notifications') || 
+      url.pathname.startsWith('/api/insumos')) {
+    swLog('Skipping problematic API', { url: url.pathname })
+    return // ✅ DEIXAR fetch normal sem interceptação
   }
   
   // ✅ Ignorar requisições não-GET
@@ -235,9 +241,14 @@ async function handleCacheFirst(request, strategy) {
     const networkResponse = await fetch(request)
     if (networkResponse.ok) {
       try {
-        const cache = await caches.open(DYNAMIC_CACHE)
-        await cache.put(request, networkResponse.clone())
-        swLog('Network response cached', { url: request.url })
+        if (networkResponse.body && networkResponse.headers.get('content-type')) {
+          const cache = await caches.open(DYNAMIC_CACHE)
+          const responseClone = networkResponse.clone()
+          await cache.put(request, responseClone)
+          swLog('Network response cached', { url: request.url })
+        } else {
+          swLog('Response not cacheable (no body or content-type)', { url: request.url })
+        }
       } catch (cacheError) {
         swLog('Failed to cache response', { url: request.url, error: cacheError.message })
       }
@@ -256,9 +267,14 @@ async function handleNetworkFirst(request, strategy) {
     const networkResponse = await fetch(request)
     if (networkResponse.ok) {
       try {
-        const cache = await caches.open(DYNAMIC_CACHE)
-        await cache.put(request, networkResponse.clone())
-        swLog('Network response cached', { url: request.url })
+        if (networkResponse.body && networkResponse.headers.get('content-type')) {
+          const cache = await caches.open(DYNAMIC_CACHE)
+          const responseClone = networkResponse.clone()
+          await cache.put(request, responseClone)
+          swLog('Network response cached', { url: request.url })
+        } else {
+          swLog('Response not cacheable (no body or content-type)', { url: request.url })
+        }
       } catch (cacheError) {
         swLog('Failed to cache response', { url: request.url, error: cacheError.message })
       }
@@ -279,9 +295,14 @@ async function handleStaleWhileRevalidate(request, strategy) {
   const networkPromise = fetch(request).then(async (networkResponse) => {
     if (networkResponse.ok) {
       try {
-        const cache = await caches.open(DYNAMIC_CACHE)
-        await cache.put(request, networkResponse.clone())
-        swLog('Background update completed', { url: request.url })
+        if (networkResponse.body && networkResponse.headers.get('content-type')) {
+          const cache = await caches.open(DYNAMIC_CACHE)
+          const responseClone = networkResponse.clone()
+          await cache.put(request, responseClone)
+          swLog('Background update completed', { url: request.url })
+        } else {
+          swLog('Response not cacheable in background (no body or content-type)', { url: request.url })
+        }
       } catch (cacheError) {
         swLog('Background cache failed', { url: request.url, error: cacheError.message })
       }
@@ -410,5 +431,5 @@ self.addEventListener('unhandledrejection', (event) => {
   event.preventDefault()
 })
 
-swLog('Service Worker v4.2.0 script loaded successfully')
+swLog('Service Worker v4.4.0 script loaded successfully')
 
