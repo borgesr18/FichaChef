@@ -126,9 +126,16 @@ export default function LoginPageContent() {
     )
   }
 
-  // ✅ Se usuário já está logado, mostrar redirecionamento
+  // ✅ Se usuário já está logado, mostrar redirecionamento E forçar navegação
   if (user) {
     console.log('🔄 LoginPageContent: Renderizando tela de redirecionamento para usuário:', user.email)
+    
+    React.useEffect(() => {
+      const redirect = searchParams.get('redirect') || '/dashboard'
+      console.log('🚀 LoginPageContent: FORÇANDO redirecionamento imediato para:', redirect)
+      router.push(redirect)
+    }, [router, searchParams])
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
