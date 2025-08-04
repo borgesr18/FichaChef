@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import DebugPanel from "@/components/DebugPanel";
 import "./globals.css";
 
+
 export const metadata: Metadata = {
   title: "FichaChef - Sistema de Gestão Gastronômica",
   description: "Sistema completo para gestão de fichas técnicas, controle de estoque e cálculo de custos para cozinhas profissionais",

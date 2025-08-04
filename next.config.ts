@@ -120,10 +120,17 @@ const nextConfig: NextConfig = {
   // ✅ Configurações de rewrite para PWA
   async rewrites() {
     return [
-      // ✅ Garantir que manifest.json seja servido corretamente
+      // ✅ Garantir que manifest.json seja servido corretamente sem middleware
       {
         source: '/manifest.json',
         destination: '/manifest.json',
+        has: [
+          {
+            type: 'header',
+            key: 'accept',
+            value: '.*application/manifest.*'
+          }
+        ]
       },
       // ✅ Garantir que service worker seja servido corretamente
       {
