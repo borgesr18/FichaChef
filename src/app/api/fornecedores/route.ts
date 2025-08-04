@@ -47,6 +47,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const { logUserAction, extractRequestMetadata } = await import('@/lib/permissions')
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = fornecedorSchema.safeParse(body)
 
@@ -72,8 +74,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  const { logUserAction } = await import('@/lib/permissions')
-  await logUserAction(user.id, 'create', 'fornecedores', fornecedor.id, 'fornecedor', { nome: fornecedor.nome }, request)
+  await logUserAction(user.id, 'create', 'fornecedores', fornecedor.id, 'fornecedor', { nome: fornecedor.nome }, requestMeta)
 
   return createSuccessResponse(fornecedor, 201)
 })

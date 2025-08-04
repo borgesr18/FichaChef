@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
 
@@ -24,6 +24,7 @@ export const PUT = withErrorHandler(async function PUT(
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = produtoSchema.safeParse(body)
 
@@ -68,7 +69,7 @@ export const PUT = withErrorHandler(async function PUT(
     })
   })
 
-  await logUserAction(user.id, 'update', 'produtos', id, 'produto', { nome: data.nome }, request)
+  await logUserAction(user.id, 'update', 'produtos', id, 'produto', { nome: data.nome }, requestMeta)
 
   return createSuccessResponse(produto)
 })
@@ -87,6 +88,8 @@ export const DELETE = withErrorHandler(async function DELETE(
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.produto.delete({
@@ -95,7 +98,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     })
   })
 
-  await logUserAction(user.id, 'delete', 'produtos', id, 'produto', {}, request)
+  await logUserAction(user.id, 'delete', 'produtos', id, 'produto', {}, requestMeta)
 
   return createSuccessResponse({ message: 'Produto excluído com sucesso' })
 })

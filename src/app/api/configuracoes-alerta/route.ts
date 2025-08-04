@@ -8,7 +8,7 @@ import {
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 
 export const GET = withErrorHandler(async function GET(request: NextRequest) {
   const auth = await requireApiAuthentication(request)
@@ -48,6 +48,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = configuracaoAlertaSchema.safeParse(body)
 
@@ -83,7 +84,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       })
     })
     
-    await logUserAction(user.id, 'update', 'alertas', configuracao.id, 'configuracao_alerta', data, request)
+    await logUserAction(user.id, 'update', 'alertas', configuracao.id, 'configuracao_alerta', data, requestMeta)
     return createSuccessResponse(configuracao)
   } else {
     const configuracao = await withConnectionHealthCheck(async () => {
@@ -97,7 +98,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       })
     })
     
-    await logUserAction(user.id, 'create', 'alertas', configuracao.id, 'configuracao_alerta', data, request)
+    await logUserAction(user.id, 'create', 'alertas', configuracao.id, 'configuracao_alerta', data, requestMeta)
     return createSuccessResponse(configuracao, 201)
   }
 })

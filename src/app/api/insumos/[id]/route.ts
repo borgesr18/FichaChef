@@ -8,7 +8,7 @@ import {
   createNotFoundResponse
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +22,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   
   const validationResult = insumoSchema.safeParse(body)
@@ -58,7 +59,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     })
   })
 
-  await logUserAction(user.id, 'update', 'insumos', id, 'insumo', data, request)
+  await logUserAction(user.id, 'update', 'insumos', id, 'insumo', data, requestMeta)
 
   return createSuccessResponse(insumo)
 })
@@ -73,6 +74,8 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   }
   
   const user = auth.user!
+
+  const requestMeta = extractRequestMetadata(request)
 
   const existingInsumo = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -94,7 +97,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     })
   })
 
-  await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { nome: existingInsumo.nome }, request)
+  await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { nome: existingInsumo.nome }, requestMeta)
 
   return createSuccessResponse({ message: 'Insumo deletado com sucesso' })
 })

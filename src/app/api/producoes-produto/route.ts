@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { producaoProdutoSchema } from '@/lib/validations'
 
@@ -43,6 +43,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   
   const bodyWithDates = {
@@ -73,7 +74,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  await logUserAction(user.id, 'create', 'producao', producao.id, 'producao_produto', data, request)
+  await logUserAction(user.id, 'create', 'producao', producao.id, 'producao_produto', data, requestMeta)
 
   return createSuccessResponse(producao, 201)
 })

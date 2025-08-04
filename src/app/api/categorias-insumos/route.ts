@@ -6,7 +6,7 @@ import {
   createSuccessResponse 
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { categoriaSchema } from '@/lib/validations'
 
@@ -40,6 +40,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = categoriaSchema.safeParse(body)
 
@@ -61,7 +62,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  await logUserAction(user.id, 'create', 'insumos', categoria.id, 'categoria', { nome, descricao }, request)
+  await logUserAction(user.id, 'create', 'insumos', categoria.id, 'categoria', { nome, descricao }, requestMeta)
 
   return createSuccessResponse(categoria, 201)
 })

@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { movimentacaoEstoqueSchema } from '@/lib/validations'
 
@@ -43,6 +43,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = movimentacaoEstoqueSchema.safeParse(body)
 
@@ -73,7 +74,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     movimentacao.id,
     'movimentacao',
     { tipo: data.tipo, quantidade: data.quantidade, motivo: data.motivo },
-    request
+    requestMeta
   )
 
   return createSuccessResponse(movimentacao, 201)

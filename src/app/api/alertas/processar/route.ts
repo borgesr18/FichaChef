@@ -5,7 +5,7 @@ import {
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { withErrorHandler } from '@/lib/api-helpers'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { NextRequest } from 'next/server'
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
@@ -16,6 +16,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   }
   
   const user = auth.user!
+  const requestMeta = extractRequestMetadata(request)
 
   const alertasGerados = []
 
@@ -207,7 +208,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     undefined,
     'processamento',
     { alertasGerados: alertasGerados.length },
-    request
+    requestMeta
   )
 
   return createSuccessResponse({ 

@@ -101,7 +101,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  const { logUserAction } = await import('@/lib/permissions')
+  const { logUserAction, extractRequestMetadata } = await import('@/lib/permissions')
+  const requestMeta = extractRequestMetadata(request)
   await logUserAction(
     user.id,
     'create',
@@ -109,7 +110,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     novaFicha.id,
     'FichaTecnica',
     { nome: novaFicha.nome },
-    request
+    requestMeta
   )
 
   return createSuccessResponse(novaFicha, 201)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
@@ -40,6 +40,7 @@ export const PUT = withErrorHandler(async function PUT(
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const validatedData = templateSchema.parse(body)
 
@@ -56,7 +57,7 @@ export const PUT = withErrorHandler(async function PUT(
     })
   })
 
-  await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, request)
+  await logUserAction(user.id, 'update', 'relatorio-templates', params.id, 'template', validatedData, requestMeta)
 
   return NextResponse.json(template)
 })
@@ -73,6 +74,7 @@ export const DELETE = withErrorHandler(async function DELETE(
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const params = await context.params
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -85,7 +87,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     })
   })
 
-  await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, request)
+  await logUserAction(user.id, 'delete', 'relatorio-templates', params.id, 'template', {}, requestMeta)
 
   return NextResponse.json({ success: true })
 })
