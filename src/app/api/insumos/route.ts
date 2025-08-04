@@ -77,8 +77,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       include: { categoria: true, unidadeCompra: true, fornecedorRel: true, tacoAlimento: true }
     })
   ))
-
-  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', data, getRequestMeta(request))
+    
+  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', data, request)
   return createSuccessResponse(insumo, 201)
 })
 
