@@ -25,7 +25,7 @@ export default function LoginPageContent() {
 
   // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
   useEffect(() => {
-    console.log('🔍 LoginPageContent useEffect TRIGGERED:', { isHydrated, authLoading, user: !!user, userEmail: user?.email })
+    console.log('🔍 LoginPageContent useEffect TRIGGERED:', { isHydrated, authLoading, user: !!user, userEmail: user?.email, timestamp: new Date().toISOString() })
     
     if (!isHydrated) {
       console.log('🚫 LoginPageContent: Aguardando hidratação')
@@ -42,7 +42,13 @@ export default function LoginPageContent() {
       const redirect = searchParams.get('redirect') || '/dashboard'
       console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
       console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
+      
       router.push(redirect)
+      
+      setTimeout(() => {
+        console.log('🔄 LoginPageContent: Fallback redirect executing...')
+        window.location.href = redirect
+      }, 2000)
     } else {
       console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login')
     }
