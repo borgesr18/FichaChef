@@ -48,7 +48,7 @@ export default function LoginPageContent() {
     if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
       console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
-      console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
+      console.log('🚀 LoginPageContent: Executando window.location.href para:', redirect)
       
       window.location.href = redirect
     } else {
