@@ -127,8 +127,8 @@ export default function LoginPageContent() {
     }
   }
 
-  // ✅ LOADING: Durante hidratação ou carregamento de auth
-  if (!isHydrated || authLoading) {
+  // ✅ LOADING: Apenas durante hidratação inicial
+  if (!isHydrated) {
     console.log('🔄 LoginPageContent: Renderizando loading screen:', { isHydrated, authLoading })
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
