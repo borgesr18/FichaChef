@@ -244,8 +244,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#5AC8FA" />
         
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
+        {/* PWA Manifest - now handled via metadata base64 encoding to bypass Vercel auth */}
         
         {/* Service Worker */}
         <script
