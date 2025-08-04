@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 interface ProducaoItem {
@@ -33,6 +33,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const { searchParams } = new URL(request.url)
   const reportType = searchParams.get('type') || 'custos'
 
@@ -83,7 +84,7 @@ export const GET = withErrorHandler(async function GET(request: NextRequest) {
     undefined,
     reportType,
     { reportType },
-    request
+    requestMeta
   )
 
   return NextResponse.json(reportData)
