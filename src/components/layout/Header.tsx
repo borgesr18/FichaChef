@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { useRouter } from 'next/navigation'
 import { LogOut, Bell, Search, Star } from 'lucide-react'
-import { withRequestDeduplication } from '@/lib/request-cache'
 
 interface Notificacao {
   id: string
@@ -30,8 +29,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
 
   const fetchNotificacoes = useCallback(async () => {
     try {
-      const response = await withRequestDeduplication('notifications', () => 
-        fetch('/api/notificacoes?lida=false'))
+      const response = await fetch('/api/notificacoes?lida=false')
       if (response.ok) {
         const data = await response.json()
         setNotificacoes(data)

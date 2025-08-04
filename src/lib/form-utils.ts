@@ -2,11 +2,15 @@ export function convertFormDataToNumbers(formData: Record<string, unknown>, nume
   const converted = { ...formData }
   
   numericFields.forEach(field => {
-    if (converted[field] !== undefined && converted[field] !== '') {
+    if (converted[field] !== undefined && converted[field] !== '' && converted[field] !== null) {
       const numValue = parseFloat(String(converted[field]))
-      if (!isNaN(numValue)) {
+      if (!isNaN(numValue) && numValue > 0) {
         converted[field] = numValue
+      } else {
+        delete converted[field]
       }
+    } else {
+      delete converted[field]
     }
   })
   
