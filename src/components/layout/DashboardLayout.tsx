@@ -60,14 +60,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // ✅ VERIFICAÇÃO: Se Supabase configurado mas sem usuário, não renderizar
   if (isConfigured && !user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <p className="text-slate-600 font-medium">Redirecionando para login...</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   // ✅ RENDERIZAÇÃO: Layout principal
