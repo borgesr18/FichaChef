@@ -86,6 +86,24 @@ export function requirePermission(
   }
 }
 
+export type RequestMetadata = {
+  url: string
+  method: string
+  ipAddress: string
+  userAgent: string
+}
+
+export function extractRequestMetadata(request: Request): RequestMetadata {
+  return {
+    url: request.url,
+    method: request.method,
+    ipAddress: request.headers.get('x-forwarded-for') || 
+              request.headers.get('x-real-ip') || 
+              'unknown',
+    userAgent: request.headers.get('user-agent') || 'unknown'
+  }
+}
+
 export async function logUserAction(
   userId: string,
   acao: string,
@@ -93,7 +111,7 @@ export async function logUserAction(
   itemId?: string,
   itemTipo?: string,
   detalhes?: Record<string, unknown>,
-  request?: Request
+  requestMeta?: RequestMetadata
 ) {
   try {
     const { prisma } = await import('./prisma')
@@ -106,10 +124,8 @@ export async function logUserAction(
         itemId,
         itemTipo,
         detalhes: detalhes ? JSON.stringify(detalhes) : undefined,
-        ipAddress: request?.headers.get('x-forwarded-for') || 
-                  request?.headers.get('x-real-ip') || 
-                  'unknown',
-        userAgent: request?.headers.get('user-agent') || 'unknown'
+        ipAddress: requestMeta?.ipAddress || 'unknown',
+        userAgent: requestMeta?.userAgent || 'unknown'
       }
     })
   } catch (error) {

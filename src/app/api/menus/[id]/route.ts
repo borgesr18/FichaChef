@@ -145,8 +145,9 @@ export const PUT = withErrorHandler(async function PUT(
     })
   })
 
-  const { logUserAction } = await import('@/lib/permissions')
-  await logUserAction(user.id, 'update', 'cardapios', id, 'menu', { nome: data.nome }, request)
+  const { logUserAction, extractRequestMetadata } = await import('@/lib/permissions')
+  const requestMeta = extractRequestMetadata(request)
+  await logUserAction(user.id, 'update', 'cardapios', id, 'menu', { nome: data.nome }, requestMeta)
 
   return createSuccessResponse(menu)
 })

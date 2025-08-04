@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +14,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   }
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const { nome, simbolo, tipo } = body
 
@@ -39,7 +40,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     })
   })
 
-  await logUserAction(user.id, 'update', 'unidades-medida', id, 'UnidadeMedida', { nome, simbolo, tipo }, request)
+  await logUserAction(user.id, 'update', 'unidades-medida', id, 'UnidadeMedida', { nome, simbolo, tipo }, requestMeta)
 
   return NextResponse.json(unidade)
 })
@@ -53,6 +54,8 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   }
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.unidadeMedida.delete({
@@ -64,7 +67,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     })
   })
 
-  await logUserAction(user.id, 'delete', 'unidades-medida', id, 'UnidadeMedida', {}, request)
+  await logUserAction(user.id, 'delete', 'unidades-medida', id, 'UnidadeMedida', {}, requestMeta)
 
   return NextResponse.json({ message: 'Unidade deletada com sucesso' })
 })

@@ -8,7 +8,7 @@ import {
   createNotFoundResponse
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +20,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   }
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const validationResult = fornecedorSchema.safeParse(body)
   
@@ -54,7 +55,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     })
   })
 
-  await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, request)
+  await logUserAction(user.id, 'update', 'fornecedores', id, 'fornecedor', data, requestMeta)
 
   return createSuccessResponse(fornecedor)
 })
@@ -67,6 +68,8 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     return auth.response!
   }
   const user = auth.user!
+
+  const requestMeta = extractRequestMetadata(request)
 
   const existingFornecedor = await withDatabaseRetry(async () => {
     return await prisma.fornecedor.findFirst({
@@ -86,7 +89,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     })
   })
 
-  await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, request)
+  await logUserAction(user.id, 'delete', 'fornecedores', id, 'fornecedor', { nome: existingFornecedor.nome }, requestMeta)
 
   return createSuccessResponse({ message: 'Fornecedor deletado com sucesso' })
 })

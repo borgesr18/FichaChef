@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
 } from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { menuPeriodoSchema } from '@/lib/validations'
 
@@ -56,6 +56,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = menuPeriodoSchema.safeParse({
     ...body,
@@ -91,7 +92,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  await logUserAction(user.id, 'create', 'cardapios', periodo.id, 'MenuPeriodo', data, request)
+  await logUserAction(user.id, 'create', 'cardapios', periodo.id, 'MenuPeriodo', data, requestMeta)
 
   return createSuccessResponse(periodo, 201)
 })

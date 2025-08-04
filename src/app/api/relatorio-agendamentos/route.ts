@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { requireApiAuthentication } from '@/lib/supabase-api'
-import { logUserAction } from '@/lib/permissions'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 
@@ -50,6 +50,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const validatedData = agendamentoSchema.parse(body)
 
@@ -68,7 +69,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
   })
 
-  await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, request)
+  await logUserAction(user.id, 'create', 'relatorios', agendamento.id, 'agendamento', validatedData, requestMeta)
 
   return NextResponse.json(agendamento, { status: 201 })
 })

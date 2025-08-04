@@ -63,6 +63,8 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   
   const user = auth.user!
 
+  const { extractRequestMetadata } = await import('@/lib/permissions')
+  const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
   const parsedBody = menuSchema.safeParse(body)
 
@@ -118,7 +120,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
   })
 
   const { logUserAction } = await import('@/lib/permissions')
-  await logUserAction(user.id, 'create', 'cardapios', menu.id, 'menu', { nome: menu.nome }, request)
+  await logUserAction(user.id, 'create', 'cardapios', menu.id, 'menu', { nome: menu.nome }, requestMeta)
 
   return createSuccessResponse(menu, 201)
 })
