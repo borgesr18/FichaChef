@@ -52,6 +52,15 @@ export default function LoginPageContent() {
     }
   }, [isHydrated, authLoading, user, router, searchParams])
 
+  if (user) {
+    console.log('🔄 LoginPageContent: User authenticated, returning null to allow redirect')
+    return null
+  }
+
+  if (!isHydrated || authLoading) {
+    return null
+  }
+
   // ✅ CORRIGIDO: Função de login com tratamento de erros
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
