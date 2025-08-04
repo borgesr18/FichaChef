@@ -25,10 +25,22 @@ export default function LoginPageContent() {
 
   // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
   useEffect(() => {
-    console.log('🔍 LoginPageContent useEffect:', { isHydrated, authLoading, user: !!user, userEmail: user?.email })
+    console.log('🔍 LoginPageContent useEffect TRIGGERED:', { 
+      isHydrated, 
+      authLoading, 
+      user: !!user, 
+      userEmail: user?.email, 
+      timestamp: new Date().toISOString(),
+      dependencies: { isHydrated, authLoading, userExists: !!user }
+    })
     
-    if (!isHydrated || authLoading) {
-      console.log('🚫 LoginPageContent: Aguardando hidratação ou auth loading')
+    if (!isHydrated) {
+      console.log('🚫 LoginPageContent: Aguardando hidratação')
+      return
+    }
+
+    if (authLoading) {
+      console.log('🚫 LoginPageContent: Auth ainda carregando')
       return
     }
 
@@ -36,9 +48,16 @@ export default function LoginPageContent() {
     if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
       console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
+      console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
+      
       router.push(redirect)
+      
+      setTimeout(() => {
+        console.log('🔄 LoginPageContent: Fallback redirect executing...')
+        window.location.href = redirect
+      }, 1000)
     } else {
-      console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login')
+      console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login. User state:', user)
     }
   }, [isHydrated, authLoading, user, router, searchParams])
 
@@ -95,9 +114,7 @@ export default function LoginPageContent() {
         const { data: { user: currentUser } } = await supabase.auth.getUser()
         console.log('🔍 Login: Estado atual do usuário antes do redirect:', currentUser?.email || 'null')
         
-        const redirect = searchParams.get('redirect') || '/dashboard'
-        console.log('🚀 Login: Redirecionando para:', redirect)
-        router.push(redirect)
+        console.log('✅ Login: Autenticação concluída, aguardando useEffect para redirecionamento automático')
       } else {
         console.warn('⚠️ Login: Supabase retornou sucesso mas sem usuário')
       }
@@ -110,30 +127,8 @@ export default function LoginPageContent() {
     }
   }
 
-  // ✅ LOADING: Durante hidratação ou carregamento de auth
-  if (!isHydrated || authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5AC8FA] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Carregando sistema...</p>
-        </div>
-      </div>
-    )
-  }
 
-  // ✅ Se usuário já está logado, mostrar redirecionamento
-  if (user) {
-    console.log('🔄 LoginPageContent: Renderizando tela de redirecionamento para usuário:', user.email)
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5AC8FA] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Redirecionando...</p>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
