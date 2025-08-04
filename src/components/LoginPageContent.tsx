@@ -50,12 +50,7 @@ export default function LoginPageContent() {
       console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
       console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
       
-      router.push(redirect)
-      
-      setTimeout(() => {
-        console.log('🔄 LoginPageContent: Fallback redirect executing...')
-        window.location.href = redirect
-      }, 1000)
+      window.location.href = redirect
     } else {
       console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login. User state:', user)
     }
