@@ -26,8 +26,9 @@ export async function middleware(request: NextRequest) {
   
   // ✅ APENAS dashboard precisa de autenticação
   if (pathname.startsWith('/dashboard')) {
-    // Verificação simples de cookie de sessão
-    const authCookie = request.cookies.get('sb-access-token') || 
+    // Verificação simples de cookie de sessão - usar nome correto do cookie Supabase
+    const authCookie = request.cookies.get('sb-qaomdfwvaxmyyyndbyic-auth-token') || 
+                      request.cookies.get('sb-access-token') || 
                       request.cookies.get('supabase-auth-token')
     
     if (!authCookie) {

@@ -16,7 +16,7 @@ export const insumoSchema = z.object({
   gorduras: z.coerce.number().min(0, 'Gorduras devem ser positivas').optional(),
   fibras: z.coerce.number().min(0, 'Fibras devem ser positivas').optional(),
   sodio: z.coerce.number().min(0, 'Sódio deve ser positivo').optional(),
-  codigoTaco: z.coerce.number().int().positive().optional(),
+  codigoTaco: z.coerce.number().int().positive().optional().or(z.literal('')).transform(val => val === '' ? undefined : val),
   fonteDados: z.enum(['taco', 'manual']).default('manual'),
 })
 
