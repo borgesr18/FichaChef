@@ -95,9 +95,7 @@ export default function LoginPageContent() {
         const { data: { user: currentUser } } = await supabase.auth.getUser()
         console.log('🔍 Login: Estado atual do usuário antes do redirect:', currentUser?.email || 'null')
         
-        const redirect = searchParams.get('redirect') || '/dashboard'
-        console.log('🚀 Login: Redirecionando para:', redirect)
-        router.push(redirect)
+        console.log('✅ Login: Autenticação concluída, aguardando useEffect para redirecionamento automático')
       } else {
         console.warn('⚠️ Login: Supabase retornou sucesso mas sem usuário')
       }
