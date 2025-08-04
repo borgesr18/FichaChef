@@ -114,7 +114,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest) {
     })
   ))
 
-  await logUserAction(user.id, 'update', 'insumos', insumo.id, 'insumo', data, getRequestMeta(request))
+  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', data, request)
   return createSuccessResponse(insumo)
 })
 
@@ -140,8 +140,8 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     prisma.insumo.delete({ where: { id } })
   ))
 
-  await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { id }, getRequestMeta(request))
-  return createSuccessResponse({ message: 'Insumo excluído com sucesso' })
+  await logUserAction(user.id, 'create', 'insumos', insumo.id, 'insumo', data, request)
+return createSuccessResponse({ message: 'Insumo excluído com sucesso' })
 })
 
 
