@@ -57,15 +57,56 @@ export default function FornecedoresPage() {
     fetchFornecedores()
   }, [])
 
+  // ✅ FUNÇÃO CORRIGIDA PARA BUSCAR FORNECEDORES
   const fetchFornecedores = async () => {
     try {
-      const response = await fetch('/api/fornecedores')
+      console.log('🔍 [FORNECEDORES] Buscando fornecedores...')
+      
+      const response = await fetch('/api/fornecedores', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+      
+      console.log('🔍 [FORNECEDORES] Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
-        setFornecedores(data)
+        console.log('🔍 [FORNECEDORES] Dados recebidos:', data)
+        
+        // ✅ VERIFICAR SE OS DADOS ESTÃO EM UM WRAPPER OU DIRETAMENTE
+        let fornecedoresData = data
+        
+        // Se os dados estão em um wrapper (ex: { data: [...] })
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (data.data && Array.isArray(data.data)) {
+            fornecedoresData = data.data
+            console.log('✅ [FORNECEDORES] Dados extraídos do wrapper:', fornecedoresData)
+          } else if (data.fornecedores && Array.isArray(data.fornecedores)) {
+            fornecedoresData = data.fornecedores
+            console.log('✅ [FORNECEDORES] Dados extraídos do campo fornecedores:', fornecedoresData)
+          } else {
+            console.log('⚠️ [FORNECEDORES] Estrutura de dados não reconhecida, usando dados diretamente')
+          }
+        }
+        
+        // ✅ GARANTIR QUE É UM ARRAY
+        if (Array.isArray(fornecedoresData)) {
+          setFornecedores(fornecedoresData)
+          console.log('✅ [FORNECEDORES] Fornecedores carregados:', fornecedoresData.length)
+        } else {
+          console.warn('⚠️ [FORNECEDORES] Dados não são um array:', fornecedoresData)
+          setFornecedores([])
+        }
+      } else {
+        console.error('❌ [FORNECEDORES] Erro na resposta:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('❌ [FORNECEDORES] Detalhes do erro:', errorText)
       }
     } catch (error) {
-      console.error('Error fetching fornecedores:', error)
+      console.error('❌ [FORNECEDORES] Erro na requisição:', error)
     }
   }
 
@@ -112,29 +153,44 @@ export default function FornecedoresPage() {
     setError('')
   }
 
+  // ✅ FUNÇÃO CORRIGIDA PARA SALVAR FORNECEDOR
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
+      console.log('🔍 [FORNECEDORES] Salvando fornecedor:', formData)
+      
       const url = editingFornecedor ? `/api/fornecedores/${editingFornecedor.id}` : '/api/fornecedores'
       const method = editingFornecedor ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify(formData)
       })
 
+      console.log('🔍 [FORNECEDORES] Response status:', response.status)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log('✅ [FORNECEDORES] Fornecedor salvo:', result)
+        
         handleCloseModal()
-        fetchFornecedores()
+        
+        // ✅ RECARREGAR LISTA APÓS SALVAR
+        await fetchFornecedores()
       } else {
         const errorData = await response.json()
+        console.error('❌ [FORNECEDORES] Erro ao salvar:', errorData)
         setError(errorData.error || 'Erro ao salvar fornecedor')
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ [FORNECEDORES] Erro na requisição:', error)
       setError('Erro ao salvar fornecedor')
     } finally {
       setLoading(false)
@@ -145,12 +201,21 @@ export default function FornecedoresPage() {
     if (!confirm('Tem certeza que deseja excluir este fornecedor?')) return
 
     try {
-      const response = await fetch(`/api/fornecedores/${id}`, { method: 'DELETE' })
+      console.log('🔍 [FORNECEDORES] Excluindo fornecedor:', id)
+      
+      const response = await fetch(`/api/fornecedores/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      
       if (response.ok) {
-        fetchFornecedores()
+        console.log('✅ [FORNECEDORES] Fornecedor excluído')
+        await fetchFornecedores()
+      } else {
+        console.error('❌ [FORNECEDORES] Erro ao excluir')
       }
     } catch (error) {
-      console.error('Error deleting fornecedor:', error)
+      console.error('❌ [FORNECEDORES] Erro na exclusão:', error)
     }
   }
 
@@ -223,16 +288,6 @@ export default function FornecedoresPage() {
 
   const stats = getStats()
 
-  if (loading && fornecedores.length === 0) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B2E4B]"></div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
@@ -244,9 +299,22 @@ export default function FornecedoresPage() {
                 Fornecedores
               </h1>
               <p className="text-gray-600 text-lg">Gestão de fornecedores e parcerias</p>
+              
+              {/* ✅ DEBUG INFO */}
+              <div className="text-xs text-gray-500 bg-white/50 p-2 rounded">
+                <p><strong>Total carregados:</strong> {fornecedores.length}</p>
+                <p><strong>Filtrados:</strong> {filteredFornecedores.length}</p>
+                <p><strong>Última atualização:</strong> {new Date().toLocaleTimeString()}</p>
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
+              <button 
+                onClick={fetchFornecedores}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
+              >
+                🔄 Recarregar
+              </button>
               <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
                 <Download className="h-4 w-4 mr-2" />
                 Exportar
@@ -262,252 +330,224 @@ export default function FornecedoresPage() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Buscar Fornecedor</label>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Nome, razão social ou cidade..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Status</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="">Todos os status</option>
-                <option value="ativo">Ativos</option>
-                <option value="inativo">Inativos</option>
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Ordenar</label>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-              >
-                <option value="recent">Mais recentes</option>
-                <option value="name">Nome A-Z</option>
-                <option value="insumos">Mais insumos</option>
-                <option value="cidade">Cidade A-Z</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Fornecedores</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalFornecedores}</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +8% este mês
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Users className="text-white h-6 w-6" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Fornecedores Ativos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.fornecedoresAtivos}</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <Crown className="h-3 w-3 mr-1" />
-                  {((stats.fornecedoresAtivos / stats.totalFornecedores) * 100).toFixed(0)}% ativos
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Truck className="text-white h-6 w-6" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total Insumos</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
-                <p className="text-xs text-blue-600 flex items-center">
-                  <Package className="h-3 w-3 mr-1" />
-                  Produtos fornecidos
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Package className="text-white h-6 w-6" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Preços Cadastrados</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPrecos}</p>
-                <p className="text-xs text-purple-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  Cotações ativas
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <MapPin className="text-white h-6 w-6" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Fornecedores Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {sortedFornecedores.map((fornecedor) => (
-            <div key={fornecedor.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-              <div className={`h-2 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)}`}></div>
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-14 h-14 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)} rounded-2xl flex items-center justify-center shadow-lg`}>
-                      <span className="text-white text-xl">{getFornecedorIcon(fornecedor.nome)}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">{fornecedor.nome}</h3>
-                      {fornecedor.razaoSocial && (
-                        <p className="text-sm text-gray-500">{fornecedor.razaoSocial}</p>
-                      )}
-                      <div className="flex items-center mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          fornecedor.ativo 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {fornecedor.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(fornecedor)}
-                      className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-white/50 rounded-lg transition-all"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(fornecedor.id)}
-                      className="p-2 text-gray-400 hover:text-[#E74C3C] hover:bg-white/50 rounded-lg transition-all"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Informações de Contato */}
-                <div className="space-y-3 mb-6">
-                  {fornecedor.telefone && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                        <span className="text-blue-600">📞</span>
-                      </div>
-                      <span>{fornecedor.telefone}</span>
-                    </div>
-                  )}
-                  {fornecedor.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                        <span className="text-green-600">📧</span>
-                      </div>
-                      <span>{fornecedor.email}</span>
-                    </div>
-                  )}
-                  {(fornecedor.cidade || fornecedor.estado) && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                        <MapPin className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <span>{fornecedor.cidade}{fornecedor.cidade && fornecedor.estado ? ', ' : ''}{fornecedor.estado}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Estatísticas do Fornecedor */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white/50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-1">Insumos</p>
-                    <p className="font-semibold text-gray-900 flex items-center">
-                      <Package className="h-4 w-4 mr-1 text-blue-600" />
-                      {fornecedor._count.insumos}
-                    </p>
-                  </div>
-                  <div className="bg-white/50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-1">Preços</p>
-                    <p className="font-semibold text-gray-900 flex items-center">
-                      <span className="text-green-600 mr-1">💰</span>
-                      {fornecedor._count.precos}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Informações Adicionais */}
-                {(fornecedor.cnpj || fornecedor.contato) && (
-                  <div className="bg-white/50 rounded-xl p-4 space-y-2">
-                    {fornecedor.cnpj && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">CNPJ:</span>
-                        <span className="font-medium text-gray-900">{fornecedor.cnpj}</span>
-                      </div>
-                    )}
-                    {fornecedor.contato && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Contato:</span>
-                        <span className="font-medium text-gray-900">{fornecedor.contato}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {sortedFornecedores.length === 0 && (
-          <div className="text-center py-12">
-            <Truck className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum fornecedor encontrado</h3>
-            <p className="text-gray-500 mb-6">Cadastre seu primeiro fornecedor para começar</p>
+        {/* ✅ MENSAGEM QUANDO NÃO HÁ FORNECEDORES */}
+        {fornecedores.length === 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 text-center">
+            <Truck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhum fornecedor encontrado</h3>
+            <p className="text-gray-500 mb-6">Comece cadastrando seu primeiro fornecedor para gerenciar suas parcerias.</p>
             <button
               onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center mx-auto"
             >
-              <Plus className="h-4 w-4 mr-2 inline" />
+              <Plus className="h-4 w-4 mr-2" />
               Cadastrar Primeiro Fornecedor
             </button>
           </div>
         )}
 
-        {/* Modal de Criação/Edição */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          title={editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}
-          size="xl"
-        >
+        {/* Resto da interface só aparece se há fornecedores */}
+        {fornecedores.length > 0 && (
+          <>
+            {/* Filters */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Buscar Fornecedor</label>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <input
+                      type="text"
+                      placeholder="Nome, razão social ou cidade..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Status</label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                  >
+                    <option value="">Todos os status</option>
+                    <option value="ativo">Ativos</option>
+                    <option value="inativo">Inativos</option>
+                  </select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">Ordenar</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                  >
+                    <option value="recent">Mais recentes</option>
+                    <option value="name">Nome A-Z</option>
+                    <option value="insumos">Mais insumos</option>
+                    <option value="cidade">Cidade A-Z</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-600">Total Fornecedores</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalFornecedores}</p>
+                    <p className="text-xs text-green-600 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      +8% este mês
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Users className="text-white h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-600">Fornecedores Ativos</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.fornecedoresAtivos}</p>
+                    <p className="text-xs text-green-600 flex items-center">
+                      <Crown className="h-3 w-3 mr-1" />
+                      {stats.totalFornecedores > 0 ? ((stats.fornecedoresAtivos / stats.totalFornecedores) * 100).toFixed(0) : 0}% ativos
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Truck className="text-white h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-600">Total Insumos</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
+                    <p className="text-xs text-blue-600 flex items-center">
+                      <Package className="h-3 w-3 mr-1" />
+                      Produtos fornecidos
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Package className="text-white h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-gray-600">Preços Cadastrados</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalPrecos}</p>
+                    <p className="text-xs text-purple-600 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Cotações ativas
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <MapPin className="text-white h-6 w-6" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fornecedores Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {sortedFornecedores.map((fornecedor) => (
+                <div key={fornecedor.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                  <div className={`h-2 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)}`}></div>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-16 h-16 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)} rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
+                          {getFornecedorIcon(fornecedor.nome)}
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="text-lg font-bold text-gray-900">{fornecedor.nome}</h3>
+                          {fornecedor.razaoSocial && (
+                            <p className="text-sm text-gray-600">{fornecedor.razaoSocial}</p>
+                          )}
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              fornecedor.ativo 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleOpenModal(fornecedor)}
+                          className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(fornecedor.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Informações de contato */}
+                    <div className="space-y-3 mb-6">
+                      {fornecedor.telefone && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="w-4 h-4 mr-3">📞</span>
+                          {fornecedor.telefone}
+                        </div>
+                      )}
+                      {fornecedor.email && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <span className="w-4 h-4 mr-3">📧</span>
+                          {fornecedor.email}
+                        </div>
+                      )}
+                      {fornecedor.cidade && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 mr-3" />
+                          {fornecedor.cidade}{fornecedor.estado && `, ${fornecedor.estado}`}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Estatísticas */}
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-[#1B2E4B]">{fornecedor._count.insumos}</p>
+                        <p className="text-xs text-gray-600">Insumos</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-[#5AC8FA]">{fornecedor._count.precos}</p>
+                        <p className="text-xs text-gray-600">Preços</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Modal para criar/editar fornecedor */}
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -517,81 +557,71 @@ export default function FornecedoresPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FloatingLabelInput
-                label="Nome"
+                label="Nome *"
                 value={formData.nome}
-                onChange={(value) => setFormData({ ...formData, nome: value })}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 required
-                error={error && !formData.nome ? 'Nome é obrigatório' : ''}
               />
-
               <FloatingLabelInput
                 label="Razão Social"
                 value={formData.razaoSocial}
-                onChange={(value) => setFormData({ ...formData, razaoSocial: value })}
+                onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="CNPJ"
                 value={formData.cnpj}
-                onChange={(value) => setFormData({ ...formData, cnpj: value })}
+                onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="Telefone"
                 value={formData.telefone}
-                onChange={(value) => setFormData({ ...formData, telefone: value })}
+                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="Email"
                 type="email"
                 value={formData.email}
-                onChange={(value) => setFormData({ ...formData, email: value })}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="Contato"
                 value={formData.contato}
-                onChange={(value) => setFormData({ ...formData, contato: value })}
+                onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
               />
             </div>
 
             <FloatingLabelInput
               label="Endereço"
               value={formData.endereco}
-              onChange={(value) => setFormData({ ...formData, endereco: value })}
+              onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FloatingLabelInput
                 label="Cidade"
                 value={formData.cidade}
-                onChange={(value) => setFormData({ ...formData, cidade: value })}
+                onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="Estado"
                 value={formData.estado}
-                onChange={(value) => setFormData({ ...formData, estado: value })}
+                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
               />
-
               <FloatingLabelInput
                 label="CEP"
                 value={formData.cep}
-                onChange={(value) => setFormData({ ...formData, cep: value })}
+                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
               />
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Observações
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Observações</label>
               <textarea
                 value={formData.observacoes}
                 onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                placeholder="Informações adicionais sobre o fornecedor..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                placeholder="Observações sobre o fornecedor..."
               />
             </div>
 
@@ -601,34 +631,27 @@ export default function FornecedoresPage() {
                 id="ativo"
                 checked={formData.ativo}
                 onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                className="rounded border-gray-300 text-[#1B2E4B] shadow-sm focus:border-[#5AC8FA] focus:ring focus:ring-[#5AC8FA] focus:ring-opacity-50"
+                className="h-4 w-4 text-[#5AC8FA] focus:ring-[#5AC8FA] border-gray-300 rounded"
               />
-              <label htmlFor="ativo" className="ml-3 text-sm text-gray-700">
+              <label htmlFor="ativo" className="ml-2 block text-sm text-gray-900">
                 Fornecedor ativo
               </label>
             </div>
 
-            <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-6 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 font-medium"
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-xl hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>Salvando...</span>
-                  </>
-                ) : (
-                  <span className="font-medium">{editingFornecedor ? 'Atualizar' : 'Criar'} Fornecedor</span>
-                )}
+                {loading ? 'Salvando...' : (editingFornecedor ? 'Atualizar' : 'Criar')}
               </button>
             </div>
           </form>
@@ -637,3 +660,14 @@ export default function FornecedoresPage() {
     </DashboardLayout>
   )
 }
+
+// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
+// ✅ Função fetchFornecedores melhorada com logs detalhados
+// ✅ Verificação de diferentes estruturas de dados de retorno
+// ✅ Tratamento robusto de arrays vazios
+// ✅ Debug info visível na interface
+// ✅ Botão de recarregar manual
+// ✅ Mensagem quando não há fornecedores
+// ✅ Logs detalhados em todas as operações
+// ✅ Tratamento de erros melhorado
+// ✅ Recarregamento automático após salvar/excluir
