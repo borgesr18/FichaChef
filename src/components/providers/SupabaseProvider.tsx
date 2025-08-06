@@ -1,7 +1,7 @@
 "use client"
 
-// 🎯 SUPABASE PROVIDER SIMPLIFICADO - SEM LOOPS
-// Versão corrigida sem circuit breaker complexo que causava problemas
+// 🎯 SUPABASE PROVIDER SIMPLIFICADO - SEM LOOPS - VERCEL COMPATIBLE
+// Versão corrigida sem circuit breaker complexo e compatível com build Vercel
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -18,6 +18,14 @@ interface SupabaseContextType {
   signOut: () => Promise<void>
   isConfigured: boolean
   isInitialized: boolean
+}
+
+interface AuthStateChangeEvent {
+  data: {
+    subscription: {
+      unsubscribe: () => void
+    }
+  }
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
@@ -185,7 +193,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     initializeAuth()
 
     // ✅ LISTENER DE MUDANÇAS DE AUTH SIMPLIFICADO
-    let subscription: any = null
+    let subscription: AuthStateChangeEvent | null = null
     
     if (isConfigured) {
       subscription = supabase.auth.onAuthStateChange(
@@ -204,7 +212,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             setLoading(false)
           }
         }
-      )
+      ) as AuthStateChangeEvent
+
     }
 
     return () => {
@@ -271,14 +280,9 @@ export function useSupabase() {
   return context
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
-// ✅ Removido circuit breaker complexo que causava problemas
-// ✅ Removido sistema de debounce que interferia
-// ✅ Simplificado sistema de cache
-// ✅ Reduzido número de useEffect para evitar loops
-// ✅ Adicionado modo desenvolvimento robusto
-// ✅ Fallbacks simples e diretos
-// ✅ Logs claros para debug
-// ✅ Cleanup adequado de timers e subscriptions
-// ✅ Verificação de componente montado
-// ✅ Admin hardcoded funciona imediatamente
+// 🎯 PRINCIPAIS CORREÇÕES PARA BUILD VERCEL:
+// ✅ Removido uso de 'any' - substituído por interface tipada
+// ✅ Criada interface AuthStateChangeEvent para tipagem
+// ✅ Type assertion adequada para subscription
+// ✅ Mantida toda funcionalidade de correção de loops
+// ✅ Compatível com ESLint strict do Vercel
