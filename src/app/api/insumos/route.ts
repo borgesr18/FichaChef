@@ -1,8 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// ✅ INTERFACE PARA DADOS DE INSUMO
+interface InsumoData {
+  nome: string
+  marca?: string | null
+  fornecedor?: string | null
+  fornecedorId?: string | null
+  categoriaId: string
+  unidadeCompraId: string
+  pesoLiquidoGramas: number
+  precoUnidade: number
+  calorias?: number | null
+  proteinas?: number | null
+  carboidratos?: number | null
+  gorduras?: number | null
+  fibras?: number | null
+  sodio?: number | null
+  codigoTaco?: number | null
+  fonteDados: string
+}
+
+// ✅ INTERFACE PARA VALIDAÇÃO
+interface ValidationResult {
+  isValid: boolean
+  errors: string[]
+  data: InsumoData
+}
+
 // ✅ SCHEMA SIMPLIFICADO PARA INSUMOS
-const validateInsumo = (data: any) => {
+const validateInsumo = (data: Record<string, unknown>): ValidationResult => {
   const errors: string[] = []
   
   if (!data.nome || typeof data.nome !== 'string' || data.nome.trim().length === 0) {
@@ -29,12 +56,12 @@ const validateInsumo = (data: any) => {
     isValid: errors.length === 0,
     errors,
     data: {
-      nome: data.nome?.trim(),
-      marca: data.marca?.trim() || null,
-      fornecedor: data.fornecedor?.trim() || null,
-      fornecedorId: data.fornecedorId || null,
-      categoriaId: data.categoriaId,
-      unidadeCompraId: data.unidadeCompraId,
+      nome: (data.nome as string)?.trim(),
+      marca: data.marca ? (data.marca as string).trim() : null,
+      fornecedor: data.fornecedor ? (data.fornecedor as string).trim() : null,
+      fornecedorId: data.fornecedorId ? (data.fornecedorId as string) : null,
+      categoriaId: data.categoriaId as string,
+      unidadeCompraId: data.unidadeCompraId as string,
       pesoLiquidoGramas: Number(data.pesoLiquidoGramas),
       precoUnidade: Number(data.precoUnidade),
       calorias: data.calorias ? Number(data.calorias) : null,
@@ -44,13 +71,19 @@ const validateInsumo = (data: any) => {
       fibras: data.fibras ? Number(data.fibras) : null,
       sodio: data.sodio ? Number(data.sodio) : null,
       codigoTaco: data.codigoTaco ? Number(data.codigoTaco) : null,
-      fonteDados: data.fonteDados || 'manual'
+      fonteDados: (data.fonteDados as string) || 'manual'
     }
   }
 }
 
+// ✅ INTERFACE PARA USUÁRIO AUTENTICADO
+interface AuthenticatedUser {
+  id: string
+  email: string
+}
+
 // ✅ FUNÇÃO DE AUTENTICAÇÃO SIMPLIFICADA
-const getAuthenticatedUser = async (request: NextRequest) => {
+const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
   try {
     // 🔧 MODO DESENVOLVIMENTO - SEMPRE PERMITIR
     if (process.env.NODE_ENV === 'development') {
@@ -78,7 +111,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [INSUMOS API] GET - Iniciando listagem')
     
-    const user = await getAuthenticatedUser(request)
+    const user = await getAuthenticatedUser()
     if (!user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -91,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [INSUMOS API] Filtros:', { categoria, fornecedor })
 
-    const where: any = { userId: user.id }
+    const where: Record<string, unknown> = { userId: user.id }
     if (categoria) where.categoriaId = categoria
     if (fornecedor) where.fornecedorId = fornecedor
 
@@ -131,7 +164,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔍 [INSUMOS API] POST - Iniciando criação')
     
-    const user = await getAuthenticatedUser(request)
+    const user = await getAuthenticatedUser()
     if (!user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -236,7 +269,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log('🔍 [INSUMOS API] PUT - Iniciando atualização')
     
-    const user = await getAuthenticatedUser(request)
+    const user = await getAuthenticatedUser()
     if (!user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -306,7 +339,7 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log('🔍 [INSUMOS API] DELETE - Iniciando exclusão')
     
-    const user = await getAuthenticatedUser(request)
+    const user = await getAuthenticatedUser()
     if (!user) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
@@ -365,13 +398,11 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
-// ✅ Removido withErrorHandler complexo
-// ✅ Removido requireApiAuthentication complexo
-// ✅ Removido withDatabaseRetry e withConnectionHealthCheck
-// ✅ Removido logUserAction complexo
-// ✅ Validação simplificada sem Zod
-// ✅ Autenticação simplificada
-// ✅ Logs detalhados para debug
-// ✅ Tratamento de erro robusto
-// ✅ Respostas padronizadas
+// 🎯 CORREÇÕES PARA BUILD VERCEL:
+// ✅ Removido uso de 'any' - substituído por Record<string, unknown>
+// ✅ Removido parâmetro 'request' não utilizado
+// ✅ Adicionadas interfaces TypeScript explícitas
+// ✅ Tipagem explícita para todas as funções
+// ✅ Compatível com @typescript-eslint/no-explicit-any
+// ✅ Compatível com @typescript-eslint/no-unused-vars
+
