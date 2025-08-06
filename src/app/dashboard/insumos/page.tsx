@@ -50,6 +50,18 @@ interface Fornecedor {
   ativo: boolean
 }
 
+// ✅ CORREÇÃO: Interface para dados TACO
+interface TacoData {
+  descricao?: string
+  energia?: number
+  proteina?: number
+  carboidrato?: number
+  lipideos?: number
+  fibra?: number
+  sodio?: number
+  codigo?: number
+}
+
 export default function InsumosPage() {
   // ✅ CORREÇÃO 1: Estados sempre inicializados como arrays
   const [insumos, setInsumos] = useState<Insumo[]>([])
@@ -296,10 +308,11 @@ export default function InsumosPage() {
     }
   }
 
-  const handleTacoSelect = (tacoData: any) => {
+  // ✅ CORREÇÃO: Função handleTacoSelect com tipagem correta
+  const handleTacoSelect = (tacoData: TacoData) => {
     setFormData({
       ...formData,
-      nome: tacoData.descricao,
+      nome: tacoData.descricao || '',
       calorias: tacoData.energia?.toString() || '',
       proteinas: tacoData.proteina?.toString() || '',
       carboidratos: tacoData.carboidrato?.toString() || '',
@@ -772,5 +785,6 @@ export default function InsumosPage() {
 }
 
 // 🎯 CORREÇÃO FINAL:
-// ✅ Adicionado 'use client' no início do arquivo
+// ✅ Adicionada interface TacoData para tipagem correta
+// ✅ Função handleTacoSelect com tipagem TacoData ao invés de any
 // ✅ Mantidas todas as outras correções anteriores
