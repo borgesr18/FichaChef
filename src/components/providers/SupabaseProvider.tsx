@@ -1,7 +1,7 @@
 "use client"
 
-// 🎯 SUPABASE PROVIDER SIMPLIFICADO - SEM LOOPS - VERCEL COMPATIBLE
-// Versão corrigida sem circuit breaker complexo e compatível com build Vercel
+// 🎯 SUPABASE PROVIDER FINAL - SEM LOOPS - VERCEL COMPATIBLE
+// Versão final corrigida com todos os erros de TypeScript resolvidos
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -131,11 +131,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         console.log('✅ [PROVIDER] Role encontrado via consulta:', data.role)
         const role = data.role as UserRole
         setUserRole(role)
-        localStorage.setItem('fichachef-user-role', role)
+        
+        // ✅ CORREÇÃO: Verificar se role não é null antes de salvar no localStorage
+        if (role) {
+          localStorage.setItem('fichachef-user-role', role)
+        }
       } else {
         // 🔧 FALLBACK SIMPLES
         console.log('⚠️ [PROVIDER] Consulta falhou, usando fallback')
-        const fallbackRole = 'cozinheiro'
+        const fallbackRole: UserRole = 'cozinheiro'
         setUserRole(fallbackRole)
         localStorage.setItem('fichachef-user-role', fallbackRole)
       }
@@ -144,7 +148,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ [PROVIDER] Erro na consulta:', error)
       
       // 🔧 FALLBACK EM CASO DE ERRO
-      const fallbackRole = 'cozinheiro'
+      const fallbackRole: UserRole = 'cozinheiro'
       setUserRole(fallbackRole)
       localStorage.setItem('fichachef-user-role', fallbackRole)
     } finally {
@@ -280,9 +284,10 @@ export function useSupabase() {
   return context
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES PARA BUILD VERCEL:
-// ✅ Removido uso de 'any' - substituído por interface tipada
-// ✅ Criada interface AuthStateChangeEvent para tipagem
-// ✅ Type assertion adequada para subscription
+// 🎯 CORREÇÃO FINAL APLICADA:
+// ✅ Verificação se role não é null antes de localStorage.setItem
+// ✅ Tipagem explícita para fallbackRole como UserRole
 // ✅ Mantida toda funcionalidade de correção de loops
-// ✅ Compatível com ESLint strict do Vercel
+// ✅ Compatível com TypeScript strict do Vercel
+// ✅ Todos os erros de build resolvidos
+
