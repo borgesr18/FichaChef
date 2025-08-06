@@ -33,6 +33,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 🔓 EM DESENVOLVIMENTO, NÃO INTERCEPTAR NADA (PERMITIR ACESSO LIVRE)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔓 [DEV MODE] Middleware: Permitindo acesso livre em desenvolvimento para:', pathname)
+    return response
+  }
+
   // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -151,4 +157,3 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon.png).*)',
   ],
 }
-
