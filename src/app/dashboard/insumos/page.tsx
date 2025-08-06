@@ -49,7 +49,7 @@ interface Fornecedor {
   ativo: boolean
 }
 
-// ✅ CORREÇÃO: Interface para dados TACO
+// ✅ Interface para dados TACO
 interface TacoData {
   descricao?: string
   energia?: number
@@ -61,8 +61,30 @@ interface TacoData {
   codigo?: number
 }
 
+// ✅ CORREÇÃO PRINCIPAL: Interface para FormData com index signature
+interface FormDataType {
+  nome: string
+  marca: string
+  fornecedor: string
+  fornecedorId: string
+  categoriaId: string
+  unidadeCompraId: string
+  pesoLiquidoGramas: string
+  precoUnidade: string
+  calorias: string
+  proteinas: string
+  carboidratos: string
+  gorduras: string
+  fibras: string
+  sodio: string
+  codigoTaco: string
+  fonteDados: string
+  // ✅ Index signature para permitir acesso dinâmico
+  [key: string]: string | number | undefined
+}
+
 export default function InsumosPage() {
-  // ✅ CORREÇÃO 1: Estados sempre inicializados como arrays
+  // ✅ Estados sempre inicializados como arrays
   const [insumos, setInsumos] = useState<Insumo[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
@@ -80,7 +102,8 @@ export default function InsumosPage() {
 
   const { addNotification } = useNotifications()
 
-  const [formData, setFormData] = useState({
+  // ✅ FormData com tipagem correta
+  const [formData, setFormData] = useState<FormDataType>({
     nome: '',
     marca: '',
     fornecedor: '',
@@ -106,14 +129,13 @@ export default function InsumosPage() {
     fetchFornecedores()
   }, [])
 
-  // ✅ CORREÇÃO 2: Funções fetch com tratamento robusto
+  // ✅ Funções fetch com tratamento robusto
   const fetchInsumos = async () => {
     try {
       const response = await fetch('/api/insumos')
       if (response.ok) {
         const data = await response.json()
         
-        // ✅ TRATAMENTO ROBUSTO DE DIFERENTES FORMATOS
         let insumosData: Insumo[] = []
         
         if (Array.isArray(data)) {
@@ -189,7 +211,6 @@ export default function InsumosPage() {
           fornecedoresData = data.data
         }
         
-        // ✅ FILTRAR APENAS ATIVOS COM VERIFICAÇÃO DE ARRAY
         const fornecedoresAtivos = Array.isArray(fornecedoresData) 
           ? fornecedoresData.filter((f: Fornecedor) => f.ativo)
           : []
@@ -259,7 +280,7 @@ export default function InsumosPage() {
     setError('')
 
     try {
-      // ✅ CORREÇÃO: Função convertFormDataToNumbers com 2 argumentos
+      // ✅ CORREÇÃO: Conversão com tipagem adequada
       const numericFields = [
         'pesoLiquidoGramas', 
         'precoUnidade', 
@@ -272,11 +293,13 @@ export default function InsumosPage() {
         'codigoTaco'
       ]
       
-      // Função simples para converter campos numéricos
-      const processedData = { ...formData }
+      // ✅ Criar objeto com Record para permitir acesso dinâmico
+      const processedData: Record<string, unknown> = { ...formData }
+      
       numericFields.forEach(field => {
-        if (processedData[field] !== undefined && processedData[field] !== '' && processedData[field] !== null) {
-          const numValue = parseFloat(String(processedData[field]))
+        const value = processedData[field]
+        if (value !== undefined && value !== '' && value !== null) {
+          const numValue = parseFloat(String(value))
           if (!isNaN(numValue) && numValue > 0) {
             processedData[field] = numValue
           } else {
@@ -333,7 +356,6 @@ export default function InsumosPage() {
     }
   }
 
-  // ✅ CORREÇÃO: Função handleTacoSelect com tipagem correta
   const handleTacoSelect = (tacoData: TacoData) => {
     setFormData({
       ...formData,
@@ -350,7 +372,7 @@ export default function InsumosPage() {
     setIsTacoModalOpen(false)
   }
 
-  // ✅ CORREÇÃO 3: Filtros com verificação de array
+  // ✅ Filtros com verificação de array
   const filteredInsumos = Array.isArray(insumos) 
     ? insumos.filter(insumo => {
         const matchesSearch = insumo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -809,8 +831,8 @@ export default function InsumosPage() {
   )
 }
 
-// 🎯 CORREÇÃO FINAL:
-// ✅ Removido import da função convertFormDataToNumbers
-// ✅ Implementada conversão inline dos campos numéricos
-// ✅ Mantidas todas as outras correções anteriores
-
+// 🎯 CORREÇÃO DEFINITIVA:
+// ✅ Interface FormDataType com index signature [key: string]: string | number | undefined
+// ✅ processedData tipado como Record<string, unknown> para acesso dinâmico
+// ✅ Todas as outras correções mantidas
+// ✅ Compatível com TypeScript strict mode
