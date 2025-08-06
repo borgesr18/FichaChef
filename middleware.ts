@@ -29,17 +29,13 @@ export async function middleware(request: NextRequest) {
   // ✅ VERIFICAÇÃO IMEDIATA - PRIMEIRA COISA NO MIDDLEWARE
   for (const route of neverIntercept) {
     if (pathname.startsWith(route) || pathname === route) {
+      console.log('🚫 Middleware: Rota não interceptada:', pathname)
       return response
     }
   }
 
-  // 🔓 EM DESENVOLVIMENTO, NÃO INTERCEPTAR NADA (PERMITIR ACESSO LIVRE)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔓 [DEV MODE] Middleware: Permitindo acesso livre em desenvolvimento para:', pathname)
-    return response
-  }
-
-  // ✅ VERIFICAR SE SUPABASE ESTÁ CONFIGURADO
+  // 🔧 VERIFICAÇÃO MELHORADA DE DESENVOLVIMENTO
+  const isDevelopment = process.env.NODE_ENV === 'development'
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -48,20 +44,26 @@ export async function middleware(request: NextRequest) {
     supabaseKey && 
     supabaseUrl !== 'https://placeholder.supabase.co' && 
     supabaseKey !== 'placeholder-key' &&
-    !supabaseUrl.includes('placeholder' ) &&
+    !supabaseUrl.includes('placeholder') &&
     !supabaseKey.includes('placeholder') &&
     supabaseUrl.length > 20 &&
     supabaseKey.length > 20
   )
 
-  // ✅ SE SUPABASE NÃO CONFIGURADO, PERMITIR ACESSO (MODO DESENVOLVIMENTO)
-  if (!isSupabaseConfigured) {
-    console.log('🔧 Middleware: Supabase não configurado - permitindo acesso (modo dev)')
+  // 🔓 EM DESENVOLVIMENTO OU SEM SUPABASE CONFIGURADO, SEMPRE PERMITIR ACESSO
+  if (isDevelopment || !isSupabaseConfigured) {
+    console.log('🔓 [MIDDLEWARE] Permitindo acesso livre:', { 
+      isDevelopment, 
+      isSupabaseConfigured, 
+      pathname,
+      reason: isDevelopment ? 'desenvolvimento' : 'supabase não configurado'
+    })
     return response
   }
 
-  // ✅ APENAS DASHBOARD PRECISA DE AUTENTICAÇÃO
+  // ✅ APENAS DASHBOARD PRECISA DE AUTENTICAÇÃO EM PRODUÇÃO
   if (!pathname.startsWith('/dashboard')) {
+    console.log('🔓 [MIDDLEWARE] Rota pública permitida:', pathname)
     return response
   }
 
@@ -118,25 +120,31 @@ export async function middleware(request: NextRequest) {
 
     // ✅ SE HÁ ERRO OU USUÁRIO NÃO AUTENTICADO
     if (error || !user) {
-      console.log('🔒 Middleware: Usuário não autenticado, redirecionando para login')
+      console.log('🔒 [MIDDLEWARE] Usuário não autenticado, redirecionando para login:', {
+        pathname,
+        error: error?.message,
+        hasUser: !!user
+      })
       
       // ✅ EVITAR LOOP DE REDIRECIONAMENTO
       if (pathname !== '/login') {
         const redirectUrl = new URL('/login', request.url)
         redirectUrl.searchParams.set('redirect', pathname)
+        console.log('🔄 [MIDDLEWARE] Redirecionando para:', redirectUrl.toString())
         return NextResponse.redirect(redirectUrl)
       }
+    } else {
+      // ✅ USUÁRIO AUTENTICADO, PERMITIR ACESSO
+      console.log('✅ [MIDDLEWARE] Usuário autenticado:', user?.email, 'acessando:', pathname)
     }
 
-    // ✅ USUÁRIO AUTENTICADO, PERMITIR ACESSO
-    console.log('✅ Middleware: Usuário autenticado:', user?.email)
     return response
 
   } catch (error) {
-    console.error('❌ Middleware: Erro na verificação de autenticação:', error)
+    console.error('❌ [MIDDLEWARE] Erro na verificação de autenticação:', error)
     
     // ✅ EM CASO DE ERRO, PERMITIR ACESSO PARA NÃO QUEBRAR O SISTEMA
-    console.warn('🔧 Middleware: Erro na autenticação, permitindo acesso temporário')
+    console.warn('🔧 [MIDDLEWARE] Erro na autenticação, permitindo acesso temporário para:', pathname)
     return response
   }
 }
