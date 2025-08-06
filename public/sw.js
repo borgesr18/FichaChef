@@ -69,7 +69,26 @@ self.addEventListener('activate', (event) => {
       }),
       
       // ✅ ASSUMIR CONTROLE IMEDIATAMENTE
-      self.clients.claim()
+      self.clients.claim().then(() => {
+        // ✅ LOG DETALHADO QUANDO O CONTROLLER MUDA
+        console.warn('🔄 SERVICE WORKER CONTROLLER CHANGE DETECTED!')
+        console.warn('📍 Origem: sw.js - activate event')
+        console.warn('⏰ Timestamp:', new Date().toISOString())
+        console.warn('🔍 Stack trace:', new Error().stack)
+        
+        swLog('Service Worker controller changed, checking for reload trigger...')
+        
+        // ✅ NOTIFICAR CLIENTES SOBRE MUDANÇA DE CONTROLLER
+        self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'CONTROLLER_CHANGED',
+              timestamp: new Date().toISOString(),
+              version: SW_VERSION
+            })
+          })
+        })
+      })
     ]).then(() => {
       swLog('Service Worker activated successfully')
     })
