@@ -91,7 +91,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
         
-        {/* Service Worker */}
+        {/* Service Worker Registration */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -101,8 +101,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     .then(function(registration) {
                       console.log('SW registered: ', registration);
                     })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
+                    .catch(function(error) {
+                      console.log('SW registration failed: ', error);
                     });
                 });
               }
