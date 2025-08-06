@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
@@ -769,10 +771,6 @@ export default function InsumosPage() {
   )
 }
 
-// 🎯 CORREÇÕES APLICADAS:
-// ✅ 1. Estados sempre inicializados como arrays vazios
-// ✅ 2. Tratamento robusto de diferentes formatos de resposta da API
-// ✅ 3. Verificação Array.isArray() antes de usar filter/map
-// ✅ 4. FloatingLabelInput com onChange correto
-// ✅ 5. Design original mantido
-// ✅ 6. Tratamento de erro que mantém arrays vazios
+// 🎯 CORREÇÃO FINAL:
+// ✅ Adicionado 'use client' no início do arquivo
+// ✅ Mantidas todas as outras correções anteriores
