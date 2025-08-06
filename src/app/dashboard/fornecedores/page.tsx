@@ -28,6 +28,7 @@ interface Fornecedor {
 
 export default function FornecedoresPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  // ✅ CORREÇÃO 1: Garantir que sempre seja array
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
@@ -57,56 +58,35 @@ export default function FornecedoresPage() {
     fetchFornecedores()
   }, [])
 
-  // ✅ FUNÇÃO CORRIGIDA PARA BUSCAR FORNECEDORES
+  // ✅ CORREÇÃO 2: Função fetchFornecedores com tratamento robusto
   const fetchFornecedores = async () => {
     try {
-      console.log('🔍 [FORNECEDORES] Buscando fornecedores...')
-      
-      const response = await fetch('/api/fornecedores', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      })
-      
-      console.log('🔍 [FORNECEDORES] Response status:', response.status)
-      
+      const response = await fetch('/api/fornecedores')
       if (response.ok) {
         const data = await response.json()
-        console.log('🔍 [FORNECEDORES] Dados recebidos:', data)
         
-        // ✅ VERIFICAR SE OS DADOS ESTÃO EM UM WRAPPER OU DIRETAMENTE
-        let fornecedoresData = data
+        // ✅ TRATAMENTO ROBUSTO DE DIFERENTES FORMATOS DE RESPOSTA
+        let fornecedoresData: Fornecedor[] = []
         
-        // Se os dados estão em um wrapper (ex: { data: [...] })
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-          if (data.data && Array.isArray(data.data)) {
+        if (Array.isArray(data)) {
+          // Dados diretos como array
+          fornecedoresData = data
+        } else if (data && typeof data === 'object') {
+          // Dados em wrapper
+          if (Array.isArray(data.data)) {
             fornecedoresData = data.data
-            console.log('✅ [FORNECEDORES] Dados extraídos do wrapper:', fornecedoresData)
-          } else if (data.fornecedores && Array.isArray(data.fornecedores)) {
+          } else if (Array.isArray(data.fornecedores)) {
             fornecedoresData = data.fornecedores
-            console.log('✅ [FORNECEDORES] Dados extraídos do campo fornecedores:', fornecedoresData)
-          } else {
-            console.log('⚠️ [FORNECEDORES] Estrutura de dados não reconhecida, usando dados diretamente')
           }
         }
         
-        // ✅ GARANTIR QUE É UM ARRAY
-        if (Array.isArray(fornecedoresData)) {
-          setFornecedores(fornecedoresData)
-          console.log('✅ [FORNECEDORES] Fornecedores carregados:', fornecedoresData.length)
-        } else {
-          console.warn('⚠️ [FORNECEDORES] Dados não são um array:', fornecedoresData)
-          setFornecedores([])
-        }
-      } else {
-        console.error('❌ [FORNECEDORES] Erro na resposta:', response.status, response.statusText)
-        const errorText = await response.text()
-        console.error('❌ [FORNECEDORES] Detalhes do erro:', errorText)
+        // ✅ GARANTIR QUE É ARRAY VÁLIDO
+        setFornecedores(Array.isArray(fornecedoresData) ? fornecedoresData : [])
       }
     } catch (error) {
-      console.error('❌ [FORNECEDORES] Erro na requisição:', error)
+      console.error('Error fetching fornecedores:', error)
+      // ✅ EM CASO DE ERRO, MANTER ARRAY VAZIO
+      setFornecedores([])
     }
   }
 
@@ -153,44 +133,29 @@ export default function FornecedoresPage() {
     setError('')
   }
 
-  // ✅ FUNÇÃO CORRIGIDA PARA SALVAR FORNECEDOR
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      console.log('🔍 [FORNECEDORES] Salvando fornecedor:', formData)
-      
       const url = editingFornecedor ? `/api/fornecedores/${editingFornecedor.id}` : '/api/fornecedores'
       const method = editingFornecedor ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
 
-      console.log('🔍 [FORNECEDORES] Response status:', response.status)
-
       if (response.ok) {
-        const result = await response.json()
-        console.log('✅ [FORNECEDORES] Fornecedor salvo:', result)
-        
         handleCloseModal()
-        
-        // ✅ RECARREGAR LISTA APÓS SALVAR
-        await fetchFornecedores()
+        fetchFornecedores()
       } else {
         const errorData = await response.json()
-        console.error('❌ [FORNECEDORES] Erro ao salvar:', errorData)
         setError(errorData.error || 'Erro ao salvar fornecedor')
       }
-    } catch (error) {
-      console.error('❌ [FORNECEDORES] Erro na requisição:', error)
+    } catch {
       setError('Erro ao salvar fornecedor')
     } finally {
       setLoading(false)
@@ -201,21 +166,12 @@ export default function FornecedoresPage() {
     if (!confirm('Tem certeza que deseja excluir este fornecedor?')) return
 
     try {
-      console.log('🔍 [FORNECEDORES] Excluindo fornecedor:', id)
-      
-      const response = await fetch(`/api/fornecedores/${id}`, { 
-        method: 'DELETE',
-        credentials: 'include'
-      })
-      
+      const response = await fetch(`/api/fornecedores/${id}`, { method: 'DELETE' })
       if (response.ok) {
-        console.log('✅ [FORNECEDORES] Fornecedor excluído')
-        await fetchFornecedores()
-      } else {
-        console.error('❌ [FORNECEDORES] Erro ao excluir')
+        fetchFornecedores()
       }
     } catch (error) {
-      console.error('❌ [FORNECEDORES] Erro na exclusão:', error)
+      console.error('Error deleting fornecedor:', error)
     }
   }
 
@@ -250,18 +206,20 @@ export default function FornecedoresPage() {
     return 'from-purple-400 to-purple-600'
   }
 
-  // Filtros e ordenação
-  const filteredFornecedores = fornecedores.filter(fornecedor => {
-    const matchesSearch = fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fornecedor.cidade?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = selectedStatus === '' || 
-      (selectedStatus === 'ativo' && fornecedor.ativo) ||
-      (selectedStatus === 'inativo' && !fornecedor.ativo)
-    
-    return matchesSearch && matchesStatus
-  })
+  // ✅ CORREÇÃO 3: Filtros com verificação de array
+  const filteredFornecedores = Array.isArray(fornecedores) 
+    ? fornecedores.filter(fornecedor => {
+        const matchesSearch = fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          fornecedor.cidade?.toLowerCase().includes(searchTerm.toLowerCase())
+        
+        const matchesStatus = selectedStatus === '' || 
+          (selectedStatus === 'ativo' && fornecedor.ativo) ||
+          (selectedStatus === 'inativo' && !fornecedor.ativo)
+        
+        return matchesSearch && matchesStatus
+      })
+    : []
 
   const sortedFornecedores = [...filteredFornecedores].sort((a, b) => {
     switch (sortOrder) {
@@ -288,6 +246,16 @@ export default function FornecedoresPage() {
 
   const stats = getStats()
 
+  if (loading && fornecedores.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B2E4B]"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
@@ -299,22 +267,9 @@ export default function FornecedoresPage() {
                 Fornecedores
               </h1>
               <p className="text-gray-600 text-lg">Gestão de fornecedores e parcerias</p>
-              
-              {/* ✅ DEBUG INFO */}
-              <div className="text-xs text-gray-500 bg-white/50 p-2 rounded">
-                <p><strong>Total carregados:</strong> {fornecedores.length}</p>
-                <p><strong>Filtrados:</strong> {filteredFornecedores.length}</p>
-                <p><strong>Última atualização:</strong> {new Date().toLocaleTimeString()}</p>
-              </div>
             </div>
             
             <div className="flex items-center space-x-3">
-              <button 
-                onClick={fetchFornecedores}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm"
-              >
-                🔄 Recarregar
-              </button>
               <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
                 <Download className="h-4 w-4 mr-2" />
                 Exportar
@@ -330,221 +285,200 @@ export default function FornecedoresPage() {
           </div>
         </div>
 
-        {/* ✅ MENSAGEM QUANDO NÃO HÁ FORNECEDORES */}
-        {fornecedores.length === 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 text-center">
-            <Truck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhum fornecedor encontrado</h3>
-            <p className="text-gray-500 mb-6">Comece cadastrando seu primeiro fornecedor para gerenciar suas parcerias.</p>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center mx-auto"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Cadastrar Primeiro Fornecedor
-            </button>
+        {/* Filters */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Buscar Fornecedor</label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Nome, razão social ou cidade..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="">Todos os status</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Ordenar</label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="name">Nome A-Z</option>
+                <option value="insumos">Mais insumos</option>
+                <option value="cidade">Cidade A-Z</option>
+              </select>
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* Resto da interface só aparece se há fornecedores */}
-        {fornecedores.length > 0 && (
-          <>
-            {/* Filters */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Buscar Fornecedor</label>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <input
-                      type="text"
-                      placeholder="Nome, razão social ou cidade..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Status</label>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                  >
-                    <option value="">Todos os status</option>
-                    <option value="ativo">Ativos</option>
-                    <option value="inativo">Inativos</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">Ordenar</label>
-                  <select
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                  >
-                    <option value="recent">Mais recentes</option>
-                    <option value="name">Nome A-Z</option>
-                    <option value="insumos">Mais insumos</option>
-                    <option value="cidade">Cidade A-Z</option>
-                  </select>
-                </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Fornecedores</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalFornecedores}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  +8% este mês
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Users className="text-white h-6 w-6" />
               </div>
             </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-600">Total Fornecedores</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalFornecedores}</p>
-                    <p className="text-xs text-green-600 flex items-center">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      +8% este mês
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Users className="text-white h-6 w-6" />
-                  </div>
-                </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Fornecedores Ativos</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.fornecedoresAtivos}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <Crown className="h-3 w-3 mr-1" />
+                  {((stats.fornecedoresAtivos / stats.totalFornecedores) * 100).toFixed(0)}% ativos
+                </p>
               </div>
-              
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-600">Fornecedores Ativos</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.fornecedoresAtivos}</p>
-                    <p className="text-xs text-green-600 flex items-center">
-                      <Crown className="h-3 w-3 mr-1" />
-                      {stats.totalFornecedores > 0 ? ((stats.fornecedoresAtivos / stats.totalFornecedores) * 100).toFixed(0) : 0}% ativos
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Truck className="text-white h-6 w-6" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-600">Total Insumos</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
-                    <p className="text-xs text-blue-600 flex items-center">
-                      <Package className="h-3 w-3 mr-1" />
-                      Produtos fornecidos
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Package className="text-white h-6 w-6" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-600">Preços Cadastrados</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalPrecos}</p>
-                    <p className="text-xs text-purple-600 flex items-center">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      Cotações ativas
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <MapPin className="text-white h-6 w-6" />
-                  </div>
-                </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Truck className="text-white h-6 w-6" />
               </div>
             </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Total Insumos</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
+                <p className="text-xs text-blue-600 flex items-center">
+                  <Package className="h-3 w-3 mr-1" />
+                  Produtos fornecidos
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Package className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600">Preços Cadastrados</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalPrecos}</p>
+                <p className="text-xs text-purple-600 flex items-center">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Cotações ativas
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <MapPin className="text-white h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {/* Fornecedores Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-              {sortedFornecedores.map((fornecedor) => (
-                <div key={fornecedor.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                  <div className={`h-2 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)}`}></div>
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-16 h-16 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)} rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
-                          {getFornecedorIcon(fornecedor.nome)}
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-lg font-bold text-gray-900">{fornecedor.nome}</h3>
-                          {fornecedor.razaoSocial && (
-                            <p className="text-sm text-gray-600">{fornecedor.razaoSocial}</p>
-                          )}
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              fornecedor.ativo 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {fornecedor.ativo ? 'Ativo' : 'Inativo'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
+        {/* Fornecedores Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          {sortedFornecedores.map((fornecedor) => (
+            <div key={fornecedor.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              <div className={`h-2 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)}`}></div>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-16 h-16 bg-gradient-to-r ${getFornecedorGradient(fornecedor.nome)} rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
+                      {getFornecedorIcon(fornecedor.nome)}
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-bold text-gray-900">{fornecedor.nome}</h3>
+                      {fornecedor.razaoSocial && (
+                        <p className="text-sm text-gray-600">{fornecedor.razaoSocial}</p>
+                      )}
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleOpenModal(fornecedor)}
-                          className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(fornecedor.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Informações de contato */}
-                    <div className="space-y-3 mb-6">
-                      {fornecedor.telefone && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-4 h-4 mr-3">📞</span>
-                          {fornecedor.telefone}
-                        </div>
-                      )}
-                      {fornecedor.email && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="w-4 h-4 mr-3">📧</span>
-                          {fornecedor.email}
-                        </div>
-                      )}
-                      {fornecedor.cidade && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPin className="w-4 h-4 mr-3" />
-                          {fornecedor.cidade}{fornecedor.estado && `, ${fornecedor.estado}`}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Estatísticas */}
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-[#1B2E4B]">{fornecedor._count.insumos}</p>
-                        <p className="text-xs text-gray-600">Insumos</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-[#5AC8FA]">{fornecedor._count.precos}</p>
-                        <p className="text-xs text-gray-600">Preços</p>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          fornecedor.ativo 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {fornecedor.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
                       </div>
                     </div>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(fornecedor)}
+                      className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(fornecedor.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              ))}
+
+                {/* Informações de contato */}
+                <div className="space-y-3 mb-6">
+                  {fornecedor.telefone && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="w-4 h-4 mr-3">📞</span>
+                      {fornecedor.telefone}
+                    </div>
+                  )}
+                  {fornecedor.email && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="w-4 h-4 mr-3">📧</span>
+                      {fornecedor.email}
+                    </div>
+                  )}
+                  {fornecedor.cidade && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mr-3" />
+                      {fornecedor.cidade}{fornecedor.estado && `, ${fornecedor.estado}`}
+                    </div>
+                  )}
+                </div>
+
+                {/* Estatísticas */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#1B2E4B]">{fornecedor._count.insumos}</p>
+                    <p className="text-xs text-gray-600">Insumos</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-[#5AC8FA]">{fornecedor._count.precos}</p>
+                    <p className="text-xs text-gray-600">Preços</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </>
-        )}
+          ))}
+        </div>
 
         {/* Modal para criar/editar fornecedor */}
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}>
@@ -556,7 +490,7 @@ export default function FornecedoresPage() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ✅ CORRIGIDO: onChange recebe string diretamente */}
+              {/* ✅ CORREÇÃO 4: FloatingLabelInput com onChange correto */}
               <FloatingLabelInput
                 label="Nome *"
                 value={formData.nome}
@@ -662,8 +596,10 @@ export default function FornecedoresPage() {
   )
 }
 
-// 🎯 CORREÇÃO PARA BUILD VERCEL:
-// ✅ FloatingLabelInput onChange recebe string diretamente, não event
-// ✅ Corrigido: onChange={(value) => setFormData({ ...formData, nome: value })}
-// ✅ Ao invés de: onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-// ✅ Mantidas todas as outras funcionalidades e correções
+// 🎯 CORREÇÕES APLICADAS:
+// ✅ 1. Estado inicial sempre como array vazio
+// ✅ 2. Tratamento robusto de diferentes formatos de resposta da API
+// ✅ 3. Verificação Array.isArray() antes de usar filter
+// ✅ 4. FloatingLabelInput com onChange correto
+// ✅ 5. Design original mantido (removidos elementos de debug)
+// ✅ 6. Tratamento de erro que mantém array vazio
