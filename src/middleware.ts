@@ -40,7 +40,6 @@ export async function middleware(request: NextRequest) {
 
   // 🔧 VERIFICAÇÃO ROBUSTA DE AMBIENTE
   const isDevelopment = process.env.NODE_ENV === 'development'
-  const isProduction = process.env.NODE_ENV === 'production'
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -88,7 +87,7 @@ export async function middleware(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: any) {
+          set(name: string, value: string, options: Record<string, unknown>) {
             request.cookies.set({
               name,
               value,
@@ -105,7 +104,7 @@ export async function middleware(request: NextRequest) {
               ...options,
             })
           },
-          remove(name: string, options: any) {
+          remove(name: string, options: Record<string, unknown>) {
             request.cookies.set({
               name,
               value: '',
@@ -132,10 +131,12 @@ export async function middleware(request: NextRequest) {
       setTimeout(() => reject(new Error('Auth timeout')), 5000)
     )
 
-    const { data: { user }, error } = await Promise.race([
+    const result = await Promise.race([
       authPromise,
       timeoutPromise
-    ]) as any
+    ]) as { data: { user: unknown }, error: Error | null }
+
+    const { data: { user }, error } = result
 
     // ✅ SE HÁ ERRO OU USUÁRIO NÃO AUTENTICADO
     if (error || !user) {
@@ -154,7 +155,8 @@ export async function middleware(request: NextRequest) {
       }
     } else {
       // ✅ USUÁRIO AUTENTICADO, PERMITIR ACESSO
-      console.log(`✅ [MIDDLEWARE] Usuário autenticado: ${user?.email} acessando: ${pathname} (${timestamp})`)
+      const userEmail = (user as { email?: string })?.email || 'unknown'
+      console.log(`✅ [MIDDLEWARE] Usuário autenticado: ${userEmail} acessando: ${pathname} (${timestamp})`)
     }
 
     return response
@@ -190,13 +192,10 @@ export const config = {
   ],
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
-// ✅ Verificação mais robusta de configuração do Supabase
-// ✅ Adicionado timeout de 5 segundos para verificação de auth
-// ✅ Logs detalhados com timestamps para debug
-// ✅ Verificação de formato correto das chaves Supabase
-// ✅ Tratamento melhorado de erros com fallback seguro
-// ✅ Adicionadas rotas extras para não interceptar (_vercel, static, health)
-// ✅ Verificação de ambiente mais precisa
-// ✅ Prevenção de loops de redirecionamento
-// ✅ Logs estruturados para facilitar debug
+// 🎯 PRINCIPAIS CORREÇÕES PARA BUILD VERCEL:
+// ✅ Removido variável 'isProduction' não utilizada
+// ✅ Substituído 'any' por tipos específicos (Record<string, unknown>)
+// ✅ Tipagem adequada para Promise.race
+// ✅ Type assertion segura para user object
+// ✅ Mantida toda funcionalidade de correção de loops
+
