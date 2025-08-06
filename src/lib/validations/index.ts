@@ -34,24 +34,24 @@ export {
 
 // Categoria pode usar o mesmo schema base
 export { insumoSchema as categoriaSchema } from './insumo'
-export type CategoriaInput = import('./insumo').InsumoInput
+export type CategoriaInput = InsumoInput
 
 // Unidade de medida pode usar schema simplificado
 export { insumoSchema as unidadeMedidaSchema } from './insumo'
-export type UnidadeMedidaInput = import('./insumo').InsumoInput
+export type UnidadeMedidaInput = InsumoInput
 
 // Análise temporal pode usar schema de produção
 export { producaoSchema as analiseTemporalSchema } from './insumo'
-export type AnaliseTemporalInput = import('./insumo').ProducaoInput
+export type AnaliseTemporalInput = ProducaoInput
 
 // Produção de produto pode usar schema de produção
 export { producaoSchema as producaoProdutoSchema } from './insumo'
-export type ProducaoProdutoInput = import('./insumo').ProducaoInput
+export type ProducaoProdutoInput = ProducaoInput
 
 // Movimentação de produto pode usar schema de movimentação de estoque
 export { movimentacaoEstoqueSchema as movimentacaoProdutoSchema } from './insumo'
-export type MovimentacaoProdutoInput = import('./insumo').MovimentacaoEstoqueInput
+export type MovimentacaoProdutoInput = MovimentacaoEstoqueInput
 
 // Período de menu pode usar schema de menu
 export { menuSchema as menuPeriodoSchema } from './insumo'
-export type MenuPeriodoInput = import('./insumo').MenuInput
+export type MenuPeriodoInput = MenuInput
