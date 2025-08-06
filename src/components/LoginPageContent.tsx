@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
@@ -17,56 +17,75 @@ export default function LoginPageContent() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  
+  // 🔧 CORREÇÃO: Usar ref para prevenir múltiplos redirects
+  const redirectExecuted = useRef(false)
+  const mountedRef = useRef(true)
 
   // ✅ Aguardar hidratação
   useEffect(() => {
     setIsHydrated(true)
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
-  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
+  // ✅ CORRIGIDO: useEffect simplificado e seguro
   useEffect(() => {
-    console.log('🔍 LoginPageContent useEffect TRIGGERED:', { 
-      isHydrated, 
-      authLoading, 
-      user: !!user, 
-      userEmail: user?.email, 
-      timestamp: new Date().toISOString(),
-      dependencies: { isHydrated, authLoading, userExists: !!user }
-    })
-    
+    // 🚫 Verificações de segurança
     if (!isHydrated) {
-      console.log('🚫 LoginPageContent: Aguardando hidratação')
+      console.log('🚫 [LOGIN] Aguardando hidratação')
       return
     }
 
     if (authLoading) {
-      console.log('🚫 LoginPageContent: Auth ainda carregando')
+      console.log('🚫 [LOGIN] Auth ainda carregando')
       return
     }
 
-    // ✅ Se usuário já está logado, redirecionar
+    if (redirectExecuted.current) {
+      console.log('🚫 [LOGIN] Redirect já executado, ignorando')
+      return
+    }
+
+    if (!mountedRef.current) {
+      console.log('🚫 [LOGIN] Componente desmontado, ignorando')
+      return
+    }
+
+    // ✅ Se usuário já está logado, redirecionar UMA VEZ
     if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
-      console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
-      console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
       
+      console.log('✅ [LOGIN] Usuário autenticado detectado:', {
+        email: user.email,
+        redirect,
+        timestamp: new Date().toISOString()
+      })
+      
+      // 🔧 Marcar redirect como executado ANTES de executar
+      redirectExecuted.current = true
+      
+      // 🔧 USAR APENAS router.push - SEM setTimeout ou window.location.href
+      console.log('🚀 [LOGIN] Executando redirecionamento para:', redirect)
       router.push(redirect)
       
-      setTimeout(() => {
-        console.log('🔄 LoginPageContent: Fallback redirect executing...')
-        window.location.href = redirect
-      }, 1000)
     } else {
-      console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login. User state:', user)
+      console.log('🔍 [LOGIN] Usuário não autenticado, permanecendo no login')
     }
   }, [isHydrated, authLoading, user, router, searchParams])
 
-  // ✅ CORRIGIDO: Função de login com tratamento de erros
+  // ✅ CORRIGIDO: Função de login simplificada
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!email || !password) {
       setError('Por favor, preencha todos os campos')
+      return
+    }
+
+    if (loading) {
+      console.log('🚫 [LOGIN] Login já em andamento, ignorando')
       return
     }
 
@@ -76,26 +95,40 @@ export default function LoginPageContent() {
     try {
       // ✅ Se Supabase não está configurado, simular login
       if (!isConfigured) {
-        console.log('🔧 Login: Modo desenvolvimento - simulando login')
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Simular delay
-        router.push('/dashboard')
+        console.log('🔧 [LOGIN] Modo desenvolvimento - simulando login')
+        
+        // 🔧 Simular delay de autenticação
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 🔧 Em modo dev, apenas redirecionar
+        const redirect = searchParams.get('redirect') || '/dashboard'
+        console.log('🚀 [LOGIN] Modo dev - redirecionando para:', redirect)
+        
+        if (mountedRef.current) {
+          redirectExecuted.current = true
+          router.push(redirect)
+        }
         return
       }
 
       // ✅ Login real com Supabase
+      console.log('🔐 [LOGIN] Tentando autenticação com Supabase para:', email.trim())
+      
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password
       })
 
       if (loginError) {
-        console.error('❌ Login: Erro na autenticação:', loginError.message)
+        console.error('❌ [LOGIN] Erro na autenticação:', loginError.message)
         
         // ✅ Mensagens de erro mais amigáveis
         if (loginError.message.includes('Invalid login credentials')) {
           setError('Email ou senha incorretos')
         } else if (loginError.message.includes('Email not confirmed')) {
           setError('Email não confirmado. Verifique sua caixa de entrada.')
+        } else if (loginError.message.includes('Too many requests')) {
+          setError('Muitas tentativas. Aguarde alguns minutos.')
         } else {
           setError(loginError.message)
         }
@@ -103,32 +136,28 @@ export default function LoginPageContent() {
       }
 
       if (data.user) {
-        console.log('✅ Login: Usuário autenticado com sucesso:', data.user.email)
-        console.log('🔍 Login: Session data:', data.session ? 'Session exists' : 'No session')
+        console.log('✅ [LOGIN] Usuário autenticado com sucesso:', data.user.email)
         
-        console.log('🔄 Login: Forçando atualização do estado de autenticação...')
+        // 🔧 AGUARDAR APENAS 300ms para sincronização mínima
+        console.log('⏳ [LOGIN] Aguardando sincronização de estado...')
+        await new Promise(resolve => setTimeout(resolve, 300))
         
-        console.log('⏳ Login: Aguardando 1000ms para sincronização de estado...')
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        console.log('🔍 Login: Estado atual do usuário antes do redirect:', currentUser?.email || 'null')
-        
-        console.log('✅ Login: Autenticação concluída, aguardando useEffect para redirecionamento automático')
+        // 🔧 O useEffect vai detectar a mudança de user e fazer o redirect
+        console.log('✅ [LOGIN] Autenticação concluída, aguardando useEffect para redirecionamento')
       } else {
-        console.warn('⚠️ Login: Supabase retornou sucesso mas sem usuário')
+        console.warn('⚠️ [LOGIN] Supabase retornou sucesso mas sem usuário')
+        setError('Erro na autenticação. Tente novamente.')
       }
 
     } catch (error) {
-      console.error('❌ Login: Erro inesperado:', error)
+      console.error('❌ [LOGIN] Erro inesperado:', error)
       setError('Erro inesperado. Tente novamente.')
     } finally {
-      setLoading(false)
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
   }
-
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -275,3 +304,14 @@ export default function LoginPageContent() {
     </div>
   )
 }
+
+// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
+// ✅ Adicionado useRef para prevenir múltiplos redirects
+// ✅ Adicionado mountedRef para verificar se componente está montado
+// ✅ Simplificado useEffect com verificações de segurança
+// ✅ Removido setTimeout e window.location.href problemáticos
+// ✅ Adicionado verificação de loading para prevenir múltiplos submits
+// ✅ Melhorado tratamento de erros com mensagens específicas
+// ✅ Reduzido tempo de sincronização para 300ms
+// ✅ Logs detalhados para debug
+// ✅ Cleanup adequado no useEffect
