@@ -9,7 +9,7 @@ import { Eye, EyeOff, ChefHat, Lock, Mail, AlertCircle } from 'lucide-react'
 export default function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading, isConfigured } = useSupabase()
+  const { user, loading: authLoading, isConfigured, isInitialized } = useSupabase()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,8 +17,6 @@ export default function LoginPageContent() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
-  
-  // 🔧 CORREÇÃO: Usar estado ao invés de ref para permitir reset
   const [redirectExecuted, setRedirectExecuted] = useState(false)
   const mountedRef = useRef(true)
 
@@ -30,11 +28,16 @@ export default function LoginPageContent() {
     }
   }, [])
 
-  // ✅ CORRIGIDO: useEffect simplificado com reset de redirect
+  // ✅ CORRIGIDO: useEffect com verificações mais robustas
   useEffect(() => {
     // 🚫 Verificações de segurança
     if (!isHydrated) {
       console.log('🚫 [LOGIN] Aguardando hidratação')
+      return
+    }
+
+    if (!isInitialized) {
+      console.log('🚫 [LOGIN] Aguardando inicialização do provider')
       return
     }
 
@@ -48,36 +51,37 @@ export default function LoginPageContent() {
       return
     }
 
+    if (redirectExecuted) {
+      console.log('🚫 [LOGIN] Redirect já executado, ignorando')
+      return
+    }
+
     // ✅ Se usuário já está logado, redirecionar
-    if (user && !redirectExecuted) {
+    if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
       
       console.log('✅ [LOGIN] Usuário autenticado detectado:', {
         email: user.email,
         redirect,
-        redirectExecuted,
         timestamp: new Date().toISOString()
       })
       
       // 🔧 Marcar redirect como executado
       setRedirectExecuted(true)
       
-      // 🔧 USAR APENAS router.push
-      console.log('🚀 [LOGIN] Executando redirecionamento para:', redirect)
-      router.push(redirect)
+      // 🔧 USAR router.replace para evitar voltar no histórico
+      console.log('🚀 [LOGIN] Executando redirecionamento DEFINITIVO para:', redirect)
+      router.replace(redirect)
       
-    } else if (!user && redirectExecuted) {
-      // 🔧 RESET: Se usuário foi deslogado, permitir novo redirect
-      console.log('🔄 [LOGIN] Usuário deslogado, resetando redirect')
-      setRedirectExecuted(false)
     } else {
       console.log('🔍 [LOGIN] Estado atual:', {
         hasUser: !!user,
-        redirectExecuted,
-        authLoading
+        authLoading,
+        isInitialized,
+        redirectExecuted
       })
     }
-  }, [isHydrated, authLoading, user, router, searchParams, redirectExecuted])
+  }, [isHydrated, isInitialized, authLoading, user, router, searchParams, redirectExecuted])
 
   // ✅ CORRIGIDO: Função de login que reseta redirect
   const handleLogin = async (e: React.FormEvent) => {
@@ -108,10 +112,10 @@ export default function LoginPageContent() {
         
         // 🔧 Em modo dev, redirecionar diretamente
         const redirect = searchParams.get('redirect') || '/dashboard'
-        console.log('🚀 [LOGIN] Modo dev - redirecionando para:', redirect)
+        console.log('🚀 [LOGIN] Modo dev - redirecionamento DEFINITIVO para:', redirect)
         
         if (mountedRef.current) {
-          router.push(redirect)
+          router.replace(redirect) // USAR replace
         }
         return
       }
@@ -143,9 +147,9 @@ export default function LoginPageContent() {
       if (data.user) {
         console.log('✅ [LOGIN] Usuário autenticado com sucesso:', data.user.email)
         
-        // 🔧 AGUARDAR APENAS 300ms para sincronização mínima
+        // 🔧 AGUARDAR APENAS 500ms para sincronização
         console.log('⏳ [LOGIN] Aguardando sincronização de estado...')
-        await new Promise(resolve => setTimeout(resolve, 300))
+        await new Promise(resolve => setTimeout(resolve, 500))
         
         // 🔧 O useEffect vai detectar a mudança de user e fazer o redirect
         console.log('✅ [LOGIN] Autenticação concluída, aguardando useEffect para redirecionamento')
@@ -310,10 +314,10 @@ export default function LoginPageContent() {
   )
 }
 
-// 🎯 CORREÇÃO PRINCIPAL APLICADA:
-// ✅ Mudado redirectExecuted de useRef para useState
-// ✅ Reset de redirectExecuted ao fazer novo login
-// ✅ Reset de redirectExecuted quando usuário é deslogado
+// 🎯 CORREÇÕES FINAIS APLICADAS:
+// ✅ Verificação de isInitialized antes de tomar decisões
+// ✅ Uso de router.replace ao invés de router.push
+// ✅ Aumento do tempo de sincronização para 500ms
 // ✅ Logs mais detalhados para debug
-// ✅ Verificação de redirectExecuted no useEffect
-// ✅ Mantida toda funcionalidade de correção de loops
+// ✅ Verificações mais robustas de estado
+// ✅ Prevenção de múltiplos redirects
