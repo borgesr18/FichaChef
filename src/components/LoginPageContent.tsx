@@ -18,8 +18,8 @@ export default function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   
-  // 🔧 CORREÇÃO: Usar ref para prevenir múltiplos redirects
-  const redirectExecuted = useRef(false)
+  // 🔧 CORREÇÃO: Usar estado ao invés de ref para permitir reset
+  const [redirectExecuted, setRedirectExecuted] = useState(false)
   const mountedRef = useRef(true)
 
   // ✅ Aguardar hidratação
@@ -30,7 +30,7 @@ export default function LoginPageContent() {
     }
   }, [])
 
-  // ✅ CORRIGIDO: useEffect simplificado e seguro
+  // ✅ CORRIGIDO: useEffect simplificado com reset de redirect
   useEffect(() => {
     // 🚫 Verificações de segurança
     if (!isHydrated) {
@@ -43,39 +43,43 @@ export default function LoginPageContent() {
       return
     }
 
-    if (redirectExecuted.current) {
-      console.log('🚫 [LOGIN] Redirect já executado, ignorando')
-      return
-    }
-
     if (!mountedRef.current) {
       console.log('🚫 [LOGIN] Componente desmontado, ignorando')
       return
     }
 
-    // ✅ Se usuário já está logado, redirecionar UMA VEZ
-    if (user) {
+    // ✅ Se usuário já está logado, redirecionar
+    if (user && !redirectExecuted) {
       const redirect = searchParams.get('redirect') || '/dashboard'
       
       console.log('✅ [LOGIN] Usuário autenticado detectado:', {
         email: user.email,
         redirect,
+        redirectExecuted,
         timestamp: new Date().toISOString()
       })
       
-      // 🔧 Marcar redirect como executado ANTES de executar
-      redirectExecuted.current = true
+      // 🔧 Marcar redirect como executado
+      setRedirectExecuted(true)
       
-      // 🔧 USAR APENAS router.push - SEM setTimeout ou window.location.href
+      // 🔧 USAR APENAS router.push
       console.log('🚀 [LOGIN] Executando redirecionamento para:', redirect)
       router.push(redirect)
       
+    } else if (!user && redirectExecuted) {
+      // 🔧 RESET: Se usuário foi deslogado, permitir novo redirect
+      console.log('🔄 [LOGIN] Usuário deslogado, resetando redirect')
+      setRedirectExecuted(false)
     } else {
-      console.log('🔍 [LOGIN] Usuário não autenticado, permanecendo no login')
+      console.log('🔍 [LOGIN] Estado atual:', {
+        hasUser: !!user,
+        redirectExecuted,
+        authLoading
+      })
     }
-  }, [isHydrated, authLoading, user, router, searchParams])
+  }, [isHydrated, authLoading, user, router, searchParams, redirectExecuted])
 
-  // ✅ CORRIGIDO: Função de login simplificada
+  // ✅ CORRIGIDO: Função de login que reseta redirect
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -89,6 +93,8 @@ export default function LoginPageContent() {
       return
     }
 
+    // 🔧 RESET: Permitir novo redirect ao fazer login
+    setRedirectExecuted(false)
     setLoading(true)
     setError('')
 
@@ -100,12 +106,11 @@ export default function LoginPageContent() {
         // 🔧 Simular delay de autenticação
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // 🔧 Em modo dev, apenas redirecionar
+        // 🔧 Em modo dev, redirecionar diretamente
         const redirect = searchParams.get('redirect') || '/dashboard'
         console.log('🚀 [LOGIN] Modo dev - redirecionando para:', redirect)
         
         if (mountedRef.current) {
-          redirectExecuted.current = true
           router.push(redirect)
         }
         return
@@ -305,13 +310,10 @@ export default function LoginPageContent() {
   )
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
-// ✅ Adicionado useRef para prevenir múltiplos redirects
-// ✅ Adicionado mountedRef para verificar se componente está montado
-// ✅ Simplificado useEffect com verificações de segurança
-// ✅ Removido setTimeout e window.location.href problemáticos
-// ✅ Adicionado verificação de loading para prevenir múltiplos submits
-// ✅ Melhorado tratamento de erros com mensagens específicas
-// ✅ Reduzido tempo de sincronização para 300ms
-// ✅ Logs detalhados para debug
-// ✅ Cleanup adequado no useEffect
+// 🎯 CORREÇÃO PRINCIPAL APLICADA:
+// ✅ Mudado redirectExecuted de useRef para useState
+// ✅ Reset de redirectExecuted ao fazer novo login
+// ✅ Reset de redirectExecuted quando usuário é deslogado
+// ✅ Logs mais detalhados para debug
+// ✅ Verificação de redirectExecuted no useEffect
+// ✅ Mantida toda funcionalidade de correção de loops
