@@ -556,61 +556,62 @@ export default function FornecedoresPage() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ✅ CORRIGIDO: onChange recebe string diretamente */}
               <FloatingLabelInput
                 label="Nome *"
                 value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, nome: value })}
                 required
               />
               <FloatingLabelInput
                 label="Razão Social"
                 value={formData.razaoSocial}
-                onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, razaoSocial: value })}
               />
               <FloatingLabelInput
                 label="CNPJ"
                 value={formData.cnpj}
-                onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, cnpj: value })}
               />
               <FloatingLabelInput
                 label="Telefone"
                 value={formData.telefone}
-                onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, telefone: value })}
               />
               <FloatingLabelInput
                 label="Email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, email: value })}
               />
               <FloatingLabelInput
                 label="Contato"
                 value={formData.contato}
-                onChange={(e) => setFormData({ ...formData, contato: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, contato: value })}
               />
             </div>
 
             <FloatingLabelInput
               label="Endereço"
               value={formData.endereco}
-              onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, endereco: value })}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FloatingLabelInput
                 label="Cidade"
                 value={formData.cidade}
-                onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, cidade: value })}
               />
               <FloatingLabelInput
                 label="Estado"
                 value={formData.estado}
-                onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, estado: value })}
               />
               <FloatingLabelInput
                 label="CEP"
                 value={formData.cep}
-                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, cep: value })}
               />
             </div>
 
@@ -661,13 +662,8 @@ export default function FornecedoresPage() {
   )
 }
 
-// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
-// ✅ Função fetchFornecedores melhorada com logs detalhados
-// ✅ Verificação de diferentes estruturas de dados de retorno
-// ✅ Tratamento robusto de arrays vazios
-// ✅ Debug info visível na interface
-// ✅ Botão de recarregar manual
-// ✅ Mensagem quando não há fornecedores
-// ✅ Logs detalhados em todas as operações
-// ✅ Tratamento de erros melhorado
-// ✅ Recarregamento automático após salvar/excluir
+// 🎯 CORREÇÃO PARA BUILD VERCEL:
+// ✅ FloatingLabelInput onChange recebe string diretamente, não event
+// ✅ Corrigido: onChange={(value) => setFormData({ ...formData, nome: value })}
+// ✅ Ao invés de: onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+// ✅ Mantidas todas as outras funcionalidades e correções
