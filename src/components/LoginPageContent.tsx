@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
@@ -28,7 +28,51 @@ export default function LoginPageContent() {
     }
   }, [])
 
-  // ✅ CORRIGIDO: useEffect com verificações mais robustas
+  // ✅ FUNÇÃO: REDIRECIONAMENTO ROBUSTO
+  const performRedirect = useCallback(async (url: string) => {
+    console.log('🚀 [LOGIN] Iniciando redirecionamento robusto para:', url)
+    
+    try {
+      // 🔧 MÉTODO 1: Next.js router.replace
+      console.log('🔧 [LOGIN] Tentativa 1: router.replace')
+      router.replace(url)
+      
+      // 🔧 AGUARDAR 1 SEGUNDO PARA VER SE FUNCIONOU
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 🔧 VERIFICAR SE AINDA ESTAMOS NA PÁGINA DE LOGIN
+      if (window.location.pathname.includes('/login')) {
+        console.log('⚠️ [LOGIN] router.replace falhou, tentando router.push')
+        
+        // 🔧 MÉTODO 2: Next.js router.push
+        router.push(url)
+        
+        // 🔧 AGUARDAR MAIS 1 SEGUNDO
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 🔧 SE AINDA ESTAMOS NO LOGIN, USAR WINDOW.LOCATION
+        if (window.location.pathname.includes('/login')) {
+          console.log('⚠️ [LOGIN] router.push também falhou, usando window.location.href')
+          
+          // 🔧 MÉTODO 3: window.location.href (FORÇA BRUTA)
+          window.location.href = url
+        } else {
+          console.log('✅ [LOGIN] router.push funcionou!')
+        }
+      } else {
+        console.log('✅ [LOGIN] router.replace funcionou!')
+      }
+      
+    } catch (error) {
+      console.error('❌ [LOGIN] Erro no redirecionamento:', error)
+      
+      // 🔧 FALLBACK FINAL: window.location.href
+      console.log('🔧 [LOGIN] Usando fallback final: window.location.href')
+      window.location.href = url
+    }
+  }, [router])
+
+  // ✅ CORRIGIDO: useEffect com redirecionamento robusto
   useEffect(() => {
     // 🚫 Verificações de segurança
     if (!isHydrated) {
@@ -63,25 +107,26 @@ export default function LoginPageContent() {
       console.log('✅ [LOGIN] Usuário autenticado detectado:', {
         email: user.email,
         redirect,
+        currentPath: window.location.pathname,
         timestamp: new Date().toISOString()
       })
       
       // 🔧 Marcar redirect como executado
       setRedirectExecuted(true)
       
-      // 🔧 USAR router.replace para evitar voltar no histórico
-      console.log('🚀 [LOGIN] Executando redirecionamento DEFINITIVO para:', redirect)
-      router.replace(redirect)
+      // 🔧 USAR FUNÇÃO DE REDIRECIONAMENTO ROBUSTO
+      performRedirect(redirect)
       
     } else {
       console.log('🔍 [LOGIN] Estado atual:', {
         hasUser: !!user,
         authLoading,
         isInitialized,
-        redirectExecuted
+        redirectExecuted,
+        currentPath: window.location.pathname
       })
     }
-  }, [isHydrated, isInitialized, authLoading, user, router, searchParams, redirectExecuted])
+  }, [isHydrated, isInitialized, authLoading, user, searchParams, redirectExecuted, performRedirect])
 
   // ✅ CORRIGIDO: Função de login que reseta redirect
   const handleLogin = async (e: React.FormEvent) => {
@@ -112,10 +157,10 @@ export default function LoginPageContent() {
         
         // 🔧 Em modo dev, redirecionar diretamente
         const redirect = searchParams.get('redirect') || '/dashboard'
-        console.log('🚀 [LOGIN] Modo dev - redirecionamento DEFINITIVO para:', redirect)
+        console.log('🚀 [LOGIN] Modo dev - redirecionamento para:', redirect)
         
         if (mountedRef.current) {
-          router.replace(redirect) // USAR replace
+          await performRedirect(redirect)
         }
         return
       }
@@ -147,9 +192,9 @@ export default function LoginPageContent() {
       if (data.user) {
         console.log('✅ [LOGIN] Usuário autenticado com sucesso:', data.user.email)
         
-        // 🔧 AGUARDAR APENAS 500ms para sincronização
+        // 🔧 AGUARDAR 800ms para sincronização
         console.log('⏳ [LOGIN] Aguardando sincronização de estado...')
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 800))
         
         // 🔧 O useEffect vai detectar a mudança de user e fazer o redirect
         console.log('✅ [LOGIN] Autenticação concluída, aguardando useEffect para redirecionamento')
@@ -192,6 +237,14 @@ export default function LoginPageContent() {
               </p>
             </div>
           )}
+
+          {/* ✅ DEBUG INFO */}
+          <div className="mt-4 p-3 bg-white/60 rounded-xl text-xs text-gray-600">
+            <p><strong>Current Path:</strong> {typeof window !== 'undefined' ? window.location.pathname : 'N/A'}</p>
+            <p><strong>User:</strong> {user ? user.email : 'None'}</p>
+            <p><strong>Redirect Executed:</strong> {redirectExecuted ? 'Yes' : 'No'}</p>
+            <p><strong>Auth Loading:</strong> {authLoading ? 'Yes' : 'No'}</p>
+          </div>
         </div>
 
         {/* ✅ Form */}
@@ -278,6 +331,18 @@ export default function LoginPageContent() {
                 'Entrar'
               )}
             </button>
+
+            {/* ✅ BOTÃO DE TESTE DIRETO */}
+            <button
+              type="button"
+              onClick={() => {
+                console.log('🧪 [LOGIN] Teste direto de redirecionamento')
+                performRedirect('/dashboard')
+              }}
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+            >
+              🧪 Testar Redirecionamento Direto
+            </button>
           </form>
 
           {/* ✅ Dados de teste */}
@@ -314,10 +379,12 @@ export default function LoginPageContent() {
   )
 }
 
-// 🎯 CORREÇÕES FINAIS APLICADAS:
-// ✅ Verificação de isInitialized antes de tomar decisões
-// ✅ Uso de router.replace ao invés de router.push
-// ✅ Aumento do tempo de sincronização para 500ms
-// ✅ Logs mais detalhados para debug
-// ✅ Verificações mais robustas de estado
-// ✅ Prevenção de múltiplos redirects
+// 🎯 CORREÇÕES APLICADAS:
+// ✅ Função performRedirect com múltiplos métodos de fallback
+// ✅ Tentativa 1: router.replace
+// ✅ Tentativa 2: router.push  
+// ✅ Tentativa 3: window.location.href (força bruta)
+// ✅ Logs detalhados para cada tentativa
+// ✅ Botão de teste direto para debug
+// ✅ Debug info visível na interface
+// ✅ useCallback para evitar re-renders desnecessários
