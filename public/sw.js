@@ -1,9 +1,9 @@
-// ✅ SERVICE WORKER v6.0.0 - SOLUÇÃO DEFINITIVA
-// NÃO INTERCEPTA NENHUMA API - RESOLVE "body stream already read"
+// ✅ SERVICE WORKER v7.0.0 - VERSÃO CORRIGIDA SEM LOOPS
+// CORREÇÃO: Removido sistema de notificação que causava reloads automáticos
 
-const CACHE_VERSION = 'fichachef-v6.0.0'
+const CACHE_VERSION = 'fichachef-v7.0.0'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
-const SW_VERSION = 'SW v6.0.0'
+const SW_VERSION = 'SW v7.0.0'
 
 // ✅ APENAS ARQUIVOS ESTÁTICOS PARA CACHE
 const STATIC_ASSETS = [
@@ -29,7 +29,7 @@ function swLog(message, data = null) {
 
 // ✅ INSTALL EVENT - CACHE INICIAL APENAS
 self.addEventListener('install', (event) => {
-  swLog('Installing Service Worker v6.0.0')
+  swLog('Installing Service Worker v7.0.0')
   
   event.waitUntil(
     caches.open(STATIC_CACHE).then(async (cache) => {
@@ -50,9 +50,9 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-// ✅ ACTIVATE EVENT - LIMPEZA DE CACHE ANTIGO
+// ✅ ACTIVATE EVENT - LIMPEZA DE CACHE ANTIGO (SEM NOTIFICAÇÕES)
 self.addEventListener('activate', (event) => {
-  swLog('Activating Service Worker v6.0.0')
+  swLog('Activating Service Worker v7.0.0')
   
   event.waitUntil(
     Promise.all([
@@ -68,26 +68,15 @@ self.addEventListener('activate', (event) => {
         )
       }),
       
-      // ✅ ASSUMIR CONTROLE IMEDIATAMENTE
+      // ✅ ASSUMIR CONTROLE SILENCIOSAMENTE (SEM NOTIFICAÇÕES)
       self.clients.claim().then(() => {
-        // ✅ LOG DETALHADO QUANDO O CONTROLLER MUDA
-        console.warn('🔄 SERVICE WORKER CONTROLLER CHANGE DETECTED!')
-        console.warn('📍 Origem: sw.js - activate event')
-        console.warn('⏰ Timestamp:', new Date().toISOString())
-        console.warn('🔍 Stack trace:', new Error().stack)
+        swLog('Service Worker controller changed silently - NO RELOAD TRIGGERED')
         
-        swLog('Service Worker controller changed, checking for reload trigger...')
+        // 🚫 REMOVIDO: Sistema de notificação que causava loops
+        // 🚫 REMOVIDO: Mensagens CONTROLLER_CHANGED
+        // 🚫 REMOVIDO: Comunicação com clientes que causava reloads
         
-        // ✅ NOTIFICAR CLIENTES SOBRE MUDANÇA DE CONTROLLER
-        self.clients.matchAll().then(clients => {
-          clients.forEach(client => {
-            client.postMessage({
-              type: 'CONTROLLER_CHANGED',
-              timestamp: new Date().toISOString(),
-              version: SW_VERSION
-            })
-          })
-        })
+        swLog('Service Worker activated without triggering page reloads')
       })
     ]).then(() => {
       swLog('Service Worker activated successfully')
@@ -161,7 +150,7 @@ self.addEventListener('fetch', (event) => {
   }
 })
 
-// ✅ MESSAGE EVENT - COMUNICAÇÃO COM CLIENTE
+// ✅ MESSAGE EVENT - COMUNICAÇÃO COM CLIENTE (SEM RELOADS)
 self.addEventListener('message', (event) => {
   swLog('Message received', { data: event.data })
   
@@ -208,5 +197,12 @@ self.addEventListener('unhandledrejection', (event) => {
   event.preventDefault()
 })
 
-swLog('Service Worker v6.0.0 script loaded successfully')
+swLog('Service Worker v7.0.0 script loaded successfully - NO RELOAD LOOPS')
 
+// 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
+// ✅ Removido console.warn que causava logs excessivos
+// ✅ Removido sistema de notificação CONTROLLER_CHANGED
+// ✅ Removido envio de mensagens para clientes
+// ✅ Removido triggers de reload automático
+// ✅ Mantida funcionalidade de cache essencial
+// ✅ Versão atualizada para v7.0.0 para forçar atualização
