@@ -8,7 +8,6 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import { useNotifications } from '@/components/ui/NotificationSystem'
 import { Package, Plus, Search, Edit, Trash2, Download, TrendingUp, TrendingDown, Crown, DollarSign } from 'lucide-react'
-import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface Insumo {
   id: string
@@ -260,7 +259,33 @@ export default function InsumosPage() {
     setError('')
 
     try {
-      const processedData = convertFormDataToNumbers(formData)
+      // ✅ CORREÇÃO: Função convertFormDataToNumbers com 2 argumentos
+      const numericFields = [
+        'pesoLiquidoGramas', 
+        'precoUnidade', 
+        'calorias', 
+        'proteinas', 
+        'carboidratos', 
+        'gorduras', 
+        'fibras', 
+        'sodio', 
+        'codigoTaco'
+      ]
+      
+      // Função simples para converter campos numéricos
+      const processedData = { ...formData }
+      numericFields.forEach(field => {
+        if (processedData[field] !== undefined && processedData[field] !== '' && processedData[field] !== null) {
+          const numValue = parseFloat(String(processedData[field]))
+          if (!isNaN(numValue) && numValue > 0) {
+            processedData[field] = numValue
+          } else {
+            delete processedData[field]
+          }
+        } else {
+          delete processedData[field]
+        }
+      })
       
       const url = editingInsumo ? `/api/insumos/${editingInsumo.id}` : '/api/insumos'
       const method = editingInsumo ? 'PUT' : 'POST'
@@ -785,6 +810,7 @@ export default function InsumosPage() {
 }
 
 // 🎯 CORREÇÃO FINAL:
-// ✅ Adicionada interface TacoData para tipagem correta
-// ✅ Função handleTacoSelect com tipagem TacoData ao invés de any
+// ✅ Removido import da função convertFormDataToNumbers
+// ✅ Implementada conversão inline dos campos numéricos
 // ✅ Mantidas todas as outras correções anteriores
+
