@@ -49,19 +49,20 @@ interface Fornecedor {
   ativo: boolean
 }
 
-// ✅ Interface para dados TACO
-interface TacoData {
-  descricao?: string
-  energia?: number
-  proteina?: number
-  carboidrato?: number
-  lipideos?: number
-  fibra?: number
-  sodio?: number
-  codigo?: number
+// ✅ CORREÇÃO: Interface TacoAlimento (compatível com TacoSearchModal)
+interface TacoAlimento {
+  id: number
+  description: string
+  category: string
+  energyKcal?: number
+  proteinG?: number
+  carbohydrateG?: number
+  lipidG?: number
+  fiberG?: number
+  sodiumMg?: number
 }
 
-// ✅ CORREÇÃO PRINCIPAL: Interface para FormData com index signature
+// ✅ Interface para FormData com index signature
 interface FormDataType {
   nome: string
   marca: string
@@ -280,7 +281,7 @@ export default function InsumosPage() {
     setError('')
 
     try {
-      // ✅ CORREÇÃO: Conversão com tipagem adequada
+      // ✅ Conversão com tipagem adequada
       const numericFields = [
         'pesoLiquidoGramas', 
         'precoUnidade', 
@@ -356,17 +357,18 @@ export default function InsumosPage() {
     }
   }
 
-  const handleTacoSelect = (tacoData: TacoData) => {
+  // ✅ CORREÇÃO: Função handleTacoSelect com interface TacoAlimento
+  const handleTacoSelect = (alimento: TacoAlimento) => {
     setFormData({
       ...formData,
-      nome: tacoData.descricao || '',
-      calorias: tacoData.energia?.toString() || '',
-      proteinas: tacoData.proteina?.toString() || '',
-      carboidratos: tacoData.carboidrato?.toString() || '',
-      gorduras: tacoData.lipideos?.toString() || '',
-      fibras: tacoData.fibra?.toString() || '',
-      sodio: tacoData.sodio?.toString() || '',
-      codigoTaco: tacoData.codigo?.toString() || '',
+      nome: alimento.description || '',
+      calorias: alimento.energyKcal?.toString() || '',
+      proteinas: alimento.proteinG?.toString() || '',
+      carboidratos: alimento.carbohydrateG?.toString() || '',
+      gorduras: alimento.lipidG?.toString() || '',
+      fibras: alimento.fiberG?.toString() || '',
+      sodio: alimento.sodiumMg?.toString() || '',
+      codigoTaco: alimento.id?.toString() || '',
       fonteDados: 'taco'
     })
     setIsTacoModalOpen(false)
@@ -831,8 +833,8 @@ export default function InsumosPage() {
   )
 }
 
-// 🎯 CORREÇÃO DEFINITIVA:
-// ✅ Interface FormDataType com index signature [key: string]: string | number | undefined
-// ✅ processedData tipado como Record<string, unknown> para acesso dinâmico
+// 🎯 CORREÇÃO FINAL:
+// ✅ Interface TacoAlimento compatível com TacoSearchModal
+// ✅ Função handleTacoSelect usando TacoAlimento ao invés de TacoData
+// ✅ Mapeamento correto dos campos (description → nome, energyKcal → calorias, etc.)
 // ✅ Todas as outras correções mantidas
-// ✅ Compatível com TypeScript strict mode
