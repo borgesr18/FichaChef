@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
-import { FileText, Plus, Search, Edit, Trash2, Calculator, Download, TrendingUp, TrendingDown, Crown } from 'lucide-react'
-import { convertFormDataToNumbers } from '@/lib/form-utils'
+import { FileText, Plus, Search, Edit, Trash2, Calculator, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface FichaTecnica {
   id: string
