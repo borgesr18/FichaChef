@@ -694,281 +694,262 @@ export default function FichasTecnicasPage() {
           </div>
         )}
 
-        {/* Modal para Nova/Editar Ficha */}
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} size="xl">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
+        {/* ✅ Modal para Nova/Editar Ficha - COM TITLE */}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={handleCloseModal} 
+          size="xl"
+          title={editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}
+        >
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
             </div>
+          )}
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Informações Básicas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Receita *</label>
-                  <input
-                    type="text"
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
-                  <select
-                    value={formData.categoriaId}
-                    onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                    required
-                  >
-                    <option value="">Selecione uma categoria</option>
-                    {categorias.map(categoria => (
-                      <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Peso Final (gramas) *</label>
-                  <input
-                    type="number"
-                    value={formData.pesoFinalGramas}
-                    onChange={(e) => setFormData({ ...formData, pesoFinalGramas: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Número de Porções *</label>
-                  <input
-                    type="number"
-                    value={formData.numeroPorcoes}
-                    onChange={(e) => setFormData({ ...formData, numeroPorcoes: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tempo de Preparo (min)</label>
-                  <input
-                    type="number"
-                    value={formData.tempoPreparo}
-                    onChange={(e) => setFormData({ ...formData, tempoPreparo: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Temperatura do Forno (°C)</label>
-                  <input
-                    type="number"
-                    value={formData.temperaturaForno}
-                    onChange={(e) => setFormData({ ...formData, temperaturaForno: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Informações Básicas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Receita *</label>
+                <input
+                  type="text"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nível de Dificuldade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
                 <select
-                  value={formData.nivelDificuldade}
-                  onChange={(e) => setFormData({ ...formData, nivelDificuldade: e.target.value })}
+                  value={formData.categoriaId}
+                  onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  required
                 >
-                  <option value="Fácil">Fácil</option>
-                  <option value="Médio">Médio</option>
-                  <option value="Difícil">Difícil</option>
+                  <option value="">Selecione uma categoria</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Modo de Preparo</label>
-                <textarea
-                  value={formData.modoPreparo}
-                  onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
-                  rows={4}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Peso Final (gramas) *</label>
+                <input
+                  type="number"
+                  value={formData.pesoFinalGramas}
+                  onChange={(e) => setFormData({ ...formData, pesoFinalGramas: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  placeholder="Descreva o modo de preparo..."
+                  required
                 />
               </div>
 
-              {/* Ingredientes */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">Ingredientes</label>
-                  <button
-                    type="button"
-                    onClick={addIngrediente}
-                    className="bg-[#5AC8FA] text-white px-4 py-2 rounded-lg hover:bg-[#5AC8FA]/90 transition-colors flex items-center"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {ingredientes.map((ingrediente, index) => (
-                    <div key={index} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
-                      <select
-                        value={ingrediente.insumoId || ''}
-                        onChange={(e) => updateIngrediente(index, 'insumoId', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                      >
-                        <option value="">Selecione um insumo</option>
-                        {insumos.map(insumo => (
-                          <option key={insumo.id} value={insumo.id}>{insumo.nome}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        placeholder="Quantidade (g)"
-                        value={ingrediente.quantidadeGramas || ''}
-                        onChange={(e) => updateIngrediente(index, 'quantidadeGramas', parseFloat(e.target.value) || 0)}
-                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeIngrediente(index)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Número de Porções *</label>
+                <input
+                  type="number"
+                  value={formData.numeroPorcoes}
+                  onChange={(e) => setFormData({ ...formData, numeroPorcoes: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  required
+                />
               </div>
 
-              {/* Botões */}
-              <div className="flex justify-end space-x-4 pt-6">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-                >
-                  {loading ? 'Salvando...' : editingFicha ? 'Atualizar' : 'Criar'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tempo de Preparo (min)</label>
+                <input
+                  type="number"
+                  value={formData.tempoPreparo}
+                  onChange={(e) => setFormData({ ...formData, tempoPreparo: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                />
               </div>
-            </form>
-          </div>
-        </Modal>
 
-        {/* Modal de Escalonamento */}
-        <Modal isOpen={isScalingModalOpen} onClose={handleCloseScalingModal} size="lg">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Escalar Receita</h2>
-              <button
-                onClick={handleCloseScalingModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Temperatura do Forno (°C)</label>
+                <input
+                  type="number"
+                  value={formData.temperaturaForno}
+                  onChange={(e) => setFormData({ ...formData, temperaturaForno: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                />
+              </div>
             </div>
 
-            {scalingFicha && (
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg text-gray-800 mb-2">{scalingFicha.nome}</h3>
-                  <p className="text-gray-600">Porções originais: {scalingFicha.numeroPorcoes}</p>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nível de Dificuldade</label>
+              <select
+                value={formData.nivelDificuldade}
+                onChange={(e) => setFormData({ ...formData, nivelDificuldade: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+              >
+                <option value="Fácil">Fácil</option>
+                <option value="Médio">Médio</option>
+                <option value="Difícil">Difícil</option>
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número de porções desejadas
-                  </label>
-                  <input
-                    type="number"
-                    value={targetPortions}
-                    onChange={(e) => setTargetPortions(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                    min="1"
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Modo de Preparo</label>
+              <textarea
+                value={formData.modoPreparo}
+                onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
+                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                placeholder="Descreva o modo de preparo..."
+              />
+            </div>
 
-                <div className="flex space-x-4">
-                  <button
-                    onClick={calculateScaling}
-                    className="bg-[#5AC8FA] text-white px-6 py-3 rounded-lg hover:bg-[#5AC8FA]/90 transition-colors"
-                  >
-                    Calcular
-                  </button>
-                </div>
+            {/* Ingredientes */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-medium text-gray-700">Ingredientes</label>
+                <button
+                  type="button"
+                  onClick={addIngrediente}
+                  className="bg-[#5AC8FA] text-white px-4 py-2 rounded-lg hover:bg-[#5AC8FA]/90 transition-colors flex items-center"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </button>
+              </div>
 
-                {scaledData && (
-                  <div className="bg-green-50 rounded-lg p-6 space-y-4">
-                    <h4 className="font-semibold text-lg text-green-800">Receita Escalada</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-white rounded-lg p-4">
-                        <p className="text-sm text-gray-600">Custo Total</p>
-                        <p className="text-xl font-bold text-green-600">R$ {scaledData.custoTotal.toFixed(2)}</p>
-                      </div>
-                      <div className="bg-white rounded-lg p-4">
-                        <p className="text-sm text-gray-600">Peso Total</p>
-                        <p className="text-xl font-bold text-blue-600">{scaledData.pesoTotal.toFixed(0)}g</p>
-                      </div>
-                      {scaledData.tempoPreparoEscalado && (
-                        <div className="bg-white rounded-lg p-4">
-                          <p className="text-sm text-gray-600">Tempo Estimado</p>
-                          <p className="text-xl font-bold text-purple-600">{scaledData.tempoPreparoEscalado} min</p>
-                        </div>
-                      )}
+              <div className="space-y-3">
+                {ingredientes.map((ingrediente, index) => (
+                  <div key={index} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                    <select
+                      value={ingrediente.insumoId || ''}
+                      onChange={(e) => updateIngrediente(index, 'insumoId', e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                    >
+                      <option value="">Selecione um insumo</option>
+                      {insumos.map(insumo => (
+                        <option key={insumo.id} value={insumo.id}>{insumo.nome}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Quantidade (g)"
+                      value={ingrediente.quantidadeGramas || ''}
+                      onChange={(e) => updateIngrediente(index, 'quantidadeGramas', parseFloat(e.target.value) || 0)}
+                      className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeIngrediente(index)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex justify-end space-x-4 pt-6">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+              >
+                {loading ? 'Salvando...' : editingFicha ? 'Atualizar' : 'Criar'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+
+        {/* ✅ Modal de Escalonamento - COM TITLE */}
+        <Modal 
+          isOpen={isScalingModalOpen} 
+          onClose={handleCloseScalingModal} 
+          size="lg"
+          title="Escalar Receita"
+        >
+          {scalingFicha && (
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-lg text-gray-800 mb-2">{scalingFicha.nome}</h3>
+                <p className="text-gray-600">Porções originais: {scalingFicha.numeroPorcoes}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Número de porções desejadas
+                </label>
+                <input
+                  type="number"
+                  value={targetPortions}
+                  onChange={(e) => setTargetPortions(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  min="1"
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={calculateScaling}
+                  className="bg-[#5AC8FA] text-white px-6 py-3 rounded-lg hover:bg-[#5AC8FA]/90 transition-colors"
+                >
+                  Calcular
+                </button>
+              </div>
+
+              {scaledData && (
+                <div className="bg-green-50 rounded-lg p-6 space-y-4">
+                  <h4 className="font-semibold text-lg text-green-800">Receita Escalada</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg p-4">
+                      <p className="text-sm text-gray-600">Custo Total</p>
+                      <p className="text-xl font-bold text-green-600">R$ {scaledData.custoTotal.toFixed(2)}</p>
                     </div>
-
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-3">Ingredientes Escalados:</h5>
-                      <div className="space-y-2">
-                        {scaledData.ingredientes.map((ing, index) => (
-                          <div key={index} className="flex justify-between items-center bg-white rounded-lg p-3">
-                            <span className="font-medium">{ing.insumo.nome}</span>
-                            <span className="text-gray-600">{ing.quantidadeGramas.toFixed(1)}g</span>
-                          </div>
-                        ))}
+                    <div className="bg-white rounded-lg p-4">
+                      <p className="text-sm text-gray-600">Peso Total</p>
+                      <p className="text-xl font-bold text-blue-600">{scaledData.pesoTotal.toFixed(0)}g</p>
+                    </div>
+                    {scaledData.tempoPreparoEscalado && (
+                      <div className="bg-white rounded-lg p-4">
+                        <p className="text-sm text-gray-600">Tempo Estimado</p>
+                        <p className="text-xl font-bold text-purple-600">{scaledData.tempoPreparoEscalado} min</p>
                       </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-gray-800 mb-3">Ingredientes Escalados:</h5>
+                    <div className="space-y-2">
+                      {scaledData.ingredientes.map((ing, index) => (
+                        <div key={index} className="flex justify-between items-center bg-white rounded-lg p-3">
+                          <span className="font-medium">{ing.insumo.nome}</span>
+                          <span className="text-gray-600">{ing.quantidadeGramas.toFixed(1)}g</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </Modal>
       </div>
     </DashboardLayout>
   )
 }
 
-// ✅ MELHORIAS APLICADAS:
-// 🔧 Removido debug info "Debug: X fichas carregadas | X filtradas"
-// 🔧 Removido botão "Recarregar"
-// 🔧 Removido seção de ingredientes dos cards para diminuí-los
-// 🔧 Removido imagem ao lado do nome da receita
-// 🔧 Cards mais compactos e limpos
-// 🔧 Header dos cards sem imagem, apenas ícone e texto
-// 🔧 Mantida toda funcionalidade original
-// 🔧 Tratamento robusto de arrays para evitar erros
+// ✅ CORREÇÃO APLICADA:
+// 🔧 Adicionada propriedade 'title' nos componentes Modal
+// 🔧 Modal de Nova/Editar Ficha: title={editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}
+// 🔧 Modal de Escalonamento: title="Escalar Receita"
+// 🔧 Mantidas todas as melhorias anteriores (sem debug info, sem botão recarregar, cards compactos)
+// 🔧 Compatível com interface ModalProps que requer title obrigatório
