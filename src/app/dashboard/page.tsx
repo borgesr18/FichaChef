@@ -15,7 +15,7 @@ interface DashboardStats {
 interface FichaTecnica {
   id: string
   nome: string
-  categoria: string
+  categoria: string | null | undefined
   custoTotal: number
   precoSugerido: number
   margemLucro: number
@@ -44,12 +44,23 @@ export default function DashboardPage() {
     return `Atualizada há ${diffInDays}d`
   }, [])
 
-  const getCategoryIcon = useCallback((categoria: string) => {
-    switch (categoria.toLowerCase()) {
+  const getCategoryIcon = useCallback((categoria: string | null | undefined) => {
+    // Verificação robusta para garantir que categoria é uma string válida
+    if (!categoria || typeof categoria !== 'string' || categoria.trim() === '') {
+      return '🍽️'
+    }
+    
+    // Converter para lowercase de forma segura
+    const categoriaLower = categoria.toLowerCase().trim()
+    
+    switch (categoriaLower) {
       case 'massas': return '🍕'
       case 'saladas': return '🥗'
       case 'carnes': return '🥩'
       case 'sobremesas': return '🍰'
+      case 'bebidas': return '🥤'
+      case 'aperitivos': return '🥨'
+      case 'pratos principais': return '🍽️'
       default: return '🍽️'
     }
   }, [])
@@ -89,9 +100,18 @@ export default function DashboardPage() {
           produtos: Array.isArray(produtos) ? produtos.length : 0
         })
 
-        // Simular fichas recentes se não houver dados
+        // Processar fichas recentes com verificação robusta
         if (Array.isArray(fichas) && fichas.length > 0) {
-          setRecentFichas(fichas.slice(0, 3))
+          const fichasProcessadas = fichas.slice(0, 3).map(ficha => ({
+            id: ficha.id || 'unknown',
+            nome: ficha.nome || 'Sem nome',
+            categoria: ficha.categoria?.nome || ficha.categoria || null,
+            custoTotal: typeof ficha.custoTotal === 'number' ? ficha.custoTotal : 0,
+            precoSugerido: typeof ficha.precoSugerido === 'number' ? ficha.precoSugerido : 0,
+            margemLucro: typeof ficha.margemLucro === 'number' ? ficha.margemLucro : 0,
+            updatedAt: ficha.updatedAt || new Date().toISOString()
+          }))
+          setRecentFichas(fichasProcessadas)
         } else {
           setRecentFichas([
             {
@@ -302,12 +322,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{ficha.categoria}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.custoTotal.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.precoSugerido.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{ficha.categoria || 'Sem categoria'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">R$ {(ficha.custoTotal || 0).toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">R$ {(ficha.precoSugerido || 0).toFixed(2)}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2ECC71]/10 text-[#2ECC71]">
-                        {ficha.margemLucro}%
+                        {ficha.margemLucro || 0}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -372,3 +392,4 @@ export default function DashboardPage() {
     </DashboardLayout>
   )
 }
+
