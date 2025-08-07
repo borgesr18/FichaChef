@@ -12,7 +12,32 @@ interface DashboardStats {
   produtos: number
 }
 
-interface FichaTecnica {
+// ✅ Interface corrigida baseada na estrutura real do banco
+interface FichaTecnicaReal {
+  id: string
+  nome: string
+  categoria?: {
+    nome: string
+  }
+  pesoFinalGramas: number
+  numeroPorcoes: number
+  tempoPreparo?: number
+  temperaturaForno?: number
+  modoPreparo: string
+  nivelDificuldade: string
+  updatedAt: string
+  ingredientes?: Array<{
+    quantidadeGramas: number
+    insumo: {
+      nome: string
+      precoUnidade: number
+      pesoLiquidoGramas: number
+    }
+  }>
+}
+
+// ✅ Interface para exibição no dashboard (com campos calculados)
+interface FichaTecnicaDisplay {
   id: string
   nome: string
   categoria: string
@@ -29,9 +54,38 @@ export default function DashboardPage() {
     producoes: 0,
     produtos: 0
   })
-  const [recentFichas, setRecentFichas] = useState<FichaTecnica[]>([])
+  const [recentFichas, setRecentFichas] = useState<FichaTecnicaDisplay[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // ✅ Função para calcular custo total de uma ficha técnica
+  const calcularCustoTotal = (ficha: FichaTecnicaReal): number => {
+    if (!ficha.ingredientes || ficha.ingredientes.length === 0) {
+      return 0
+    }
+
+    return ficha.ingredientes.reduce((total, ingrediente) => {
+      const custoIngrediente = (ingrediente.quantidadeGramas / ingrediente.insumo.pesoLiquidoGramas) * ingrediente.insumo.precoUnidade
+      return total + custoIngrediente
+    }, 0)
+  }
+
+  // ✅ Função para converter ficha real em ficha para display
+  const converterFichaParaDisplay = (ficha: FichaTecnicaReal): FichaTecnicaDisplay => {
+    const custoTotal = calcularCustoTotal(ficha)
+    const precoSugerido = custoTotal * 2.5 // Margem padrão de 150%
+    const margemLucro = custoTotal > 0 ? Math.round(((precoSugerido - custoTotal) / precoSugerido) * 100) : 0
+
+    return {
+      id: ficha.id,
+      nome: ficha.nome,
+      categoria: ficha.categoria?.nome || 'Sem categoria',
+      custoTotal,
+      precoSugerido,
+      margemLucro,
+      updatedAt: ficha.updatedAt
+    }
+  }
 
   useEffect(() => {
     let mounted = true
@@ -54,24 +108,48 @@ export default function DashboardPage() {
         // Processar resultados
         const insumos = insumosRes.status === 'fulfilled' && insumosRes.value.ok 
           ? await insumosRes.value.json() : []
-        const fichas = fichasRes.status === 'fulfilled' && fichasRes.value.ok 
+        const fichasRaw = fichasRes.status === 'fulfilled' && fichasRes.value.ok 
           ? await fichasRes.value.json() : []
         const producoes = producoesRes.status === 'fulfilled' && producoesRes.value.ok 
           ? await producoesRes.value.json() : []
         const produtos = produtosRes.status === 'fulfilled' && produtosRes.value.ok 
           ? await produtosRes.value.json() : []
 
+        console.log('🔍 [DASHBOARD] Fichas recebidas da API:', fichasRaw)
+
         setStats({
-          insumos: Array.isArray(insumos) ? insumos.length : 89,
-          fichasTecnicas: Array.isArray(fichas) ? fichas.length : 142,
+          insumos: Array.isArray(insumos) ? insumos.length : 0,
+          fichasTecnicas: Array.isArray(fichasRaw) ? fichasRaw.length : 0,
           producoes: Array.isArray(producoes) ? producoes.length : 0,
           produtos: Array.isArray(produtos) ? produtos.length : 0
         })
 
-        // Simular fichas recentes se não houver dados
-        if (Array.isArray(fichas) && fichas.length > 0) {
-          setRecentFichas(fichas.slice(0, 3))
+        // ✅ Processar fichas técnicas reais
+        if (Array.isArray(fichasRaw) && fichasRaw.length > 0) {
+          const fichasProcessadas = fichasRaw
+            .slice(0, 3) // Pegar apenas as 3 mais recentes
+            .map((ficha: FichaTecnicaReal) => {
+              try {
+                return converterFichaParaDisplay(ficha)
+              } catch (err) {
+                console.error('Erro ao processar ficha:', ficha.nome, err)
+                // ✅ Retornar ficha com valores padrão em caso de erro
+                return {
+                  id: ficha.id,
+                  nome: ficha.nome,
+                  categoria: ficha.categoria?.nome || 'Sem categoria',
+                  custoTotal: 0,
+                  precoSugerido: 0,
+                  margemLucro: 0,
+                  updatedAt: ficha.updatedAt
+                }
+              }
+            })
+          
+          console.log('🔍 [DASHBOARD] Fichas processadas:', fichasProcessadas)
+          setRecentFichas(fichasProcessadas)
         } else {
+          // ✅ Dados simulados apenas se não houver fichas reais
           setRecentFichas([
             {
               id: '1',
@@ -124,11 +202,10 @@ export default function DashboardPage() {
     return `Atualizada há ${diffInDays}d`
   }
 
-  // ✅ CORREÇÃO PRINCIPAL: Verificação de tipo antes de usar toLowerCase
+  // ✅ Função corrigida com verificação de tipo
   const getCategoryIcon = (categoria: string | null | undefined) => {
-    // ✅ Verificar se categoria é string válida antes de usar toLowerCase
     if (!categoria || typeof categoria !== 'string') {
-      return '🍽️' // Ícone padrão
+      return '🍽️'
     }
     
     switch (categoria.toLowerCase()) {
@@ -309,11 +386,15 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{ficha.categoria || 'Sem categoria'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.custoTotal.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.precoSugerido.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      R$ {(ficha.custoTotal || 0).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      R$ {(ficha.precoSugerido || 0).toFixed(2)}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2ECC71]/10 text-[#2ECC71]">
-                        {ficha.margemLucro}%
+                        {ficha.margemLucro || 0}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -379,9 +460,12 @@ export default function DashboardPage() {
   )
 }
 
-// ✅ CORREÇÃO APLICADA:
-// 🔧 Função getCategoryIcon com verificação de tipo
-// 🔧 Verificação se categoria é string válida antes de usar toLowerCase
-// 🔧 Fallback para ícone padrão quando categoria é null/undefined
-// 🔧 Exibição de "Sem categoria" quando categoria é inválida
-// 🔧 Mantida toda funcionalidade original
+// ✅ CORREÇÕES APLICADAS:
+// 🔧 Interface FichaTecnicaReal baseada na estrutura real do banco
+// 🔧 Função calcularCustoTotal para calcular custos reais
+// 🔧 Função converterFichaParaDisplay para converter dados
+// 🔧 Verificação de tipos antes de usar toFixed()
+// 🔧 Tratamento de erro ao processar fichas
+// 🔧 Logs para debug
+// 🔧 Fallback para valores padrão (0) quando há erro
+// 🔧 Compatível com a estrutura real das fichas técnicas do banco
