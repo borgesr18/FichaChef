@@ -57,6 +57,18 @@ interface Ingrediente {
   quantidadeGramas?: number
 }
 
+interface FormDataType {
+  nome: string
+  categoriaId: string
+  pesoFinalGramas: string
+  numeroPorcoes: string
+  tempoPreparo: string
+  temperaturaForno: string
+  modoPreparo: string
+  nivelDificuldade: string
+  [key: string]: string | number | undefined
+}
+
 export default function FichasTecnicasPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [fichas, setFichas] = useState<FichaTecnica[]>([])
@@ -248,11 +260,11 @@ export default function FichasTecnicasPage() {
     })
   }
 
-  const convertFormDataToNumbers = (data: any, fields: string[]) => {
+  const convertFormDataToNumbers = (data: FormDataType, fields: string[]) => {
     const converted = { ...data }
     fields.forEach(field => {
       if (converted[field] && converted[field] !== '') {
-        const num = parseFloat(converted[field])
+        const num = parseFloat(String(converted[field]))
         if (!isNaN(num)) {
           converted[field] = num
         }
@@ -958,3 +970,4 @@ export default function FichasTecnicasPage() {
     </DashboardLayout>
   )
 }
+
