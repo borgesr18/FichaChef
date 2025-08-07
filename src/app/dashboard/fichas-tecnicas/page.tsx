@@ -57,7 +57,6 @@ interface Ingrediente {
   quantidadeGramas?: number
 }
 
-// ✅ Interface para FormData com index signature
 interface FormDataType {
   nome: string
   categoriaId: string
@@ -67,13 +66,11 @@ interface FormDataType {
   temperaturaForno: string
   modoPreparo: string
   nivelDificuldade: string
-  // ✅ Index signature para permitir acesso dinâmico
   [key: string]: string | number | undefined
 }
 
 export default function FichasTecnicasPage() {
   const [searchTerm, setSearchTerm] = useState('')
-  // ✅ Estados sempre inicializados como arrays
   const [fichas, setFichas] = useState<FichaTecnica[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [insumos, setInsumos] = useState<Insumo[]>([])
@@ -100,12 +97,10 @@ export default function FichasTecnicasPage() {
     tempoPreparoEscalado?: number
   } | null>(null)
 
-  // Estados para filtros
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedLevel, setSelectedLevel] = useState('')
   const [sortOrder, setSortOrder] = useState('recent')
 
-  // ✅ FormData com tipagem correta
   const [formData, setFormData] = useState<FormDataType>({
     nome: '',
     categoriaId: '',
@@ -125,29 +120,60 @@ export default function FichasTecnicasPage() {
     fetchInsumos()
   }, [])
 
-  // ✅ Funções fetch com tratamento robusto
+  // ✅ CORREÇÃO PRINCIPAL: Função fetchFichas melhorada com logs detalhados
   const fetchFichas = async () => {
+    console.log('🔍 [FICHAS] Iniciando fetch das fichas técnicas...')
     try {
       const response = await fetch('/api/fichas-tecnicas')
+      console.log('🔍 [FICHAS] Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 [FICHAS] Dados recebidos da API:', data)
+        console.log('🔍 [FICHAS] Tipo dos dados:', typeof data)
+        console.log('🔍 [FICHAS] É array?', Array.isArray(data))
         
         let fichasData: FichaTecnica[] = []
         
+        // ✅ Tratamento robusto de diferentes estruturas de retorno
         if (Array.isArray(data)) {
+          console.log('✅ [FICHAS] Dados são array direto')
           fichasData = data
         } else if (data && typeof data === 'object') {
+          console.log('🔍 [FICHAS] Dados são objeto, verificando propriedades...')
+          console.log('🔍 [FICHAS] Propriedades do objeto:', Object.keys(data))
+          
           if (Array.isArray(data.data)) {
+            console.log('✅ [FICHAS] Encontrado array em data.data')
             fichasData = data.data
           } else if (Array.isArray(data.fichas)) {
+            console.log('✅ [FICHAS] Encontrado array em data.fichas')
             fichasData = data.fichas
+          } else if (Array.isArray(data.result)) {
+            console.log('✅ [FICHAS] Encontrado array em data.result')
+            fichasData = data.result
+          } else if (data.success && Array.isArray(data.data)) {
+            console.log('✅ [FICHAS] Encontrado array em data.success.data')
+            fichasData = data.data
+          } else {
+            console.log('⚠️ [FICHAS] Estrutura não reconhecida, tentando usar o objeto como array')
+            // Se não encontrar array, tenta usar o próprio objeto
+            fichasData = []
           }
         }
         
-        setFichas(Array.isArray(fichasData) ? fichasData : [])
+        console.log('🔍 [FICHAS] Fichas processadas:', fichasData.length)
+        console.log('🔍 [FICHAS] Primeira ficha (se existir):', fichasData[0])
+        
+        const finalFichas = Array.isArray(fichasData) ? fichasData : []
+        console.log('✅ [FICHAS] Definindo fichas no estado:', finalFichas.length, 'itens')
+        setFichas(finalFichas)
+      } else {
+        console.error('❌ [FICHAS] Erro na resposta:', response.status, response.statusText)
+        setFichas([])
       }
     } catch (error) {
-      console.error('Error fetching fichas:', error)
+      console.error('❌ [FICHAS] Erro no fetch:', error)
       setFichas([])
     }
   }
@@ -303,7 +329,6 @@ export default function FichasTecnicasPage() {
       const url = editingFicha ? `/api/fichas-tecnicas/${editingFicha.id}` : '/api/fichas-tecnicas'
       const method = editingFicha ? 'PUT' : 'POST'
 
-      // ✅ Conversão com tipagem adequada
       const numericFields = [
         'pesoFinalGramas', 
         'numeroPorcoes', 
@@ -311,7 +336,6 @@ export default function FichasTecnicasPage() {
         'temperaturaForno'
       ]
       
-      // ✅ Criar objeto com Record para permitir acesso dinâmico
       const processedData: Record<string, unknown> = { ...formData }
       
       numericFields.forEach(field => {
@@ -338,20 +362,30 @@ export default function FichasTecnicasPage() {
           }))
       }
 
+      console.log('🔍 [FICHAS] Enviando dados:', dataToSend)
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend)
       })
 
+      console.log('🔍 [FICHAS] Response do submit:', response.status)
+
       if (response.ok) {
+        console.log('✅ [FICHAS] Ficha salva com sucesso, recarregando lista...')
         handleCloseModal()
-        fetchFichas()
+        // ✅ Aguardar um pouco antes de recarregar para garantir que o banco foi atualizado
+        setTimeout(() => {
+          fetchFichas()
+        }, 500)
       } else {
         const errorData = await response.json()
+        console.error('❌ [FICHAS] Erro ao salvar:', errorData)
         setError(errorData.error || 'Erro ao salvar ficha técnica')
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ [FICHAS] Erro no submit:', error)
       setError('Erro ao salvar ficha técnica')
     } finally {
       setLoading(false)
@@ -364,6 +398,7 @@ export default function FichasTecnicasPage() {
     try {
       const response = await fetch(`/api/fichas-tecnicas/${id}`, { method: 'DELETE' })
       if (response.ok) {
+        console.log('✅ [FICHAS] Ficha deletada, recarregando lista...')
         fetchFichas()
       }
     } catch (error) {
@@ -403,7 +438,6 @@ export default function FichasTecnicasPage() {
     }
   }
 
-  // ✅ Filtros com verificação de array
   const filteredFichas = Array.isArray(fichas) 
     ? fichas.filter(ficha => {
         const matchesSearch = ficha.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -433,7 +467,6 @@ export default function FichasTecnicasPage() {
     }
   })
 
-  // Estatísticas
   const getStats = () => {
     const totalFichas = fichas.length
     const costs = fichas.map(ficha => 
@@ -455,6 +488,10 @@ export default function FichasTecnicasPage() {
 
   const stats = getStats()
 
+  // ✅ Debug info visível
+  console.log('🔍 [FICHAS] Estado atual - Total fichas:', fichas.length)
+  console.log('🔍 [FICHAS] Fichas filtradas:', filteredFichas.length)
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
@@ -466,12 +503,19 @@ export default function FichasTecnicasPage() {
                 Fichas Técnicas
               </h1>
               <p className="text-gray-600 text-lg">Gerencie suas receitas com precisão e eficiência</p>
+              {/* ✅ Debug info visível */}
+              <p className="text-sm text-blue-600">
+                📊 Debug: {fichas.length} fichas carregadas | {filteredFichas.length} filtradas
+              </p>
             </div>
             
             <div className="flex items-center space-x-3">
-              <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
+              <button 
+                onClick={fetchFichas}
+                className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center"
+              >
                 <Download className="h-4 w-4 mr-2" />
-                Exportar
+                🔄 Recarregar
               </button>
               <button
                 onClick={() => handleOpenModal()}
@@ -611,115 +655,133 @@ export default function FichasTecnicasPage() {
           </div>
         </div>
 
+        {/* ✅ Mensagem quando não há fichas */}
+        {fichas.length === 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 text-center">
+            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhuma ficha técnica encontrada</h3>
+            <p className="text-gray-500 mb-4">Crie sua primeira ficha técnica para começar</p>
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2 inline" />
+              Nova Ficha Técnica
+            </button>
+          </div>
+        )}
+
         {/* Fichas Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {sortedFichas.map((ficha) => {
-            const custoTotal = ficha.ingredientes.reduce((total, ing) => {
-              const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-              return total + (custoPorGrama * ing.quantidadeGramas)
-            }, 0)
-            
-            const custoPorPorcao = custoTotal / ficha.numeroPorcoes
-            const precoSugerido = custoPorPorcao * 2.5
-            const margem = ((precoSugerido - custoPorPorcao) / precoSugerido) * 100
+        {fichas.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            {sortedFichas.map((ficha) => {
+              const custoTotal = ficha.ingredientes.reduce((total, ing) => {
+                const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+                return total + (custoPorGrama * ing.quantidadeGramas)
+              }, 0)
+              
+              const custoPorPorcao = custoTotal / ficha.numeroPorcoes
+              const precoSugerido = custoPorPorcao * 2.5
+              const margem = ((precoSugerido - custoPorPorcao) / precoSugerido) * 100
 
-            return (
-              <div key={ficha.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)}`}></div>
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-16 h-16 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)} rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
-                        {getCategoryIcon(ficha.categoria.nome)}
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-lg font-bold text-gray-900">{ficha.nome}</h3>
-                        <div className="flex items-center space-x-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {ficha.categoria.nome}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getDifficultyColor(ficha.nivelDificuldade)} text-white`}>
-                            {ficha.nivelDificuldade}
-                          </span>
+              return (
+                <div key={ficha.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                  <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)}`}></div>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-16 h-16 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)} rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
+                          {getCategoryIcon(ficha.categoria.nome)}
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="text-lg font-bold text-gray-900">{ficha.nome}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {ficha.categoria.nome}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${getDifficultyColor(ficha.nivelDificuldade)} text-white`}>
+                              {ficha.nivelDificuldade}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleOpenScalingModal(ficha)}
+                          className="p-2 text-gray-400 hover:text-[#5AC8FA] hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Escalar receita"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenModal(ficha)}
+                          className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ficha.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleOpenScalingModal(ficha)}
-                        className="p-2 text-gray-400 hover:text-[#5AC8FA] hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Escalar receita"
-                      >
-                        <Calculator className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenModal(ficha)}
-                        className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(ficha.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Informações da receita */}
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Porções:</span>
-                      <span className="font-semibold">{ficha.numeroPorcoes}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Peso final:</span>
-                      <span className="font-semibold">{ficha.pesoFinalGramas}g</span>
-                    </div>
-                    {ficha.tempoPreparo && (
+                    {/* Informações da receita */}
+                    <div className="space-y-3 mb-6">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Tempo preparo:</span>
-                        <span className="font-semibold">{ficha.tempoPreparo} min</span>
+                        <span className="text-gray-600">Porções:</span>
+                        <span className="font-semibold">{ficha.numeroPorcoes}</span>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Custo por porção:</span>
-                      <span className="font-semibold text-green-600">R$ {custoPorPorcao.toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Preço sugerido:</span>
-                      <span className="font-semibold text-blue-600">R$ {precoSugerido.toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Margem:</span>
-                      <span className="font-semibold text-purple-600">{margem.toFixed(1)}%</span>
-                    </div>
-                  </div>
-
-                  {/* Ingredientes */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Ingredientes ({ficha.ingredientes.length})</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {ficha.ingredientes.slice(0, 3).map((ing, index) => (
-                        <div key={index} className="flex justify-between text-xs">
-                          <span className="text-gray-600 truncate">{ing.insumo.nome}</span>
-                          <span className="font-medium ml-2">{ing.quantidadeGramas}g</span>
-                        </div>
-                      ))}
-                      {ficha.ingredientes.length > 3 && (
-                        <div className="text-xs text-gray-500 text-center">
-                          +{ficha.ingredientes.length - 3} ingredientes
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Peso final:</span>
+                        <span className="font-semibold">{ficha.pesoFinalGramas}g</span>
+                      </div>
+                      {ficha.tempoPreparo && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Tempo preparo:</span>
+                          <span className="font-semibold">{ficha.tempoPreparo} min</span>
                         </div>
                       )}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Custo por porção:</span>
+                        <span className="font-semibold text-green-600">R$ {custoPorPorcao.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Preço sugerido:</span>
+                        <span className="font-semibold text-blue-600">R$ {precoSugerido.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Margem:</span>
+                        <span className="font-semibold text-purple-600">{margem.toFixed(1)}%</span>
+                      </div>
+                    </div>
+
+                    {/* Ingredientes */}
+                    <div className="pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3">Ingredientes ({ficha.ingredientes.length})</h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {ficha.ingredientes.slice(0, 3).map((ing, index) => (
+                          <div key={index} className="flex justify-between text-xs">
+                            <span className="text-gray-600 truncate">{ing.insumo.nome}</span>
+                            <span className="font-medium ml-2">{ing.quantidadeGramas}g</span>
+                          </div>
+                        ))}
+                        {ficha.ingredientes.length > 3 && (
+                          <div className="text-xs text-gray-500 text-center">
+                            +{ficha.ingredientes.length - 3} ingredientes
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Modal para criar/editar ficha técnica */}
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'} size="xl">
@@ -965,12 +1027,11 @@ export default function FichasTecnicasPage() {
   )
 }
 
-// 🎯 CORREÇÕES APLICADAS (baseadas em Insumos):
+// 🎯 CORREÇÕES ESPECÍFICAS PARA PROBLEMA DE EXIBIÇÃO:
+// ✅ Logs detalhados no fetchFichas para debug
+// ✅ Tratamento robusto de diferentes estruturas de API
+// ✅ Debug info visível na interface
+// ✅ Botão de recarregar manual
+// ✅ Mensagem quando não há fichas
+// ✅ Timeout após salvar para garantir atualização
 // ✅ Estados sempre inicializados como arrays
-// ✅ Funções fetch com tratamento robusto de diferentes formatos de API
-// ✅ Verificação Array.isArray() antes de usar filter/map
-// ✅ Interface FormDataType com index signature
-// ✅ Conversão de dados numéricos com tipagem adequada
-// ✅ Filtros com verificação de array
-// ✅ Layout original mantido (não alterado)
-
