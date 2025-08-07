@@ -124,7 +124,13 @@ export default function DashboardPage() {
     return `Atualizada há ${diffInDays}d`
   }
 
-  const getCategoryIcon = (categoria: string) => {
+  // ✅ CORREÇÃO PRINCIPAL: Verificação de tipo antes de usar toLowerCase
+  const getCategoryIcon = (categoria: string | null | undefined) => {
+    // ✅ Verificar se categoria é string válida antes de usar toLowerCase
+    if (!categoria || typeof categoria !== 'string') {
+      return '🍽️' // Ícone padrão
+    }
+    
     switch (categoria.toLowerCase()) {
       case 'massas': return '🍕'
       case 'saladas': return '🥗'
@@ -302,7 +308,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{ficha.categoria}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{ficha.categoria || 'Sem categoria'}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.custoTotal.toFixed(2)}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">R$ {ficha.precoSugerido.toFixed(2)}</td>
                     <td className="px-6 py-4">
@@ -372,3 +378,10 @@ export default function DashboardPage() {
     </DashboardLayout>
   )
 }
+
+// ✅ CORREÇÃO APLICADA:
+// 🔧 Função getCategoryIcon com verificação de tipo
+// 🔧 Verificação se categoria é string válida antes de usar toLowerCase
+// 🔧 Fallback para ícone padrão quando categoria é null/undefined
+// 🔧 Exibição de "Sem categoria" quando categoria é inválida
+// 🔧 Mantida toda funcionalidade original
