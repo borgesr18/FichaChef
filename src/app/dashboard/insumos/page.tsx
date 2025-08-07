@@ -573,7 +573,7 @@ export default function InsumosPage() {
           </div>
         </div>
 
-        {/* ✅ MELHORIA 2: Cards menores sem informações nutricionais */}
+        {/* Cards menores sem informações nutricionais */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
           {sortedInsumos.map((insumo) => (
             <div key={insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
@@ -613,7 +613,7 @@ export default function InsumosPage() {
                   </div>
                 </div>
 
-                {/* ✅ Informações essenciais apenas */}
+                {/* Apenas informações essenciais */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Preço por unidade:</span>
@@ -634,18 +634,17 @@ export default function InsumosPage() {
                     </div>
                   )}
                 </div>
-                {/* ✅ REMOVIDO: Seção de informações nutricionais para cards menores */}
               </div>
             </div>
           ))}
         </div>
 
-        {/* ✅ MELHORIA 1: Modal mais largo com melhor distribuição dos campos */}
+        {/* ✅ CORREÇÃO: Modal usando size='xl' ao invés de className */}
         <Modal 
           isOpen={isModalOpen} 
           onClose={handleCloseModal} 
           title={editingInsumo ? 'Editar Insumo' : 'Novo Insumo'}
-          className="max-w-6xl" // ✅ Modal mais largo
+          size="xl" // ✅ Usando size ao invés de className
         >
           <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
@@ -665,7 +664,7 @@ export default function InsumosPage() {
               </button>
             </div>
 
-            {/* ✅ Grid com 3 colunas para melhor distribuição */}
+            {/* Grid com 3 colunas para melhor distribuição */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FloatingLabelInput
                 label="Nome *"
@@ -720,7 +719,6 @@ export default function InsumosPage() {
 
             <div>
               <h3 className="text-lg font-semibold mb-4">Informações Nutricionais (por 100g)</h3>
-              {/* ✅ Grid com 3 colunas para informações nutricionais */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FloatingLabelInput
                   label="Calorias (kcal)"
@@ -797,8 +795,9 @@ export default function InsumosPage() {
   )
 }
 
-// 🎯 MELHORIAS APLICADAS:
-// ✅ MELHORIA 1: Modal mais largo (max-w-6xl) com grid de 3 colunas
-// ✅ MELHORIA 2: Cards menores sem informações nutricionais
-// ✅ Layout mais limpo e organizado
-// ✅ Melhor distribuição dos campos no modal
+// 🎯 CORREÇÃO APLICADA:
+// ✅ Removido className="max-w-6xl" do Modal
+// ✅ Usado size="xl" que é suportado pelo componente
+// ✅ Cards menores sem informações nutricionais mantidos
+// ✅ Grid de 3 colunas no modal mantido
+
