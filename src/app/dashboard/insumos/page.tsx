@@ -49,7 +49,6 @@ interface Fornecedor {
   ativo: boolean
 }
 
-// ✅ CORREÇÃO: Interface TacoAlimento (compatível com TacoSearchModal)
 interface TacoAlimento {
   id: number
   description: string
@@ -62,7 +61,6 @@ interface TacoAlimento {
   sodiumMg?: number
 }
 
-// ✅ Interface para FormData com index signature
 interface FormDataType {
   nome: string
   marca: string
@@ -80,12 +78,10 @@ interface FormDataType {
   sodio: string
   codigoTaco: string
   fonteDados: string
-  // ✅ Index signature para permitir acesso dinâmico
   [key: string]: string | number | undefined
 }
 
 export default function InsumosPage() {
-  // ✅ Estados sempre inicializados como arrays
   const [insumos, setInsumos] = useState<Insumo[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
@@ -103,7 +99,6 @@ export default function InsumosPage() {
 
   const { addNotification } = useNotifications()
 
-  // ✅ FormData com tipagem correta
   const [formData, setFormData] = useState<FormDataType>({
     nome: '',
     marca: '',
@@ -130,7 +125,6 @@ export default function InsumosPage() {
     fetchFornecedores()
   }, [])
 
-  // ✅ Funções fetch com tratamento robusto
   const fetchInsumos = async () => {
     try {
       const response = await fetch('/api/insumos')
@@ -281,7 +275,6 @@ export default function InsumosPage() {
     setError('')
 
     try {
-      // ✅ Conversão com tipagem adequada
       const numericFields = [
         'pesoLiquidoGramas', 
         'precoUnidade', 
@@ -294,7 +287,6 @@ export default function InsumosPage() {
         'codigoTaco'
       ]
       
-      // ✅ Criar objeto com Record para permitir acesso dinâmico
       const processedData: Record<string, unknown> = { ...formData }
       
       numericFields.forEach(field => {
@@ -357,7 +349,6 @@ export default function InsumosPage() {
     }
   }
 
-  // ✅ CORREÇÃO: Função handleTacoSelect com interface TacoAlimento
   const handleTacoSelect = (alimento: TacoAlimento) => {
     setFormData({
       ...formData,
@@ -374,7 +365,6 @@ export default function InsumosPage() {
     setIsTacoModalOpen(false)
   }
 
-  // ✅ Filtros com verificação de array
   const filteredInsumos = Array.isArray(insumos) 
     ? insumos.filter(insumo => {
         const matchesSearch = insumo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -401,7 +391,6 @@ export default function InsumosPage() {
     }
   })
 
-  // Estatísticas
   const getStats = () => {
     const totalInsumos = insumos.length
     const valorTotalEstoque = insumos.reduce((sum, insumo) => sum + insumo.precoUnidade, 0)
@@ -584,13 +573,13 @@ export default function InsumosPage() {
           </div>
         </div>
 
-        {/* Insumos Grid */}
+        {/* ✅ MELHORIA 2: Cards menores sem informações nutricionais */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
           {sortedInsumos.map((insumo) => (
             <div key={insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
               <div className="h-2 bg-gradient-to-r from-blue-400 to-purple-600"></div>
               <div className="p-6">
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
                       📦
@@ -624,8 +613,8 @@ export default function InsumosPage() {
                   </div>
                 </div>
 
-                {/* Informações do produto */}
-                <div className="space-y-3 mb-6">
+                {/* ✅ Informações essenciais apenas */}
+                <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Preço por unidade:</span>
                     <span className="font-semibold text-green-600">R$ {insumo.precoUnidade.toFixed(2)}</span>
@@ -645,47 +634,20 @@ export default function InsumosPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Informações nutricionais */}
-                {(insumo.calorias || insumo.proteinas || insumo.carboidratos || insumo.gorduras) && (
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Informações Nutricionais (100g)</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      {insumo.calorias && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Calorias:</span>
-                          <span className="font-medium">{insumo.calorias} kcal</span>
-                        </div>
-                      )}
-                      {insumo.proteinas && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Proteínas:</span>
-                          <span className="font-medium">{insumo.proteinas}g</span>
-                        </div>
-                      )}
-                      {insumo.carboidratos && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Carboidratos:</span>
-                          <span className="font-medium">{insumo.carboidratos}g</span>
-                        </div>
-                      )}
-                      {insumo.gorduras && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Gorduras:</span>
-                          <span className="font-medium">{insumo.gorduras}g</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* ✅ REMOVIDO: Seção de informações nutricionais para cards menores */}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Modal para criar/editar insumo */}
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingInsumo ? 'Editar Insumo' : 'Novo Insumo'}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ✅ MELHORIA 1: Modal mais largo com melhor distribuição dos campos */}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={handleCloseModal} 
+          title={editingInsumo ? 'Editar Insumo' : 'Novo Insumo'}
+          className="max-w-6xl" // ✅ Modal mais largo
+        >
+          <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
@@ -703,7 +665,8 @@ export default function InsumosPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ✅ Grid com 3 colunas para melhor distribuição */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FloatingLabelInput
                 label="Nome *"
                 value={formData.nome}
@@ -757,7 +720,8 @@ export default function InsumosPage() {
 
             <div>
               <h3 className="text-lg font-semibold mb-4">Informações Nutricionais (por 100g)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* ✅ Grid com 3 colunas para informações nutricionais */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FloatingLabelInput
                   label="Calorias (kcal)"
                   type="number"
@@ -833,8 +797,8 @@ export default function InsumosPage() {
   )
 }
 
-// 🎯 CORREÇÃO FINAL:
-// ✅ Interface TacoAlimento compatível com TacoSearchModal
-// ✅ Função handleTacoSelect usando TacoAlimento ao invés de TacoData
-// ✅ Mapeamento correto dos campos (description → nome, energyKcal → calorias, etc.)
-// ✅ Todas as outras correções mantidas
+// 🎯 MELHORIAS APLICADAS:
+// ✅ MELHORIA 1: Modal mais largo (max-w-6xl) com grid de 3 colunas
+// ✅ MELHORIA 2: Cards menores sem informações nutricionais
+// ✅ Layout mais limpo e organizado
+// ✅ Melhor distribuição dos campos no modal
