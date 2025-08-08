@@ -5,8 +5,8 @@ import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
-export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -23,13 +23,17 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.categoriaReceita.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 404 })
+  }
+
   const categoria = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.categoriaReceita.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           nome,
           descricao
@@ -43,8 +47,8 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   return NextResponse.json(categoria)
 })
 
-export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -52,13 +56,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   }
   const user = auth.user!
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.categoriaReceita.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.categoriaReceita.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })
