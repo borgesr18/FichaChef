@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { requireApiAuthentication } from '@/lib/supabase-api'
@@ -8,9 +8,9 @@ import { movimentacaoProdutoSchema } from '@/lib/validations'
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -23,7 +23,7 @@ export const PUT = withErrorHandler(async function PUT(
   const parsedBody = movimentacaoProdutoSchema.safeParse(body)
 
   if (!parsedBody.success) {
-    return new Response(JSON.stringify({ error: parsedBody.error.message }), { status: 400 })
+    return NextResponse.json({ error: parsedBody.error.message }, { status: 400 })
   }
 
   const data = parsedBody.data
@@ -32,14 +32,21 @@ export const PUT = withErrorHandler(async function PUT(
     return await prisma.movimentacaoProduto.findFirst({ where: { id, userId: user.id } })
   })
   if (!exists) {
-    return new Response(JSON.stringify({ error: 'Movimentação não encontrada' }), { status: 404 })
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
   }
 
   const movimentacao = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoProduto.update({
         where: { id },
-        data: data as any,
+        data: {
+          produtoId: data.produtoId,
+          tipo: data.tipo,
+          quantidade: data.quantidade,
+          motivo: data.motivo,
+          lote: data.lote ?? null,
+          dataValidade: data.dataValidade ?? null,
+        },
         include: { produto: true }
       })
     })
@@ -47,14 +54,14 @@ export const PUT = withErrorHandler(async function PUT(
 
   await logUserAction(user.id, 'update', 'estoque', id, 'movimentacao_produto', data, requestMeta)
 
-  return new Response(JSON.stringify(movimentacao))
+  return NextResponse.json(movimentacao)
 })
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -68,7 +75,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     return await prisma.movimentacaoProduto.findFirst({ where: { id, userId: user.id } })
   })
   if (!exists) {
-    return new Response(JSON.stringify({ error: 'Movimentação não encontrada' }), { status: 404 })
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
   }
 
   await withConnectionHealthCheck(async () => {
@@ -79,5 +86,5 @@ export const DELETE = withErrorHandler(async function DELETE(
 
   await logUserAction(user.id, 'delete', 'estoque', id, 'movimentacao_produto', {}, requestMeta)
 
-  return new Response(JSON.stringify({ message: 'Movimentação deletada com sucesso' }))
+  return NextResponse.json({ message: 'Movimentação deletada com sucesso' })
 })
