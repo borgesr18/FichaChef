@@ -83,6 +83,7 @@ export default function Home() {
       </div>
     </div>
   )
+
 }
 
 // 🎯 PRINCIPAIS CORREÇÕES APLICADAS:
