@@ -5,64 +5,49 @@ import {
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
-// import { requireApiAuthentication } from '@/lib/supabase-api'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
-import { withTempUserHandling } from '@/lib/temp-user-utils'
 
-// Autenticação simples (padrão Insumos)
-async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
-  try {
-    if (process.env.NODE_ENV === 'development') {
-      return { id: 'dev-user', email: 'dev@fichachef.com' }
-    }
-    return { id: 'temp-prod-user', email: 'temp@fichachef.com' }
-  } catch {
-    return null
+export const GET = withErrorHandler(async function GET(request: NextRequest) {
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
   }
-}
+  const user = auth.user!
 
-export const GET = withErrorHandler(async function GET() {
-  const user = await getAuthenticatedUser()
-  if (!user) {
-    return createValidationErrorResponse('Não autorizado')
-  }
-
-  return withTempUserHandling(user.id, 'produtos', async () => {
-    const produtos = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.produto.findMany({
-          where: { userId: user.id },
-          include: {
-            produtoFichas: {
-              include: {
-                fichaTecnica: {
-                  include: {
-                    ingredientes: {
-                      include: {
-                        insumo: true
-                      }
-                    }
+  const produtos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.produto.findMany({
+        where: { userId: user.id },
+        include: {
+          produtoFichas: {
+            include: {
+              fichaTecnica: {
+                include: {
+                  ingredientes: {
+                    include: { insumo: true }
                   }
                 }
               }
             }
-          },
-          orderBy: { nome: 'asc' },
-        })
+          }
+        },
+        orderBy: { nome: 'asc' },
       })
     })
-
-    return createSuccessResponse(produtos)
   })
+
+  return createSuccessResponse(produtos)
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const user = await getAuthenticatedUser()
-  if (!user) {
-    return createValidationErrorResponse('Não autorizado')
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
   }
+  const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
@@ -95,9 +80,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
               fichaTecnica: {
                 include: {
                   ingredientes: {
-                    include: {
-                      insumo: true
-                    }
+                    include: { insumo: true }
                   }
                 }
               }

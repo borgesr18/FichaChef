@@ -5,31 +5,22 @@ import {
   createValidationErrorResponse,
   createSuccessResponse,
 } from '@/lib/auth'
-// import { requireApiAuthentication } from '@/lib/supabase-api'
+import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
-
-async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
-  try {
-    if (process.env.NODE_ENV === 'development') {
-      return { id: 'dev-user', email: 'dev@fichachef.com' }
-    }
-    return { id: 'temp-prod-user', email: 'temp@fichachef.com' }
-  } catch {
-    return null
-  }
-}
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await getAuthenticatedUser()
-  if (!user) {
-    return createValidationErrorResponse('Não autorizado')
+
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
   }
+  const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
@@ -93,10 +84,12 @@ export const DELETE = withErrorHandler(async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await getAuthenticatedUser()
-  if (!user) {
-    return createValidationErrorResponse('Não autorizado')
+
+  const auth = await requireApiAuthentication(request)
+  if (!auth.authenticated) {
+    return auth.response!
   }
+  const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
 
