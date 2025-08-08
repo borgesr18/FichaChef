@@ -15,7 +15,7 @@ const updateUserSchema = z.object({
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireApiAuthentication(request)
   
@@ -23,7 +23,7 @@ export const PUT = withErrorHandler(async function PUT(
     return auth.response!
   }
   
-  const { id } = params
+  const { id } = await params
 
   const body = await request.json()
   const validatedData = updateUserSchema.parse(body)
@@ -50,7 +50,7 @@ export const PUT = withErrorHandler(async function PUT(
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireApiAuthentication(request)
   
@@ -58,7 +58,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     return auth.response!
   }
   
-  const { id } = params
+  const { id } = await params
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY

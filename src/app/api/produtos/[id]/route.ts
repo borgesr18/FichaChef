@@ -12,9 +12,9 @@ import { produtoSchema } from '@/lib/validations'
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   
@@ -84,9 +84,9 @@ export const PUT = withErrorHandler(async function PUT(
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   

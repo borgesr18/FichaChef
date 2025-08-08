@@ -5,8 +5,8 @@ import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 
-export const GET = withErrorHandler(async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export const GET = withErrorHandler(async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const auth = await requireApiAuthentication(request)
   
   if (!auth.authenticated) {
@@ -38,8 +38,8 @@ export const GET = withErrorHandler(async function GET(request: NextRequest, { p
   return NextResponse.json(ficha)
 })
 
-export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const auth = await requireApiAuthentication(request)
   
   if (!auth.authenticated) {
@@ -120,8 +120,8 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   return NextResponse.json(ficha)
 })
 
-export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const auth = await requireApiAuthentication(request)
   
   if (!auth.authenticated) {

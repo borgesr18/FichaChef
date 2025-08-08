@@ -11,8 +11,8 @@ import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { insumoSchema } from '@/lib/validations'
 
-export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -53,8 +53,8 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   return createSuccessResponse(insumo)
 })
 
-export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export const DELETE = withErrorHandler(async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
