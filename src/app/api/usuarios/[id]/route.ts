@@ -15,7 +15,7 @@ const updateUserSchema = z.object({
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const auth = await requireApiAuthentication(request)
   
@@ -23,10 +23,18 @@ export const PUT = withErrorHandler(async function PUT(
     return auth.response!
   }
   
-  const { id } = await params
+  const { id } = params
 
   const body = await request.json()
   const validatedData = updateUserSchema.parse(body)
+
+  // Verificar existência
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.perfilUsuario.findUnique({ where: { userId: id } })
+  })
+  if (!exists) {
+    return createErrorResponse('Usuário não encontrado', 404)
+  }
 
   const updatedUser = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
@@ -42,7 +50,7 @@ export const PUT = withErrorHandler(async function PUT(
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const auth = await requireApiAuthentication(request)
   
@@ -50,7 +58,7 @@ export const DELETE = withErrorHandler(async function DELETE(
     return auth.response!
   }
   
-  const { id } = await params
+  const { id } = params
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -61,6 +69,14 @@ export const DELETE = withErrorHandler(async function DELETE(
                     supabaseServiceKey.includes('placeholder')
 
   try {
+    // Verificar existência
+    const exists = await withDatabaseRetry(async () => {
+      return await prisma.perfilUsuario.findUnique({ where: { userId: id } })
+    })
+    if (!exists) {
+      return createErrorResponse('Usuário não encontrado', 404)
+    }
+
     await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
         return await prisma.perfilUsuario.delete({

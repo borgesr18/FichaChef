@@ -12,9 +12,9 @@ import { menuSchema } from '@/lib/validations'
 
 export const GET = withErrorHandler(async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params
+  const { id } = params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -63,9 +63,9 @@ export const GET = withErrorHandler(async function GET(
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params
+  const { id } = params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
@@ -154,9 +154,9 @@ export const PUT = withErrorHandler(async function PUT(
 
 export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params
+  const { id } = params
   
   const auth = await requireApiAuthentication(request)
   if (!auth.authenticated) {
