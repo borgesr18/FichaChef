@@ -17,11 +17,8 @@ export const GET = withErrorHandler(async function GET(request: NextRequest, { p
 
   const ficha = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
-      return await prisma.fichaTecnica.findUnique({
-        where: { 
-          id,
-          userId: user.id
-        },
+      return await prisma.fichaTecnica.findFirst({
+        where: { id, userId: user.id },
         include: {
           categoria: true,
           ingredientes: {
@@ -71,6 +68,13 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.fichaTecnica.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Ficha técnica não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.ingrediente.deleteMany({
@@ -82,10 +86,7 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
   const ficha = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.fichaTecnica.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           nome,
           categoriaId,
@@ -96,9 +97,9 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
           modoPreparo,
           nivelDificuldade,
           ingredientes: {
-            create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string }) => ({
+            create: ingredientes?.map((ing: { insumoId: string; quantidadeGramas: string | number }) => ({
               insumoId: ing.insumoId,
-              quantidadeGramas: parseFloat(ing.quantidadeGramas)
+              quantidadeGramas: typeof ing.quantidadeGramas === 'number' ? ing.quantidadeGramas : parseFloat(ing.quantidadeGramas)
             })) || []
           }
         },
@@ -131,13 +132,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
 
   const requestMeta = extractRequestMetadata(request)
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.fichaTecnica.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Ficha técnica não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.fichaTecnica.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })

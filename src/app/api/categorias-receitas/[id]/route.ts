@@ -23,13 +23,17 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.categoriaReceita.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 404 })
+  }
+
   const categoria = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.categoriaReceita.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           nome,
           descricao
@@ -52,13 +56,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   }
   const user = auth.user!
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.categoriaReceita.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Categoria não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.categoriaReceita.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })

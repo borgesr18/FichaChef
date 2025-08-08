@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { supabase } from '@/lib/supabase'
@@ -9,7 +9,7 @@ import { Eye, EyeOff, ChefHat, Lock, Mail, AlertCircle } from 'lucide-react'
 export default function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, loading: authLoading, isConfigured } = useSupabase()
+  const { user, loading: authLoading, isConfigured, isInitialized } = useSupabase()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,51 +17,118 @@ export default function LoginPageContent() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [redirectExecuted, setRedirectExecuted] = useState(false)
+  const mountedRef = useRef(true)
 
   // ✅ Aguardar hidratação
   useEffect(() => {
     setIsHydrated(true)
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
-  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação
-  useEffect(() => {
-    console.log('🔍 LoginPageContent useEffect TRIGGERED:', { 
-      isHydrated, 
-      authLoading, 
-      user: !!user, 
-      userEmail: user?.email, 
-      timestamp: new Date().toISOString(),
-      dependencies: { isHydrated, authLoading, userExists: !!user }
-    })
+  // ✅ FUNÇÃO: REDIRECIONAMENTO ROBUSTO
+  const performRedirect = useCallback(async (url: string) => {
+    console.log('🚀 [LOGIN] Iniciando redirecionamento robusto para:', url)
     
+    try {
+      // 🔧 MÉTODO 1: Next.js router.replace
+      console.log('🔧 [LOGIN] Tentativa 1: router.replace')
+      router.replace(url)
+      
+      // 🔧 AGUARDAR 1 SEGUNDO PARA VER SE FUNCIONOU
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 🔧 VERIFICAR SE AINDA ESTAMOS NA PÁGINA DE LOGIN
+      if (window.location.pathname.includes('/login')) {
+        console.log('⚠️ [LOGIN] router.replace falhou, tentando router.push')
+        
+        // 🔧 MÉTODO 2: Next.js router.push
+        router.push(url)
+        
+        // 🔧 AGUARDAR MAIS 1 SEGUNDO
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 🔧 SE AINDA ESTAMOS NO LOGIN, USAR WINDOW.LOCATION
+        if (window.location.pathname.includes('/login')) {
+          console.log('⚠️ [LOGIN] router.push também falhou, usando window.location.href')
+          
+          // 🔧 MÉTODO 3: window.location.href (FORÇA BRUTA)
+          window.location.href = url
+        } else {
+          console.log('✅ [LOGIN] router.push funcionou!')
+        }
+      } else {
+        console.log('✅ [LOGIN] router.replace funcionou!')
+      }
+      
+    } catch (error) {
+      console.error('❌ [LOGIN] Erro no redirecionamento:', error)
+      
+      // 🔧 FALLBACK FINAL: window.location.href
+      console.log('🔧 [LOGIN] Usando fallback final: window.location.href')
+      window.location.href = url
+    }
+  }, [router])
+
+  // ✅ CORRIGIDO: useEffect com redirecionamento robusto
+  useEffect(() => {
+    // 🚫 Verificações de segurança
     if (!isHydrated) {
-      console.log('🚫 LoginPageContent: Aguardando hidratação')
+      console.log('🚫 [LOGIN] Aguardando hidratação')
+      return
+    }
+
+    if (!isInitialized) {
+      console.log('🚫 [LOGIN] Aguardando inicialização do provider')
       return
     }
 
     if (authLoading) {
-      console.log('🚫 LoginPageContent: Auth ainda carregando')
+      console.log('🚫 [LOGIN] Auth ainda carregando')
+      return
+    }
+
+    if (!mountedRef.current) {
+      console.log('🚫 [LOGIN] Componente desmontado, ignorando')
+      return
+    }
+
+    if (redirectExecuted) {
+      console.log('🚫 [LOGIN] Redirect já executado, ignorando')
       return
     }
 
     // ✅ Se usuário já está logado, redirecionar
     if (user) {
       const redirect = searchParams.get('redirect') || '/dashboard'
-      console.log('✅ LoginPageContent: Usuário já autenticado, redirecionando para:', redirect, 'User:', user.email)
-      console.log('🚀 LoginPageContent: Executando router.push para:', redirect)
       
-      router.push(redirect)
+      console.log('✅ [LOGIN] Usuário autenticado detectado:', {
+        email: user.email,
+        redirect,
+        currentPath: window.location.pathname,
+        timestamp: new Date().toISOString()
+      })
       
-      setTimeout(() => {
-        console.log('🔄 LoginPageContent: Fallback redirect executing...')
-        window.location.href = redirect
-      }, 1000)
+      // 🔧 Marcar redirect como executado
+      setRedirectExecuted(true)
+      
+      // 🔧 USAR FUNÇÃO DE REDIRECIONAMENTO ROBUSTO
+      performRedirect(redirect)
+      
     } else {
-      console.log('🔍 LoginPageContent: Usuário não autenticado, permanecendo no login. User state:', user)
+      console.log('🔍 [LOGIN] Estado atual:', {
+        hasUser: !!user,
+        authLoading,
+        isInitialized,
+        redirectExecuted,
+        currentPath: window.location.pathname
+      })
     }
-  }, [isHydrated, authLoading, user, router, searchParams])
+  }, [isHydrated, isInitialized, authLoading, user, searchParams, redirectExecuted, performRedirect])
 
-  // ✅ CORRIGIDO: Função de login com tratamento de erros
+  // ✅ CORRIGIDO: Função de login que reseta redirect
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -70,32 +137,52 @@ export default function LoginPageContent() {
       return
     }
 
+    if (loading) {
+      console.log('🚫 [LOGIN] Login já em andamento, ignorando')
+      return
+    }
+
+    // 🔧 RESET: Permitir novo redirect ao fazer login
+    setRedirectExecuted(false)
     setLoading(true)
     setError('')
 
     try {
       // ✅ Se Supabase não está configurado, simular login
       if (!isConfigured) {
-        console.log('🔧 Login: Modo desenvolvimento - simulando login')
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Simular delay
-        router.push('/dashboard')
+        console.log('🔧 [LOGIN] Modo desenvolvimento - simulando login')
+        
+        // 🔧 Simular delay de autenticação
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 🔧 Em modo dev, redirecionar diretamente
+        const redirect = searchParams.get('redirect') || '/dashboard'
+        console.log('🚀 [LOGIN] Modo dev - redirecionamento para:', redirect)
+        
+        if (mountedRef.current) {
+          await performRedirect(redirect)
+        }
         return
       }
 
       // ✅ Login real com Supabase
+      console.log('🔐 [LOGIN] Tentando autenticação com Supabase para:', email.trim())
+      
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password
       })
 
       if (loginError) {
-        console.error('❌ Login: Erro na autenticação:', loginError.message)
+        console.error('❌ [LOGIN] Erro na autenticação:', loginError.message)
         
         // ✅ Mensagens de erro mais amigáveis
         if (loginError.message.includes('Invalid login credentials')) {
           setError('Email ou senha incorretos')
         } else if (loginError.message.includes('Email not confirmed')) {
           setError('Email não confirmado. Verifique sua caixa de entrada.')
+        } else if (loginError.message.includes('Too many requests')) {
+          setError('Muitas tentativas. Aguarde alguns minutos.')
         } else {
           setError(loginError.message)
         }
@@ -103,33 +190,28 @@ export default function LoginPageContent() {
       }
 
       if (data.user) {
-        console.log('✅ Login: Usuário autenticado com sucesso:', data.user.email)
-        console.log('🔍 Login: Session data:', data.session ? 'Session exists' : 'No session')
+        console.log('✅ [LOGIN] Usuário autenticado com sucesso:', data.user.email)
         
-        console.log('🔄 Login: Forçando atualização do estado de autenticação...')
+        // 🔧 AGUARDAR 800ms para sincronização
+        console.log('⏳ [LOGIN] Aguardando sincronização de estado...')
+        await new Promise(resolve => setTimeout(resolve, 800))
         
-        console.log('⏳ Login: Aguardando 1000ms para sincronização de estado...')
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        console.log('🔍 Login: Estado atual do usuário antes do redirect:', currentUser?.email || 'null')
-        
-        console.log('✅ Login: Autenticação concluída, aguardando useEffect para redirecionamento automático')
+        // 🔧 O useEffect vai detectar a mudança de user e fazer o redirect
+        console.log('✅ [LOGIN] Autenticação concluída, aguardando useEffect para redirecionamento')
       } else {
-        console.warn('⚠️ Login: Supabase retornou sucesso mas sem usuário')
+        console.warn('⚠️ [LOGIN] Supabase retornou sucesso mas sem usuário')
+        setError('Erro na autenticação. Tente novamente.')
       }
 
     } catch (error) {
-      console.error('❌ Login: Erro inesperado:', error)
+      console.error('❌ [LOGIN] Erro inesperado:', error)
       setError('Erro inesperado. Tente novamente.')
     } finally {
-      setLoading(false)
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
   }
-
-
-
-
 
 
   return (
@@ -156,6 +238,14 @@ export default function LoginPageContent() {
               </p>
             </div>
           )}
+
+          {/* ✅ DEBUG INFO */}
+          <div className="mt-4 p-3 bg-white/60 rounded-xl text-xs text-gray-600">
+            <p><strong>Current Path:</strong> {typeof window !== 'undefined' ? window.location.pathname : 'N/A'}</p>
+            <p><strong>User:</strong> {user ? user.email : 'None'}</p>
+            <p><strong>Redirect Executed:</strong> {redirectExecuted ? 'Yes' : 'No'}</p>
+            <p><strong>Auth Loading:</strong> {authLoading ? 'Yes' : 'No'}</p>
+          </div>
         </div>
 
         {/* ✅ Form */}
@@ -242,6 +332,18 @@ export default function LoginPageContent() {
                 'Entrar'
               )}
             </button>
+
+            {/* ✅ BOTÃO DE TESTE DIRETO */}
+            <button
+              type="button"
+              onClick={() => {
+                console.log('🧪 [LOGIN] Teste direto de redirecionamento')
+                performRedirect('/dashboard')
+              }}
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+            >
+              🧪 Testar Redirecionamento Direto
+            </button>
           </form>
 
           {/* ✅ Dados de teste */}
@@ -277,3 +379,13 @@ export default function LoginPageContent() {
     </div>
   )
 }
+
+// 🎯 CORREÇÕES APLICADAS:
+// ✅ Função performRedirect com múltiplos métodos de fallback
+// ✅ Tentativa 1: router.replace
+// ✅ Tentativa 2: router.push  
+// ✅ Tentativa 3: window.location.href (força bruta)
+// ✅ Logs detalhados para cada tentativa
+// ✅ Botão de teste direto para debug
+// ✅ Debug info visível na interface
+// ✅ useCallback para evitar re-renders desnecessários

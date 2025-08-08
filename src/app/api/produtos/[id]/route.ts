@@ -34,10 +34,18 @@ export const PUT = withErrorHandler(async function PUT(
 
   const data = parsedBody.data
 
+  // Verificar existência
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.produto.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return createSuccessResponse({ error: 'Produto não encontrado' }, 404)
+  }
+
   const produto = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.produto.update({
-        where: { id, userId: user.id },
+        where: { id },
         data: {
           nome: data.nome,
           precoVenda: data.precoVenda,
@@ -90,10 +98,18 @@ export const DELETE = withErrorHandler(async function DELETE(
 
   const requestMeta = extractRequestMetadata(request)
 
+  // Verificar existência
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.produto.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return createSuccessResponse({ error: 'Produto não encontrado' }, 404)
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.produto.delete({
-        where: { id, userId: user.id },
+        where: { id },
       })
     })
   })

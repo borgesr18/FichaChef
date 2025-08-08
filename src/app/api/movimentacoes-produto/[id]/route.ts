@@ -1,14 +1,10 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import {
-  createValidationErrorResponse,
-  createSuccessResponse,
-} from '@/lib/auth'
 import { requireApiAuthentication } from '@/lib/supabase-api'
+import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { movimentacaoProdutoSchema } from '@/lib/validations'
-import { extractRequestMetadata } from '@/lib/permissions'
 
 export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
@@ -27,29 +23,38 @@ export const PUT = withErrorHandler(async function PUT(
   const parsedBody = movimentacaoProdutoSchema.safeParse(body)
 
   if (!parsedBody.success) {
-    return createValidationErrorResponse(parsedBody.error.message)
+    return NextResponse.json({ error: parsedBody.error.message }, { status: 400 })
   }
 
   const data = parsedBody.data
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoProduto.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
+  }
+
   const movimentacao = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoProduto.update({
-        where: { id, userId: user.id },
+        where: { id },
         data: {
-          ...data,
+          produtoId: data.produtoId,
+          tipo: data.tipo,
+          quantidade: data.quantidade,
+          motivo: data.motivo,
+          lote: data.lote ?? null,
+          dataValidade: data.dataValidade ?? null,
         },
-        include: {
-          produto: true,
-        },
+        include: { produto: true }
       })
     })
   })
 
-  const { logUserAction } = await import('@/lib/permissions')
-  await logUserAction(user.id, 'update', 'estoque', id, 'movimentacao-produto', data, requestMeta)
+  await logUserAction(user.id, 'update', 'estoque', id, 'movimentacao_produto', data, requestMeta)
 
-  return createSuccessResponse(movimentacao)
+  return NextResponse.json(movimentacao)
 })
 
 export const DELETE = withErrorHandler(async function DELETE(
@@ -65,16 +70,21 @@ export const DELETE = withErrorHandler(async function DELETE(
   const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
+
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoProduto.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
-      return await prisma.movimentacaoProduto.delete({
-        where: { id, userId: user.id },
-      })
+      return await prisma.movimentacaoProduto.delete({ where: { id } })
     })
   })
 
-  const { logUserAction } = await import('@/lib/permissions')
-  await logUserAction(user.id, 'delete', 'estoque', id, 'movimentacao-produto', undefined, requestMeta)
+  await logUserAction(user.id, 'delete', 'estoque', id, 'movimentacao_produto', {}, requestMeta)
 
-  return createSuccessResponse({ message: 'Movimentação de produto excluída com sucesso' })
+  return NextResponse.json({ message: 'Movimentação deletada com sucesso' })
 })

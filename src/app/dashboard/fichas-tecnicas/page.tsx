@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
-import { FileText, Plus, Search, Edit, Trash2, X, Calculator, Download, TrendingUp, TrendingDown, Crown } from 'lucide-react'
-import { convertFormDataToNumbers } from '@/lib/form-utils'
+import { FileText, Plus, Search, Edit, Trash2, Calculator, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface FichaTecnica {
   id: string
@@ -56,6 +55,18 @@ interface Insumo {
 interface Ingrediente {
   insumoId?: string
   quantidadeGramas?: number
+}
+
+interface FormDataType {
+  nome: string
+  categoriaId: string
+  pesoFinalGramas: string
+  numeroPorcoes: string
+  tempoPreparo: string
+  temperaturaForno: string
+  modoPreparo: string
+  nivelDificuldade: string
+  [key: string]: string | number | undefined
 }
 
 export default function FichasTecnicasPage() {
@@ -115,10 +126,11 @@ export default function FichasTecnicasPage() {
       const response = await fetch('/api/fichas-tecnicas')
       if (response.ok) {
         const data = await response.json()
-        setFichas(data)
+        setFichas(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching fichas:', error)
+      setFichas([])
     }
   }
 
@@ -127,10 +139,11 @@ export default function FichasTecnicasPage() {
       const response = await fetch('/api/categorias-receitas')
       if (response.ok) {
         const data = await response.json()
-        setCategorias(data)
+        setCategorias(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching categorias:', error)
+      setCategorias([])
     }
   }
 
@@ -139,10 +152,11 @@ export default function FichasTecnicasPage() {
       const response = await fetch('/api/insumos')
       if (response.ok) {
         const data = await response.json()
-        setInsumos(data)
+        setInsumos(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching insumos:', error)
+      setInsumos([])
     }
   }
 
@@ -200,8 +214,6 @@ export default function FichasTecnicasPage() {
     setIngredientes(updated)
   }
 
-
-
   const handleOpenScalingModal = (ficha: FichaTecnica) => {
     setScalingFicha(ficha)
     setTargetPortions(ficha.numeroPorcoes.toString())
@@ -246,6 +258,19 @@ export default function FichasTecnicasPage() {
       pesoTotal,
       tempoPreparoEscalado
     })
+  }
+
+  const convertFormDataToNumbers = (data: FormDataType, fields: string[]) => {
+    const converted = { ...data }
+    fields.forEach(field => {
+      if (converted[field] && converted[field] !== '') {
+        const num = parseFloat(String(converted[field]))
+        if (!isNaN(num)) {
+          converted[field] = num
+        }
+      }
+    })
+    return converted
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -303,7 +328,11 @@ export default function FichasTecnicasPage() {
   }
 
   // Funções auxiliares para o design
-  const getCategoryIcon = (categoria: string) => {
+  const getCategoryIcon = (categoria: string | null | undefined) => {
+    if (!categoria || typeof categoria !== 'string') {
+      return '🍽️'
+    }
+    
     switch (categoria.toLowerCase()) {
       case 'massas': return '🍕'
       case 'carnes': return '🥩'
@@ -335,27 +364,27 @@ export default function FichasTecnicasPage() {
   }
 
   // Filtros e ordenação
-  const filteredFichas = fichas.filter(ficha => {
+  const filteredFichas = Array.isArray(fichas) ? fichas.filter(ficha => {
     const matchesSearch = ficha.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ficha.categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !selectedCategory || ficha.categoria.nome === selectedCategory
+                         (ficha.categoria?.nome || '').toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = !selectedCategory || (ficha.categoria?.nome === selectedCategory)
     const matchesLevel = !selectedLevel || ficha.nivelDificuldade === selectedLevel
     return matchesSearch && matchesCategory && matchesLevel
-  })
+  }) : []
 
   const sortedFichas = [...filteredFichas].sort((a, b) => {
     switch (sortOrder) {
       case 'name':
         return a.nome.localeCompare(b.nome)
       case 'cost':
-        const costA = a.ingredientes.reduce((total, ing) => {
+        const costA = Array.isArray(a.ingredientes) ? a.ingredientes.reduce((total, ing) => {
           const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
           return total + (custoPorGrama * ing.quantidadeGramas)
-        }, 0)
-        const costB = b.ingredientes.reduce((total, ing) => {
+        }, 0) : 0
+        const costB = Array.isArray(b.ingredientes) ? b.ingredientes.reduce((total, ing) => {
           const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
           return total + (custoPorGrama * ing.quantidadeGramas)
-        }, 0)
+        }, 0) : 0
         return costA - costB
       default:
         return 0
@@ -366,10 +395,10 @@ export default function FichasTecnicasPage() {
   const getStats = () => {
     const totalFichas = fichas.length
     const costs = fichas.map(ficha => 
-      ficha.ingredientes.reduce((total, ing) => {
+      Array.isArray(ficha.ingredientes) ? ficha.ingredientes.reduce((total, ing) => {
         const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
         return total + (custoPorGrama * ing.quantidadeGramas)
-      }, 0)
+      }, 0) : 0
     )
     const avgCost = costs.length > 0 ? costs.reduce((a, b) => a + b, 0) / costs.length : 0
     const margins = costs.map(cost => {
@@ -398,10 +427,6 @@ export default function FichasTecnicasPage() {
             </div>
             
             <div className="flex items-center space-x-3">
-              <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </button>
               <button
                 onClick={() => handleOpenModal()}
                 className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center"
@@ -475,155 +500,164 @@ export default function FichasTecnicasPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total de Fichas</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalFichas}</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +12% este mês
-                </p>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total de Receitas</p>
+                <p className="text-3xl font-bold text-[#1B2E4B]">{stats.totalFichas}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <FileText className="text-white h-6 w-6" />
+              <div className="bg-gradient-to-br from-[#1B2E4B] to-[#5AC8FA] p-3 rounded-xl">
+                <FileText className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Custo Médio</p>
-                <p className="text-2xl font-bold text-gray-900">R$ {stats.avgCost.toFixed(2)}</p>
-                <p className="text-xs text-red-600 flex items-center">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  -3% este mês
-                </p>
+                <p className="text-3xl font-bold text-[#1B2E4B]">R$ {stats.avgCost.toFixed(2)}</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Calculator className="text-white h-6 w-6" />
+              <div className="bg-gradient-to-br from-green-400 to-emerald-500 p-3 rounded-xl">
+                <TrendingDown className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Margem Média</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.avgMargin.toFixed(0)}%</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +5% este mês
-                </p>
+                <p className="text-3xl font-bold text-[#1B2E4B]">{stats.avgMargin.toFixed(0)}%</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-xl font-bold">%</span>
+              <div className="bg-gradient-to-br from-yellow-400 to-orange-500 p-3 rounded-xl">
+                <TrendingUp className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
-          
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Top Margem</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.topMargin.toFixed(0)}%</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Melhor receita
-                </p>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Melhor Margem</p>
+                <p className="text-3xl font-bold text-[#1B2E4B]">{stats.topMargin.toFixed(0)}%</p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Crown className="text-white h-6 w-6" />
+              <div className="bg-gradient-to-br from-purple-400 to-pink-500 p-3 rounded-xl">
+                <TrendingUp className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Fichas Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {sortedFichas.map((ficha) => {
-            const cost = ficha.ingredientes.reduce((total, ing) => {
+            const custoTotal = Array.isArray(ficha.ingredientes) ? ficha.ingredientes.reduce((total, ing) => {
               const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
               return total + (custoPorGrama * ing.quantidadeGramas)
-            }, 0)
-            const suggestedPrice = cost * 2.5
-            const margin = ((suggestedPrice - cost) / suggestedPrice) * 100
+            }, 0) : 0
+            const precoSugerido = custoTotal * 2.5
+            const margemLucro = precoSugerido > 0 ? ((precoSugerido - custoTotal) / precoSugerido) * 100 : 0
 
             return (
-              <div key={ficha.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)}`}></div>
+              <div key={ficha.id} className="group bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                {/* Card Header */}
+                <div className={`bg-gradient-to-r ${getCategoryGradient(ficha.categoria?.nome || '')} p-6 text-white relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-4xl">{getCategoryIcon(ficha.categoria?.nome)}</span>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleOpenScalingModal(ficha)}
+                          className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                          title="Escalar receita"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenModal(ficha)}
+                          className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ficha.id)}
+                          className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">{ficha.nome}</h3>
+                    <p className="text-white/80">{ficha.categoria?.nome || 'Sem categoria'}</p>
+                  </div>
+                </div>
+
+                {/* Card Content */}
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-14 h-14 bg-gradient-to-r ${getCategoryGradient(ficha.categoria.nome)} rounded-2xl flex items-center justify-center shadow-lg`}>
-                        <span className="text-white text-xl">{getCategoryIcon(ficha.categoria.nome)}</span>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{ficha.nome}</h3>
-                        <p className="text-sm text-gray-500">Atualizada recentemente</p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleOpenScalingModal(ficha)}
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-white/50 rounded-lg transition-all"
-                        title="Escalar Receita"
-                      >
-                        <Calculator className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenModal(ficha)}
-                        className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-white/50 rounded-lg transition-all"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-[#5AC8FA] hover:bg-white/50 rounded-lg transition-all">
-                        <FileText className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(ficha.id)}
-                        className="p-2 text-gray-400 hover:text-[#E74C3C] hover:bg-white/50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-6 leading-relaxed">{ficha.modoPreparo.substring(0, 100)}...</p>
-                  
                   <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <p className="text-xs text-gray-500 mb-1">Categoria</p>
-                      <p className="font-semibold text-gray-900">{ficha.categoria.nome}</p>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-[#1B2E4B]">{ficha.numeroPorcoes}</p>
+                      <p className="text-sm text-gray-600">Porções</p>
                     </div>
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <p className="text-xs text-gray-500 mb-1">Peso final</p>
-                      <p className="font-semibold text-gray-900">{ficha.pesoFinalGramas}g</p>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-[#1B2E4B]">{ficha.pesoFinalGramas}g</p>
+                      <p className="text-sm text-gray-600">Peso Final</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-gray-600">Dificuldade:</span>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${getDifficultyColor(ficha.nivelDificuldade)} text-white shadow-md`}>
-                      {ficha.nivelDificuldade}
-                    </span>
+
+                  {ficha.tempoPreparo && (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Tempo de Preparo</span>
+                        <span className="font-semibold text-[#1B2E4B]">{ficha.tempoPreparo} min</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${getDifficultyColor(ficha.nivelDificuldade)} text-white mb-6`}>
+                    {ficha.nivelDificuldade}
                   </div>
-                  
-                  <div className="bg-white/50 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Custo total:</span>
-                      <span className="text-xl font-bold text-gray-900">R$ {cost.toFixed(2)}</span>
+
+                  {/* Ingredientes */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold text-gray-800 mb-3">Ingredientes ({Array.isArray(ficha.ingredientes) ? ficha.ingredientes.length : 0})</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {Array.isArray(ficha.ingredientes) && ficha.ingredientes.slice(0, 3).map((ing, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-gray-600">{ing.insumo.nome}</span>
+                          <span className="font-medium">{ing.quantidadeGramas}g</span>
+                        </div>
+                      ))}
+                      {Array.isArray(ficha.ingredientes) && ficha.ingredientes.length > 3 && (
+                        <p className="text-xs text-gray-500">+{ficha.ingredientes.length - 3} mais...</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Custos */}
+                  <div className="border-t pt-4 space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Custo Total</span>
+                      <span className="font-bold text-red-600">R$ {custoTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Preço Sugerido</span>
+                      <span className="font-bold text-green-600">R$ {precoSugerido.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Preço sugerido:</span>
-                      <span className="text-xl font-bold text-[#2ECC71]">R$ {suggestedPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">Margem de lucro:</span>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-[#2ECC71] to-green-400 text-white shadow-md">
-                        {margin.toFixed(0)}%
-                      </span>
+                      <span className="text-gray-600">Margem de Lucro</span>
+                      <div className="flex items-center space-x-1">
+                        {margemLucro >= 50 ? (
+                          <TrendingUp className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4 text-yellow-500" />
+                        )}
+                        <span className={`font-bold ${margemLucro >= 50 ? 'text-green-600' : 'text-yellow-600'}`}>
+                          {margemLucro.toFixed(0)}%
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -634,22 +668,25 @@ export default function FichasTecnicasPage() {
 
         {sortedFichas.length === 0 && (
           <div className="text-center py-12">
-            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma ficha técnica encontrada</h3>
-            <p className="text-gray-500 mb-6">Crie sua primeira ficha técnica para começar</p>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || selectedCategory || selectedLevel 
+                ? 'Tente ajustar os filtros de busca' 
+                : 'Comece criando sua primeira ficha técnica'}
+            </p>
             <button
               onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
-              <Plus className="h-4 w-4 mr-2 inline" />
               Criar Primeira Ficha
             </button>
           </div>
         )}
 
-        {/* Modal de Criação/Edição */}
-        <Modal
-          isOpen={isModalOpen}
+        {/* Modal de Nova/Editar Ficha */}
+        <Modal 
+          isOpen={isModalOpen} 
           onClose={handleCloseModal}
           title={editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}
         >
@@ -662,23 +699,26 @@ export default function FichasTecnicasPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Receita</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome da Receita *
+                </label>
                 <input
                   type="text"
+                  required
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoria
+                </label>
                 <select
                   value={formData.categoriaId}
                   onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 >
                   <option value="">Selecione uma categoria</option>
                   {categorias.map(categoria => (
@@ -688,43 +728,68 @@ export default function FichasTecnicasPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Peso Final (gramas)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Peso Final (gramas) *
+                </label>
                 <input
                   type="number"
+                  required
+                  min="1"
                   value={formData.pesoFinalGramas}
                   onChange={(e) => setFormData({ ...formData, pesoFinalGramas: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Número de Porções</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Número de Porções *
+                </label>
                 <input
                   type="number"
+                  required
+                  min="1"
                   value={formData.numeroPorcoes}
                   onChange={(e) => setFormData({ ...formData, numeroPorcoes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tempo de Preparo (min)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tempo de Preparo (minutos)
+                </label>
                 <input
                   type="number"
+                  min="1"
                   value={formData.tempoPreparo}
                   onChange={(e) => setFormData({ ...formData, tempoPreparo: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nível de Dificuldade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Temperatura do Forno (°C)
+                </label>
+                <input
+                  type="number"
+                  min="50"
+                  max="300"
+                  value={formData.temperaturaForno}
+                  onChange={(e) => setFormData({ ...formData, temperaturaForno: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nível de Dificuldade
+                </label>
                 <select
                   value={formData.nivelDificuldade}
                   onChange={(e) => setFormData({ ...formData, nivelDificuldade: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                 >
                   <option value="Fácil">Fácil</option>
                   <option value="Médio">Médio</option>
@@ -734,38 +799,40 @@ export default function FichasTecnicasPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Modo de Preparo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Modo de Preparo
+              </label>
               <textarea
+                rows={4}
                 value={formData.modoPreparo}
                 onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                placeholder="Descreva o modo de preparo da receita..."
               />
             </div>
 
             {/* Ingredientes */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <label className="block text-sm font-medium text-gray-700">Ingredientes</label>
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  Ingredientes
+                </label>
                 <button
                   type="button"
                   onClick={addIngrediente}
-                  className="bg-[#5AC8FA] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#5AC8FA]/90 flex items-center"
+                  className="bg-[#5AC8FA] text-white px-3 py-1 rounded-lg text-sm hover:bg-[#4A9FE7] transition-colors"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Adicionar
+                  + Adicionar
                 </button>
               </div>
-
-              <div className="space-y-3">
+              
+              <div className="space-y-3 max-h-60 overflow-y-auto">
                 {ingredientes.map((ingrediente, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
                     <select
-                      value={ingrediente.insumoId}
+                      value={ingrediente.insumoId || ''}
                       onChange={(e) => updateIngrediente(index, 'insumoId', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                      required
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                     >
                       <option value="">Selecione um insumo</option>
                       {insumos.map(insumo => (
@@ -776,107 +843,131 @@ export default function FichasTecnicasPage() {
                     <input
                       type="number"
                       placeholder="Quantidade (g)"
-                      value={ingrediente.quantidadeGramas}
-                      onChange={(e) => updateIngrediente(index, 'quantidadeGramas', Number(e.target.value))}
-                      className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                      required
+                      min="0"
+                      step="0.1"
+                      value={ingrediente.quantidadeGramas || ''}
+                      onChange={(e) => updateIngrediente(index, 'quantidadeGramas', parseFloat(e.target.value) || 0)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
                     />
                     
                     <button
                       type="button"
                       onClick={() => removeIngrediente(index)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors"
                     >
-                      <X className="h-4 w-4" />
+                      Remover
                     </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-6 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+                className="px-4 py-2 bg-[#5AC8FA] text-white rounded-lg hover:bg-[#4A9FE7] transition-colors disabled:opacity-50"
               >
-                {loading ? 'Salvando...' : (editingFicha ? 'Atualizar' : 'Criar')} Ficha
+                {loading ? 'Salvando...' : (editingFicha ? 'Atualizar' : 'Criar')} Ficha Técnica
               </button>
             </div>
           </form>
         </Modal>
 
         {/* Modal de Escalonamento */}
-        <Modal
-          isOpen={isScalingModalOpen}
+        <Modal 
+          isOpen={isScalingModalOpen} 
           onClose={handleCloseScalingModal}
           title="Escalar Receita"
         >
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Número de Porções Desejadas
-              </label>
-              <input
-                type="number"
-                value={targetPortions}
-                onChange={(e) => setTargetPortions(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
-                min="1"
-              />
-            </div>
-
-            <button
-              onClick={calculateScaling}
-              className="w-full bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white py-2 rounded-lg hover:shadow-lg transition-all duration-200"
-            >
-              Calcular Escalonamento
-            </button>
-
-            {scaledData && (
-              <div className="space-y-4 border-t pt-4">
-                <h4 className="font-semibold text-gray-900">Resultado do Escalonamento:</h4>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p><strong>Custo Total:</strong> R$ {scaledData.custoTotal.toFixed(2)}</p>
-                  <p><strong>Peso Total:</strong> {scaledData.pesoTotal.toFixed(0)}g</p>
-                  {scaledData.tempoPreparoEscalado && (
-                    <p><strong>Tempo de Preparo:</strong> {scaledData.tempoPreparoEscalado} min</p>
-                  )}
+            {scalingFicha && (
+              <>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {scalingFicha.nome}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Receita original: {scalingFicha.numeroPorcoes} porções, {scalingFicha.pesoFinalGramas}g
+                  </p>
                 </div>
 
                 <div>
-                  <h5 className="font-medium text-gray-900 mb-2">Ingredientes Escalados:</h5>
-                  <div className="space-y-2">
-                    {scaledData.ingredientes.map((ing, index) => (
-                      <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
-                        <span>{ing.insumo.nome}</span>
-                        <span className="font-medium">{ing.quantidadeGramas.toFixed(1)}g</span>
-                      </div>
-                    ))}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Número de Porções Desejado
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={targetPortions}
+                    onChange={(e) => setTargetPortions(e.target.value)}
+                    onBlur={calculateScaling}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent"
+                  />
                 </div>
-              </div>
-            )}
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              <button
-                onClick={handleCloseScalingModal}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Fechar
-              </button>
-            </div>
+                {scaledData && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-3">Resultado do Escalonamento:</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Peso Total:</span>
+                        <span className="font-medium">{scaledData.pesoTotal.toFixed(0)}g</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Custo Total:</span>
+                        <span className="font-medium text-red-600">R$ {scaledData.custoTotal.toFixed(2)}</span>
+                      </div>
+                      {scaledData.tempoPreparoEscalado && (
+                        <div className="flex justify-between">
+                          <span>Tempo Estimado:</span>
+                          <span className="font-medium">{scaledData.tempoPreparoEscalado} min</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h5 className="font-medium text-gray-900 mb-2">Ingredientes Escalonados:</h5>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {scaledData.ingredientes.map((ing, index) => (
+                          <div key={index} className="flex justify-between text-sm">
+                            <span>{ing.insumo.nome}</span>
+                            <span className="font-medium">{ing.quantidadeGramas.toFixed(1)}g</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={handleCloseScalingModal}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Fechar
+                  </button>
+                  <button
+                    onClick={calculateScaling}
+                    className="px-4 py-2 bg-[#5AC8FA] text-white rounded-lg hover:bg-[#4A9FE7] transition-colors"
+                  >
+                    Recalcular
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </Modal>
       </div>
     </DashboardLayout>
   )
 }
+

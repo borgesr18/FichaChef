@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { insumoSchema } from '@/lib/validations'
-import { 
+import {
   createValidationErrorResponse,
   createSuccessResponse,
   createNotFoundResponse
@@ -10,39 +9,31 @@ import {
 import { requireApiAuthentication } from '@/lib/supabase-api'
 import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
+import { insumoSchema } from '@/lib/validations'
 
 export const PUT = withErrorHandler(async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   
   const auth = await requireApiAuthentication(request)
-  
   if (!auth.authenticated) {
     return auth.response!
   }
-  
   const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
   const body = await request.json()
-  
-  const validationResult = insumoSchema.safeParse(body)
-  
-  if (!validationResult.success) {
-    const errors = validationResult.error.errors.map(err => err.message).join(', ')
-    return createValidationErrorResponse(errors)
+  const parsedBody = insumoSchema.safeParse(body)
+
+  if (!parsedBody.success) {
+    return createValidationErrorResponse(parsedBody.error.message)
   }
 
-  const data = validationResult.data
+  const data = parsedBody.data
 
-  const existingInsumo = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.insumo.findFirst({
-        where: { id, userId: user.id }
-      })
-    })
+  const existing = await withDatabaseRetry(async () => {
+    return await prisma.insumo.findFirst({ where: { id, userId: user.id } })
   })
-
-  if (!existingInsumo) {
+  if (!existing) {
     return createNotFoundResponse('Insumo')
   }
 
@@ -50,10 +41,8 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     return await withDatabaseRetry(async () => {
       return await prisma.insumo.update({
         where: { id },
-        data,
-        include: {
-          categoria: true,
-          unidadeCompra: true
+        data: {
+          ...data
         }
       })
     })
@@ -68,24 +57,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
   const { id } = await params
   
   const auth = await requireApiAuthentication(request)
-  
   if (!auth.authenticated) {
     return auth.response!
   }
-  
   const user = auth.user!
 
   const requestMeta = extractRequestMetadata(request)
 
-  const existingInsumo = await withConnectionHealthCheck(async () => {
-    return await withDatabaseRetry(async () => {
-      return await prisma.insumo.findFirst({
-        where: { id, userId: user.id }
-      })
-    })
+  const existing = await withDatabaseRetry(async () => {
+    return await prisma.insumo.findFirst({ where: { id, userId: user.id } })
   })
-
-  if (!existingInsumo) {
+  if (!existing) {
     return createNotFoundResponse('Insumo')
   }
 
@@ -97,7 +79,7 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
     })
   })
 
-  await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', { nome: existingInsumo.nome }, requestMeta)
+  await logUserAction(user.id, 'delete', 'insumos', id, 'insumo', {}, requestMeta)
 
-  return createSuccessResponse({ message: 'Insumo deletado com sucesso' })
+  return createSuccessResponse({ message: 'Insumo excluído com sucesso' })
 })

@@ -24,13 +24,18 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  // Verificar existência vinculada ao usuário
+  const existing = await withDatabaseRetry(async () => {
+    return await prisma.unidadeMedida.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!existing) {
+    return NextResponse.json({ error: 'Unidade não encontrada' }, { status: 404 })
+  }
+
   const unidade = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.unidadeMedida.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           nome,
           simbolo,
@@ -56,13 +61,18 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
 
   const requestMeta = extractRequestMetadata(request)
 
+  // Verificar existência vinculada ao usuário
+  const existing = await withDatabaseRetry(async () => {
+    return await prisma.unidadeMedida.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!existing) {
+    return NextResponse.json({ error: 'Unidade não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.unidadeMedida.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })

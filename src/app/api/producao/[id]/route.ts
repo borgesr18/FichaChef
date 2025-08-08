@@ -30,13 +30,17 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.producao.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Produção não encontrada' }, { status: 404 })
+  }
+
   const producao = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.producao.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           fichaTecnicaId,
           dataProducao: new Date(dataProducao),
@@ -67,13 +71,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
 
   const requestMeta = extractRequestMetadata(request)
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.producao.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Produção não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.producao.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })

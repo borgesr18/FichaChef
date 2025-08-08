@@ -8,7 +8,6 @@ import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import { useNotifications } from '@/components/ui/NotificationSystem'
 import { Package, Plus, Search, Edit, Trash2, Download, TrendingUp, TrendingDown, Crown, DollarSign } from 'lucide-react'
-import { convertFormDataToNumbers } from '@/lib/form-utils'
 
 interface Insumo {
   id: string
@@ -50,25 +49,57 @@ interface Fornecedor {
   ativo: boolean
 }
 
+interface TacoAlimento {
+  id: number
+  description: string
+  category: string
+  energyKcal?: number
+  proteinG?: number
+  carbohydrateG?: number
+  lipidG?: number
+  fiberG?: number
+  sodiumMg?: number
+}
+
+interface FormDataType {
+  nome: string
+  marca: string
+  fornecedor: string
+  fornecedorId: string
+  categoriaId: string
+  unidadeCompraId: string
+  pesoLiquidoGramas: string
+  precoUnidade: string
+  calorias: string
+  proteinas: string
+  carboidratos: string
+  gorduras: string
+  fibras: string
+  sodio: string
+  codigoTaco: string
+  fonteDados: string
+  [key: string]: string | number | undefined
+}
+
 export default function InsumosPage() {
-  const { addNotification } = useNotifications()
-  const [searchTerm, setSearchTerm] = useState('')
   const [insumos, setInsumos] = useState<Insumo[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [unidades, setUnidades] = useState<UnidadeMedida[]>([])
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategoria, setSelectedCategoria] = useState('')
+  const [selectedFornecedor, setSelectedFornecedor] = useState('')
+  const [sortOrder, setSortOrder] = useState('recent')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isTacoModalOpen, setIsTacoModalOpen] = useState(false)
   const [editingInsumo, setEditingInsumo] = useState<Insumo | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [isTacoModalOpen, setIsTacoModalOpen] = useState(false)
 
-  // Estados para filtros
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedFornecedor, setSelectedFornecedor] = useState('')
-  const [sortOrder, setSortOrder] = useState('recent')
+  const { addNotification } = useNotifications()
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     nome: '',
     marca: '',
     fornecedor: '',
@@ -99,10 +130,24 @@ export default function InsumosPage() {
       const response = await fetch('/api/insumos')
       if (response.ok) {
         const data = await response.json()
-        setInsumos(data)
+        
+        let insumosData: Insumo[] = []
+        
+        if (Array.isArray(data)) {
+          insumosData = data
+        } else if (data && typeof data === 'object') {
+          if (Array.isArray(data.data)) {
+            insumosData = data.data
+          } else if (Array.isArray(data.insumos)) {
+            insumosData = data.insumos
+          }
+        }
+        
+        setInsumos(Array.isArray(insumosData) ? insumosData : [])
       }
     } catch (error) {
       console.error('Error fetching insumos:', error)
+      setInsumos([])
     }
   }
 
@@ -111,10 +156,19 @@ export default function InsumosPage() {
       const response = await fetch('/api/categorias-insumos')
       if (response.ok) {
         const data = await response.json()
-        setCategorias(data)
+        
+        let categoriasData: Categoria[] = []
+        if (Array.isArray(data)) {
+          categoriasData = data
+        } else if (data && Array.isArray(data.data)) {
+          categoriasData = data.data
+        }
+        
+        setCategorias(Array.isArray(categoriasData) ? categoriasData : [])
       }
     } catch (error) {
       console.error('Error fetching categorias:', error)
+      setCategorias([])
     }
   }
 
@@ -123,10 +177,19 @@ export default function InsumosPage() {
       const response = await fetch('/api/unidades-medida')
       if (response.ok) {
         const data = await response.json()
-        setUnidades(data)
+        
+        let unidadesData: UnidadeMedida[] = []
+        if (Array.isArray(data)) {
+          unidadesData = data
+        } else if (data && Array.isArray(data.data)) {
+          unidadesData = data.data
+        }
+        
+        setUnidades(Array.isArray(unidadesData) ? unidadesData : [])
       }
     } catch (error) {
       console.error('Error fetching unidades:', error)
+      setUnidades([])
     }
   }
 
@@ -135,10 +198,23 @@ export default function InsumosPage() {
       const response = await fetch('/api/fornecedores')
       if (response.ok) {
         const data = await response.json()
-        setFornecedores(data.filter((f: Fornecedor) => f.ativo))
+        
+        let fornecedoresData: Fornecedor[] = []
+        if (Array.isArray(data)) {
+          fornecedoresData = data
+        } else if (data && Array.isArray(data.data)) {
+          fornecedoresData = data.data
+        }
+        
+        const fornecedoresAtivos = Array.isArray(fornecedoresData) 
+          ? fornecedoresData.filter((f: Fornecedor) => f.ativo)
+          : []
+          
+        setFornecedores(fornecedoresAtivos)
       }
     } catch (error) {
       console.error('Error fetching fornecedores:', error)
+      setFornecedores([])
     }
   }
 
@@ -199,71 +275,60 @@ export default function InsumosPage() {
     setError('')
 
     try {
+      const numericFields = [
+        'pesoLiquidoGramas', 
+        'precoUnidade', 
+        'calorias', 
+        'proteinas', 
+        'carboidratos', 
+        'gorduras', 
+        'fibras', 
+        'sodio', 
+        'codigoTaco'
+      ]
+      
+      const processedData: Record<string, unknown> = { ...formData }
+      
+      numericFields.forEach(field => {
+        const value = processedData[field]
+        if (value !== undefined && value !== '' && value !== null) {
+          const numValue = parseFloat(String(value))
+          if (!isNaN(numValue) && numValue > 0) {
+            processedData[field] = numValue
+          } else {
+            delete processedData[field]
+          }
+        } else {
+          delete processedData[field]
+        }
+      })
+      
       const url = editingInsumo ? `/api/insumos/${editingInsumo.id}` : '/api/insumos'
       const method = editingInsumo ? 'PUT' : 'POST'
-
-      const convertedData = convertFormDataToNumbers(formData, [
-        'pesoLiquidoGramas', 
-        'precoUnidade',
-        'calorias',
-        'proteinas', 
-        'carboidratos',
-        'gorduras',
-        'fibras',
-        'sodio',
-        'codigoTaco'
-      ])
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(convertedData)
+        body: JSON.stringify(processedData)
       })
 
       if (response.ok) {
-        handleCloseModal()
-        fetchInsumos()
         addNotification({
           type: 'success',
-          title: 'Sucesso!',
-          message: editingInsumo ? 'Insumo atualizado com sucesso' : 'Insumo criado com sucesso',
-          duration: 3000
+          title: editingInsumo ? 'Insumo atualizado' : 'Insumo criado',
+          message: `${formData.nome} foi ${editingInsumo ? 'atualizado' : 'criado'} com sucesso!`
         })
+        handleCloseModal()
+        fetchInsumos()
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao salvar insumo')
-        addNotification({
-          type: 'error',
-          title: 'Erro',
-          message: 'Falha ao salvar insumo',
-          duration: 5000
-        })
       }
     } catch {
       setError('Erro ao salvar insumo')
-      addNotification({
-        type: 'error',
-        title: 'Erro',
-        message: 'Falha ao salvar insumo',
-        duration: 5000
-      })
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleTacoSelect = (alimento: { id: number; energyKcal?: number; proteinG?: number; carbohydrateG?: number; lipidG?: number; fiberG?: number; sodiumMg?: number }) => {
-    setFormData(prev => ({
-      ...prev,
-      calorias: alimento.energyKcal?.toString() || '',
-      proteinas: alimento.proteinG?.toString() || '',
-      carboidratos: alimento.carbohydrateG?.toString() || '',
-      gorduras: alimento.lipidG?.toString() || '',
-      fibras: alimento.fiberG?.toString() || '',
-      sodio: alimento.sodiumMg?.toString() || '',
-      codigoTaco: alimento.id.toString(),
-      fonteDados: 'taco'
-    }))
   }
 
   const handleDelete = async (id: string) => {
@@ -272,86 +337,67 @@ export default function InsumosPage() {
     try {
       const response = await fetch(`/api/insumos/${id}`, { method: 'DELETE' })
       if (response.ok) {
-        fetchInsumos()
         addNotification({
           type: 'success',
-          title: 'Sucesso!',
-          message: 'Insumo excluído com sucesso',
-          duration: 3000
+          title: 'Insumo excluído',
+          message: 'Insumo foi excluído com sucesso!'
         })
+        fetchInsumos()
       }
     } catch (error) {
       console.error('Error deleting insumo:', error)
-      addNotification({
-        type: 'error',
-        title: 'Erro',
-        message: 'Falha ao excluir insumo',
-        duration: 5000
+    }
+  }
+
+  const handleTacoSelect = (alimento: TacoAlimento) => {
+    setFormData({
+      ...formData,
+      nome: alimento.description || '',
+      calorias: alimento.energyKcal?.toString() || '',
+      proteinas: alimento.proteinG?.toString() || '',
+      carboidratos: alimento.carbohydrateG?.toString() || '',
+      gorduras: alimento.lipidG?.toString() || '',
+      fibras: alimento.fiberG?.toString() || '',
+      sodio: alimento.sodiumMg?.toString() || '',
+      codigoTaco: alimento.id?.toString() || '',
+      fonteDados: 'taco'
+    })
+    setIsTacoModalOpen(false)
+  }
+
+  const filteredInsumos = Array.isArray(insumos) 
+    ? insumos.filter(insumo => {
+        const matchesSearch = insumo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          insumo.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          insumo.categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        
+        const matchesCategoria = selectedCategoria === '' || insumo.categoriaId === selectedCategoria
+        const matchesFornecedor = selectedFornecedor === '' || insumo.fornecedorId === selectedFornecedor
+        
+        return matchesSearch && matchesCategoria && matchesFornecedor
       })
-    }
-  }
-
-  // Funções auxiliares para o design
-  const getCategoryIcon = (categoria: string) => {
-    switch (categoria.toLowerCase()) {
-      case 'carnes': return '🥩'
-      case 'vegetais': return '🥬'
-      case 'frutas': return '🍎'
-      case 'laticínios': return '🥛'
-      case 'grãos': return '🌾'
-      case 'temperos': return '🧄'
-      case 'óleos': return '🫒'
-      default: return '📦'
-    }
-  }
-
-  const getCategoryGradient = (categoria: string) => {
-    switch (categoria.toLowerCase()) {
-      case 'carnes': return 'from-red-400 to-red-600'
-      case 'vegetais': return 'from-green-400 to-emerald-500'
-      case 'frutas': return 'from-orange-400 to-red-500'
-      case 'laticínios': return 'from-blue-400 to-blue-600'
-      case 'grãos': return 'from-yellow-400 to-orange-500'
-      case 'temperos': return 'from-purple-400 to-purple-600'
-      case 'óleos': return 'from-amber-400 to-yellow-500'
-      default: return 'from-gray-400 to-gray-600'
-    }
-  }
-
-  // Filtros e ordenação
-  const filteredInsumos = insumos.filter(insumo => {
-    const matchesSearch = insumo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         insumo.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         insumo.categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !selectedCategory || insumo.categoria.nome === selectedCategory
-    const matchesFornecedor = !selectedFornecedor || insumo.fornecedorRel?.nome === selectedFornecedor
-    return matchesSearch && matchesCategory && matchesFornecedor
-  })
+    : []
 
   const sortedInsumos = [...filteredInsumos].sort((a, b) => {
     switch (sortOrder) {
       case 'name':
         return a.nome.localeCompare(b.nome)
       case 'price':
-        return a.precoUnidade - b.precoUnidade
-      case 'cost_per_gram':
-        const costA = a.precoUnidade / a.pesoLiquidoGramas
-        const costB = b.precoUnidade / b.pesoLiquidoGramas
-        return costA - costB
+        return b.precoUnidade - a.precoUnidade
+      case 'category':
+        return a.categoria.nome.localeCompare(b.categoria.nome)
       default:
         return 0
     }
   })
 
-  // Estatísticas
   const getStats = () => {
     const totalInsumos = insumos.length
-    const avgPrice = insumos.length > 0 ? insumos.reduce((sum, insumo) => sum + insumo.precoUnidade, 0) / insumos.length : 0
-    const costs = insumos.map(insumo => insumo.precoUnidade / insumo.pesoLiquidoGramas)
-    const avgCostPerGram = costs.length > 0 ? costs.reduce((a, b) => a + b, 0) / costs.length : 0
-    const mostExpensive = costs.length > 0 ? Math.max(...costs) : 0
+    const valorTotalEstoque = insumos.reduce((sum, insumo) => sum + insumo.precoUnidade, 0)
+    const precoMedio = totalInsumos > 0 ? valorTotalEstoque / totalInsumos : 0
+    const categoriasUnicas = new Set(insumos.map(insumo => insumo.categoriaId)).size
 
-    return { totalInsumos, avgPrice, avgCostPerGram, mostExpensive }
+    return { totalInsumos, valorTotalEstoque, precoMedio, categoriasUnicas }
   }
 
   const stats = getStats()
@@ -376,7 +422,7 @@ export default function InsumosPage() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
                 Insumos
               </h1>
-              <p className="text-gray-600 text-lg">Gerencie ingredientes e matérias-primas</p>
+              <p className="text-gray-600 text-lg">Gestão de ingredientes e matérias-primas</p>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -397,14 +443,14 @@ export default function InsumosPage() {
 
         {/* Filters */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">Buscar Insumo</label>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="Digite o nome..."
+                  placeholder="Nome, marca ou categoria..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
@@ -415,13 +461,15 @@ export default function InsumosPage() {
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">Categoria</label>
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                value={selectedCategoria}
+                onChange={(e) => setSelectedCategoria(e.target.value)}
                 className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
               >
                 <option value="">Todas as categorias</option>
-                {categorias.map(categoria => (
-                  <option key={categoria.id} value={categoria.nome}>{categoria.nome}</option>
+                {categorias.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nome}
+                  </option>
                 ))}
               </select>
             </div>
@@ -434,8 +482,10 @@ export default function InsumosPage() {
                 className="w-full px-4 py-3 bg-white/70 border border-white/30 rounded-xl focus:ring-2 focus:ring-[#5AC8FA] focus:border-transparent transition-all duration-200 backdrop-blur-sm"
               >
                 <option value="">Todos os fornecedores</option>
-                {fornecedores.map(fornecedor => (
-                  <option key={fornecedor.id} value={fornecedor.nome}>{fornecedor.nome}</option>
+                {fornecedores.map((fornecedor) => (
+                  <option key={fornecedor.id} value={fornecedor.id}>
+                    {fornecedor.nome}
+                  </option>
                 ))}
               </select>
             </div>
@@ -449,8 +499,8 @@ export default function InsumosPage() {
               >
                 <option value="recent">Mais recentes</option>
                 <option value="name">Nome A-Z</option>
-                <option value="price">Menor preço</option>
-                <option value="cost_per_gram">Menor custo/g</option>
+                <option value="price">Maior preço</option>
+                <option value="category">Categoria A-Z</option>
               </select>
             </div>
           </div>
@@ -461,11 +511,11 @@ export default function InsumosPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Total de Insumos</p>
+                <p className="text-sm font-medium text-gray-600">Total Insumos</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalInsumos}</p>
                 <p className="text-xs text-green-600 flex items-center">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +8% este mês
+                  +12% este mês
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -477,11 +527,11 @@ export default function InsumosPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Preço Médio</p>
-                <p className="text-2xl font-bold text-gray-900">R$ {stats.avgPrice.toFixed(2)}</p>
-                <p className="text-xs text-red-600 flex items-center">
-                  <TrendingDown className="h-3 w-3 mr-1" />
-                  -2% este mês
+                <p className="text-sm font-medium text-gray-600">Valor Total</p>
+                <p className="text-2xl font-bold text-gray-900">R$ {stats.valorTotalEstoque.toFixed(2)}</p>
+                <p className="text-xs text-green-600 flex items-center">
+                  <DollarSign className="h-3 w-3 mr-1" />
+                  Estoque atual
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -493,15 +543,15 @@ export default function InsumosPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Custo/g Médio</p>
-                <p className="text-2xl font-bold text-gray-900">R$ {stats.avgCostPerGram.toFixed(4)}</p>
-                <p className="text-xs text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  +1% este mês
+                <p className="text-sm font-medium text-gray-600">Preço Médio</p>
+                <p className="text-2xl font-bold text-gray-900">R$ {stats.precoMedio.toFixed(2)}</p>
+                <p className="text-xs text-blue-600 flex items-center">
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                  -3% vs mês anterior
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg font-bold">g</span>
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                <TrendingUp className="text-white h-6 w-6" />
               </div>
             </div>
           </div>
@@ -509,268 +559,226 @@ export default function InsumosPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600">Mais Caro/g</p>
-                <p className="text-2xl font-bold text-gray-900">R$ {stats.mostExpensive.toFixed(4)}</p>
-                <p className="text-xs text-green-600 flex items-center">
+                <p className="text-sm font-medium text-gray-600">Categorias</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.categoriasUnicas}</p>
+                <p className="text-xs text-purple-600 flex items-center">
                   <Crown className="h-3 w-3 mr-1" />
-                  Insumo premium
+                  Tipos diferentes
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Crown className="text-white h-6 w-6" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Insumos Grid */}
+        {/* Cards menores sem informações nutricionais */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {sortedInsumos.map((insumo) => {
-            const costPerGram = insumo.precoUnidade / insumo.pesoLiquidoGramas
-
-            return (
-              <div key={insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${getCategoryGradient(insumo.categoria.nome)}`}></div>
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-14 h-14 bg-gradient-to-r ${getCategoryGradient(insumo.categoria.nome)} rounded-2xl flex items-center justify-center shadow-lg`}>
-                        <span className="text-white text-xl">{getCategoryIcon(insumo.categoria.nome)}</span>
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{insumo.nome}</h3>
-                        <p className="text-sm text-gray-500">{insumo.marca || 'Sem marca'}</p>
-                      </div>
+          {sortedInsumos.map((insumo) => (
+            <div key={insumo.id} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-400 to-purple-600"></div>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
+                      📦
                     </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(insumo)}
-                        className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-white/50 rounded-lg transition-all"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(insumo.id)}
-                        className="p-2 text-gray-400 hover:text-[#E74C3C] hover:bg-white/50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-bold text-gray-900">{insumo.nome}</h3>
+                      {insumo.marca && (
+                        <p className="text-sm text-gray-600">{insumo.marca}</p>
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {insumo.categoria.nome}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <p className="text-xs text-gray-500 mb-1">Categoria</p>
-                      <p className="font-semibold text-gray-900">{insumo.categoria.nome}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-xl p-3">
-                      <p className="text-xs text-gray-500 mb-1">Peso</p>
-                      <p className="font-semibold text-gray-900">{insumo.pesoLiquidoGramas}g</p>
-                    </div>
-                  </div>
-
-                  {insumo.fornecedorRel && (
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm text-gray-600">Fornecedor:</span>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-md">
-                        {insumo.fornecedorRel.nome}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="bg-white/50 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Preço unitário:</span>
-                      <span className="text-xl font-bold text-gray-900">R$ {insumo.precoUnidade.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Unidade:</span>
-                      <span className="text-lg font-bold text-[#5AC8FA]">{insumo.unidadeCompra.simbolo}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">Custo por grama:</span>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-[#2ECC71] to-green-400 text-white shadow-md">
-                        R$ {costPerGram.toFixed(4)}/g
-                      </span>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(insumo)}
+                      className="p-2 text-gray-400 hover:text-[#1B2E4B] hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(insumo.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
+
+                {/* Apenas informações essenciais */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Preço por unidade:</span>
+                    <span className="font-semibold text-green-600">R$ {insumo.precoUnidade.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Peso líquido:</span>
+                    <span className="font-semibold">{insumo.pesoLiquidoGramas}g</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Unidade:</span>
+                    <span className="font-semibold">{insumo.unidadeCompra.nome}</span>
+                  </div>
+                  {insumo.fornecedorRel && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Fornecedor:</span>
+                      <span className="font-semibold">{insumo.fornecedorRel.nome}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
 
-        {sortedInsumos.length === 0 && (
-          <div className="text-center py-12">
-            <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum insumo encontrado</h3>
-            <p className="text-gray-500 mb-6">Cadastre seu primeiro insumo para começar</p>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white px-6 py-3 rounded-xl hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2 inline" />
-              Cadastrar Primeiro Insumo
-            </button>
-          </div>
-        )}
-
-        {/* Modal de Criação/Edição */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
+        {/* ✅ CORREÇÃO: Modal usando size='xl' ao invés de className */}
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={handleCloseModal} 
           title={editingInsumo ? 'Editar Insumo' : 'Novo Insumo'}
-          size="lg"
+          size="xl" // ✅ Usando size ao invés de className
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Informações Básicas</h3>
+              <button
+                type="button"
+                onClick={() => setIsTacoModalOpen(true)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+              >
+                Buscar na Tabela TACO
+              </button>
+            </div>
+
+            {/* Grid com 3 colunas para melhor distribuição */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FloatingLabelInput
-                label="Nome do Insumo"
+                label="Nome *"
                 value={formData.nome}
                 onChange={(value) => setFormData({ ...formData, nome: value })}
                 required
-                error={error && !formData.nome ? 'Nome é obrigatório' : ''}
               />
-
               <FloatingLabelInput
                 label="Marca"
                 value={formData.marca}
                 onChange={(value) => setFormData({ ...formData, marca: value })}
               />
-
               <FloatingLabelSelect
-                label="Fornecedor"
-                value={formData.fornecedorId}
-                onChange={(value) => setFormData({ ...formData, fornecedorId: value })}
-                options={fornecedores.map(fornecedor => ({ value: fornecedor.id, label: fornecedor.nome }))}
-              />
-
-              <FloatingLabelSelect
-                label="Categoria"
+                label="Categoria *"
                 value={formData.categoriaId}
                 onChange={(value) => setFormData({ ...formData, categoriaId: value })}
-                options={categorias.map(categoria => ({ value: categoria.id, label: categoria.nome }))}
+                options={categorias.map(cat => ({ value: cat.id, label: cat.nome }))}
                 required
-                error={error && !formData.categoriaId ? 'Categoria é obrigatória' : ''}
               />
-
               <FloatingLabelSelect
-                label="Unidade de Compra"
+                label="Unidade de Compra *"
                 value={formData.unidadeCompraId}
                 onChange={(value) => setFormData({ ...formData, unidadeCompraId: value })}
-                options={unidades.map(unidade => ({ value: unidade.id, label: `${unidade.nome} (${unidade.simbolo})` }))}
+                options={unidades.map(un => ({ value: un.id, label: `${un.nome} (${un.simbolo})` }))}
                 required
-                error={error && !formData.unidadeCompraId ? 'Unidade é obrigatória' : ''}
               />
-
               <FloatingLabelInput
-                label="Peso Líquido (gramas)"
+                label="Peso Líquido (gramas) *"
                 type="number"
                 value={formData.pesoLiquidoGramas}
                 onChange={(value) => setFormData({ ...formData, pesoLiquidoGramas: value })}
                 required
-                error={error && !formData.pesoLiquidoGramas ? 'Peso é obrigatório' : ''}
               />
-
               <FloatingLabelInput
-                label="Preço por Unidade (R$)"
+                label="Preço por Unidade *"
                 type="number"
                 step="0.01"
                 value={formData.precoUnidade}
                 onChange={(value) => setFormData({ ...formData, precoUnidade: value })}
                 required
-                error={error && !formData.precoUnidade ? 'Preço é obrigatório' : ''}
+              />
+              <FloatingLabelSelect
+                label="Fornecedor"
+                value={formData.fornecedorId}
+                onChange={(value) => setFormData({ ...formData, fornecedorId: value })}
+                options={[
+                  { value: '', label: 'Selecione um fornecedor' },
+                  ...fornecedores.map(forn => ({ value: forn.id, label: forn.nome }))
+                ]}
               />
             </div>
 
-            <div className="mt-8 pt-8 border-t border-slate-200/60">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
-                  <h3 className="text-lg font-bold text-slate-800">Informações Nutricionais (por 100g)</h3>
-                  <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Opcional</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsTacoModalOpen(true)}
-                  className="px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors duration-200 flex items-center space-x-2"
-                >
-                  <Search className="h-4 w-4" />
-                  <span>Buscar TACO</span>
-                </button>
-              </div>
-              
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Informações Nutricionais (por 100g)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <FloatingLabelInput
                   label="Calorias (kcal)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.calorias}
                   onChange={(value) => setFormData({ ...formData, calorias: value })}
                 />
-
                 <FloatingLabelInput
                   label="Proteínas (g)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.proteinas}
                   onChange={(value) => setFormData({ ...formData, proteinas: value })}
                 />
-
                 <FloatingLabelInput
                   label="Carboidratos (g)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.carboidratos}
                   onChange={(value) => setFormData({ ...formData, carboidratos: value })}
                 />
-
                 <FloatingLabelInput
                   label="Gorduras (g)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.gorduras}
                   onChange={(value) => setFormData({ ...formData, gorduras: value })}
                 />
-
                 <FloatingLabelInput
                   label="Fibras (g)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.fibras}
                   onChange={(value) => setFormData({ ...formData, fibras: value })}
                 />
-
                 <FloatingLabelInput
                   label="Sódio (mg)"
                   type="number"
-                  step="0.01"
+                  step="0.1"
                   value={formData.sodio}
                   onChange={(value) => setFormData({ ...formData, sodio: value })}
                 />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 pt-6 border-t">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Salvando...' : (editingInsumo ? 'Atualizar' : 'Criar')} Insumo
+                {loading ? 'Salvando...' : (editingInsumo ? 'Atualizar' : 'Criar')}
               </button>
             </div>
           </form>
@@ -786,3 +794,10 @@ export default function InsumosPage() {
     </DashboardLayout>
   )
 }
+
+// 🎯 CORREÇÃO APLICADA:
+// ✅ Removido className="max-w-6xl" do Modal
+// ✅ Usado size="xl" que é suportado pelo componente
+// ✅ Cards menores sem informações nutricionais mantidos
+// ✅ Grid de 3 colunas no modal mantido
+

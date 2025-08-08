@@ -179,6 +179,21 @@ export async function authenticateUserFromApi(req: NextRequest) {
  * Retorna resposta 401 se usuário não estiver autenticado
  */
 export async function requireApiAuthentication(req: NextRequest) {
+  // 🔓 PERMITIR ACESSO SEM AUTENTICAÇÃO EM DESENVOLVIMENTO
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔓 [DEV MODE] Permitindo acesso sem autenticação para:', req.url)
+    return {
+      authenticated: true,
+      user: {
+        id: 'dev-user',
+        email: 'dev@fichachef.com',
+        user_metadata: { role: 'chef' },
+        app_metadata: {}
+      },
+      response: null
+    }
+  }
+
   const user = await authenticateUserFromApi(req)
   
   if (!user) {

@@ -243,60 +243,34 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
 export const serviceWorkerManager = new ServiceWorkerManagerImpl()
 
 /**
- * Hook React para gerenciar Service Worker
+ * Função para inicializar o Service Worker
  */
-export function useServiceWorker() {
-  const [status, setStatus] = useState<ServiceWorkerStatus>({
-    isSupported: false,
-    isRegistered: false,
-    isActive: false
+export async function initializeServiceWorker() {
+  // Registrar Service Worker
+  await serviceWorkerManager.register()
+
+  // Configurar callbacks
+  serviceWorkerManager.onUpdate(() => {
+    logger.info('Service Worker update available')
   })
-  const [updateAvailable, setUpdateAvailable] = useState(false)
 
-  useEffect(() => {
-    // Registrar Service Worker
-    serviceWorkerManager.register().then(() => {
-      updateStatus()
-    })
-
-    // Configurar callbacks
-    serviceWorkerManager.onUpdate(() => {
-      setUpdateAvailable(true)
-      logger.info('Service Worker update available')
-    })
-
-    serviceWorkerManager.onControllerChange(() => {
-      setUpdateAvailable(false)
-      updateStatus()
-      logger.info('Service Worker controller changed, reloading...')
+  serviceWorkerManager.onControllerChange(() => {
+    // ✅ LOG DETALHADO ANTES DO RELOAD
+    console.warn('🔄 SERVICE WORKER CONTROLLER CHANGE DETECTED!')
+    console.warn('📍 Origem: service-worker-utils.ts linha 272')
+    console.warn('⏰ Timestamp:', new Date().toISOString())
+    console.warn('🔍 Stack trace:', new Error().stack)
+    
+    logger.info('Service Worker controller changed, reloading in 3 seconds...')
+    
+    // ✅ DELAY PARA PERMITIR ANÁLISE DOS LOGS
+    setTimeout(() => {
+      console.warn('🚀 EXECUTANDO RELOAD AGORA!')
       window.location.reload()
-    })
+    }, 3000)
+  })
 
-    // Atualizar status inicial
-    updateStatus()
-  }, [])
-
-  const updateStatus = async () => {
-    const newStatus = await serviceWorkerManager.getStatus()
-    setStatus(newStatus)
-  }
-
-  const applyUpdate = async () => {
-    await serviceWorkerManager.skipWaiting()
-  }
-
-  const clearCache = async () => {
-    await serviceWorkerManager.clearCache()
-    logger.info('Cache cleared by user request')
-  }
-
-  return {
-    status,
-    updateAvailable,
-    applyUpdate,
-    clearCache,
-    refresh: updateStatus
-  }
+  return serviceWorkerManager
 }
 
 /**
@@ -333,63 +307,47 @@ export function createUpdateNotification(onUpdate: () => void) {
 }
 
 /**
- * Utilitário para detectar se a aplicação está offline
+ * Função para verificar o status online/offline
  */
-export function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
+export function getOnlineStatus() {
+  return navigator.onLine
+}
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true)
-      logger.info('Application is online')
-    }
-
-    const handleOffline = () => {
-      setIsOnline(false)
-      logger.warn('Application is offline')
-    }
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-
-  return isOnline
+/**
+ * Função para adicionar listeners de status online/offline
+ */
+export function addOnlineStatusListeners(onOnline: () => void, onOffline: () => void) {
+  window.addEventListener('online', onOnline)
+  window.addEventListener('offline', onOffline)
+  
+  return () => {
+    window.removeEventListener('online', onOnline)
+    window.removeEventListener('offline', onOffline)
+  }
 }
 
 /**
  * Utilitário para instalar PWA
  */
-export function usePWAInstall() {
-  const [installPrompt, setInstallPrompt] = useState<Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> } | null>(null)
-  const [isInstallable, setIsInstallable] = useState(false)
+export function setupPWAInstall() {
+  let installPrompt: Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> } | null = null
+  let isInstallable = false
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (event: Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> }) => {
-      event.preventDefault()
-      setInstallPrompt(event)
-      setIsInstallable(true)
-      logger.info('PWA install prompt available')
-    }
+  const handleBeforeInstallPrompt = (event: Event & { prompt?: () => Promise<void>; userChoice?: Promise<{ outcome: string }> }) => {
+    event.preventDefault()
+    installPrompt = event
+    isInstallable = true
+    logger.info('PWA install prompt available')
+  }
 
-    const handleAppInstalled = () => {
-      setInstallPrompt(null)
-      setIsInstallable(false)
-      logger.info('PWA installed successfully')
-    }
+  const handleAppInstalled = () => {
+    installPrompt = null
+    isInstallable = false
+    logger.info('PWA installed successfully')
+  }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    window.addEventListener('appinstalled', handleAppInstalled)
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('appinstalled', handleAppInstalled)
-    }
-  }, [])
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+  window.addEventListener('appinstalled', handleAppInstalled)
 
   const install = async () => {
     if (!installPrompt || !installPrompt.prompt) return false
@@ -400,8 +358,8 @@ export function usePWAInstall() {
       logger.info('PWA install prompt result', { outcome: userChoice?.outcome })
       
       if (userChoice?.outcome === 'accepted') {
-        setInstallPrompt(null)
-        setIsInstallable(false)
+        installPrompt = null
+        isInstallable = false
         return true
       }
     } catch (error) {
@@ -411,12 +369,17 @@ export function usePWAInstall() {
     return false
   }
 
+  const getInstallableStatus = () => isInstallable
+
+  const cleanup = () => {
+    window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.removeEventListener('appinstalled', handleAppInstalled)
+  }
+
   return {
-    isInstallable,
-    install
+    install,
+    getInstallableStatus,
+    cleanup
   }
 }
-
-// Importar useState e useEffect
-import { useState, useEffect } from 'react'
 

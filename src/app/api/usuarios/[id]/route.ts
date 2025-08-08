@@ -28,6 +28,14 @@ export const PUT = withErrorHandler(async function PUT(
   const body = await request.json()
   const validatedData = updateUserSchema.parse(body)
 
+  // Verificar existência
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.perfilUsuario.findUnique({ where: { userId: id } })
+  })
+  if (!exists) {
+    return createErrorResponse('Usuário não encontrado', 404)
+  }
+
   const updatedUser = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.perfilUsuario.update({
@@ -61,6 +69,14 @@ export const DELETE = withErrorHandler(async function DELETE(
                     supabaseServiceKey.includes('placeholder')
 
   try {
+    // Verificar existência
+    const exists = await withDatabaseRetry(async () => {
+      return await prisma.perfilUsuario.findUnique({ where: { userId: id } })
+    })
+    if (!exists) {
+      return createErrorResponse('Usuário não encontrado', 404)
+    }
+
     await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
         return await prisma.perfilUsuario.delete({

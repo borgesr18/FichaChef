@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Debug Service Worker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Teste Debug Service Worker - FichaChef</h1>
+        
+        <div id="status" class="status">Verificando status...</div>
+        
+        <div>
+            <button onclick="triggerServiceWorkerChange()">🔄 Simular Mudança SW</button>
+            <button onclick="clearLogs()">🗑️ Limpar Logs</button>
+            <button onclick="checkOnlineStatus()">🌐 Status Online</button>
+        </div>
+        
+        <h3>📋 Logs do Sistema:</h3>
+        <div id="logs" class="log">Aguardando eventos...
+</div>
+        
+        <h3>ℹ️ Informações:</h3>
+        <p>Este teste simula as condições que causam o reload automático no FichaChef.</p>
+        <p>Quando você clicar em "Simular Mudança SW", verá os logs detalhados antes do reload ser executado.</p>
+        <p><strong>Modificações implementadas:</strong></p>
+        <ul>
+            <li>✅ Logs detalhados com timestamp e stack trace</li>
+            <li>✅ Delay de 3 segundos antes do reload</li>
+            <li>✅ Remoção de hooks React desnecessários</li>
+        </ul>
+    </div>
+
+    <script>
+        // Simular o logger do sistema
+        const logger = {
+            info: (msg) => addLog('ℹ️ INFO: ' + msg),
+            warn: (msg) => addLog('⚠️ WARN: ' + msg),
+            error: (msg) => addLog('❌ ERROR: ' + msg)
+        };
+
+        function addLog(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.textContent += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = 'Logs limpos...\n';
+        }
+
+        function checkOnlineStatus() {
+            const isOnline = navigator.onLine;
+            const status = document.getElementById('status');
+            if (isOnline) {
+                status.className = 'status online';
+                status.textContent = '🟢 Sistema Online';
+                addLog('Sistema está online');
+            } else {
+                status.className = 'status offline';
+                status.textContent = '🔴 Sistema Offline';
+                addLog('Sistema está offline');
+            }
+        }
+
+        function triggerServiceWorkerChange() {
+            addLog('🔄 SIMULANDO MUDANÇA DO SERVICE WORKER...');
+            
+            // Simular o comportamento do service-worker-utils.ts modificado
+            console.warn('🔄 SERVICE WORKER CONTROLLER CHANGE DETECTED!');
+            console.warn('📍 Origem: service-worker-utils.ts linha 272');
+            console.warn('⏰ Timestamp:', new Date().toISOString());
+            console.warn('🔍 Stack trace:', new Error().stack);
+            
+            addLog('🔄 SERVICE WORKER CONTROLLER CHANGE DETECTED!');
+            addLog('📍 Origem: service-worker-utils.ts linha 272');
+            addLog('⏰ Timestamp: ' + new Date().toISOString());
+            addLog('🔍 Stack trace disponível no console do navegador');
+            
+            logger.info('Service Worker controller changed, reloading in 3 seconds...');
+            
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                addLog(`⏱️ Reload em ${countdown} segundos...`);
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    console.warn('🚀 EXECUTANDO RELOAD AGORA!');
+                    addLog('🚀 EXECUTANDO RELOAD AGORA!');
+                    
+                    // Em um ambiente real, seria window.location.reload()
+                    // Aqui apenas simulamos
+                    addLog('✅ RELOAD SIMULADO - Em produção a página seria recarregada');
+                }
+            }, 1000);
+        }
+
+        // Verificar status inicial
+        checkOnlineStatus();
+        
+        // Monitorar mudanças de status online/offline
+        window.addEventListener('online', () => {
+            addLog('🟢 Conexão restaurada');
+            checkOnlineStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+            addLog('🔴 Conexão perdida');
+            checkOnlineStatus();
+        });
+        
+        addLog('🚀 Sistema de debug inicializado');
+        addLog('📱 Teste as funcionalidades usando os botões acima');
+    </script>
+</body>
+</html>

@@ -31,13 +31,17 @@ export const PUT = withErrorHandler(async function PUT(request: NextRequest, { p
     }, { status: 400 })
   }
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoEstoque.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
+  }
+
   const movimentacao = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoEstoque.update({
-        where: { 
-          id,
-          userId: user.id
-        },
+        where: { id },
         data: {
           insumoId,
           tipo,
@@ -69,13 +73,17 @@ export const DELETE = withErrorHandler(async function DELETE(request: NextReques
 
   const requestMeta = extractRequestMetadata(request)
 
+  const exists = await withDatabaseRetry(async () => {
+    return await prisma.movimentacaoEstoque.findFirst({ where: { id, userId: user.id } })
+  })
+  if (!exists) {
+    return NextResponse.json({ error: 'Movimentação não encontrada' }, { status: 404 })
+  }
+
   await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.movimentacaoEstoque.delete({
-        where: { 
-          id,
-          userId: user.id
-        }
+        where: { id }
       })
     })
   })
