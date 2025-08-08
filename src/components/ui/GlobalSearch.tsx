@@ -36,7 +36,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       const [insumos, fichas, produtos, fornecedores, menus] = await Promise.all([
         fetch(`/api/insumos?search=${encodeURIComponent(searchQuery)}`).then(r => r.ok ? r.json() : []),
         fetch(`/api/fichas-tecnicas?search=${encodeURIComponent(searchQuery)}`).then(r => r.ok ? r.json() : []),
-        fetch(`/api/produtos?search=${encodeURIComponent(searchQuery)}`).then(r => r.ok ? r.json() : []),
+        fetch(`/api/produtos?search=${encodeURIComponent(searchQuery)}`, { credentials: 'include' }).then(r => r.ok ? r.json() : []),
         fetch(`/api/fornecedores?search=${encodeURIComponent(searchQuery)}`).then(r => r.ok ? r.json() : []),
         fetch(`/api/menus?search=${encodeURIComponent(searchQuery)}`).then(r => r.ok ? r.json() : [])
       ])
