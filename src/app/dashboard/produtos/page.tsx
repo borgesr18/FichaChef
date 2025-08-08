@@ -118,7 +118,7 @@ export default function ProdutosPage() {
   }
 
   const addProdutoFicha = () => {
-    setProdutoFichas([...produtoFichas, { fichaTecnicaId: '', quantidadeGramas: 0 }])
+    setProdutoFichas([...produtoFichas, { fichaTecnicaId: '', quantidadeGramas: '' }])
   }
 
   const removeProdutoFicha = (index: number) => {
@@ -127,11 +127,10 @@ export default function ProdutosPage() {
 
   const updateProdutoFicha = (index: number, field: keyof ProdutoFicha, value: string | number) => {
     const updated = [...produtoFichas]
-    updated[index] = { 
-      ...updated[index], 
+    const current = updated[index] || { fichaTecnicaId: '', quantidadeGramas: '' }
+    updated[index] = {
+      ...current,
       [field]: value,
-      fichaTecnicaId: updated[index]?.fichaTecnicaId || '',
-      quantidadeGramas: updated[index]?.quantidadeGramas || ''
     }
     setProdutoFichas(updated)
   }
@@ -173,7 +172,7 @@ export default function ProdutosPage() {
       const dataToSend = {
         ...convertedFormData,
         fichas: produtoFichas
-          .filter(f => f.fichaTecnicaId && f.quantidadeGramas && (typeof f.quantidadeGramas === 'string' ? parseFloat(f.quantidadeGramas) > 0 : f.quantidadeGramas > 0))
+          .filter(f => f.fichaTecnicaId && (typeof f.quantidadeGramas === 'string' ? parseFloat(f.quantidadeGramas) > 0 : (f.quantidadeGramas || 0) > 0))
           .map(f => ({
             fichaTecnicaId: f.fichaTecnicaId,
             quantidadeGramas: typeof f.quantidadeGramas === 'string' ? parseFloat(f.quantidadeGramas) || 0 : f.quantidadeGramas
@@ -607,8 +606,8 @@ export default function ProdutosPage() {
                       label="Quantidade (g)"
                       type="number"
                       step="0.01"
-                      value={produtoFicha.quantidadeGramas.toString()}
-                      onChange={(value) => updateProdutoFicha(index, 'quantidadeGramas', parseFloat(value) || 0)}
+                      value={typeof produtoFicha.quantidadeGramas === 'number' ? String(produtoFicha.quantidadeGramas) : (produtoFicha.quantidadeGramas || '')}
+                      onChange={(value) => updateProdutoFicha(index, 'quantidadeGramas', value)}
                       required
                     />
                   </div>
