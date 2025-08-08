@@ -61,13 +61,11 @@ export async function authenticateUserFromApi(req: NextRequest) {
         supabaseUrl === '' || supabaseKey === '' ||
         supabaseUrl.includes('placeholder') || 
         supabaseKey.includes('placeholder')) {
-      
       // Em produção, não usar modo desenvolvimento
       if (process.env.NODE_ENV === 'production') {
         logger.error('Supabase não configurado em produção', new Error('api_auth_prod_no_config'))
         return null
       }
-      
       logger.info('api_auth_dev_mode', { message: 'Supabase não configurado - usando modo desenvolvimento' })
       return {
         id: 'dev-user-id',
@@ -197,27 +195,7 @@ export async function requireApiAuthentication(req: NextRequest) {
   const user = await authenticateUserFromApi(req)
   
   if (!user) {
-    // Em produção, se a autenticação falhar, usar usuário temporário com logs
-    if (process.env.NODE_ENV === 'production') {
-      logger.warn('api_auth_fallback_prod', { 
-        message: 'Autenticação falhou em produção, usando fallback temporário',
-        url: req.url,
-        method: req.method
-      })
-      
-      // Retornar usuário temporário para manter funcionalidade
-      return {
-        authenticated: true,
-        user: {
-          id: 'temp-prod-user',
-          email: 'temp@fichachef.com',
-          user_metadata: { role: 'chef' },
-          app_metadata: {}
-        },
-        response: null
-      }
-    }
-    
+    // Em produção, retornar 401 sem fallback de usuário temporário para evitar inconsistências
     return {
       authenticated: false,
       user: null,
