@@ -64,7 +64,7 @@ export default function ProdutosPage() {
 
   const fetchProdutos = async () => {
     try {
-      const response = await fetch('/api/produtos')
+      const response = await fetch('/api/produtos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setProdutos(data)
@@ -76,7 +76,7 @@ export default function ProdutosPage() {
 
   const fetchFichasTecnicas = async () => {
     try {
-      const response = await fetch('/api/fichas-tecnicas')
+      const response = await fetch('/api/fichas-tecnicas', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setFichasTecnicas(data)
@@ -182,7 +182,8 @@ export default function ProdutosPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
+        body: JSON.stringify(dataToSend),
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -203,7 +204,7 @@ export default function ProdutosPage() {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return
 
     try {
-      const response = await fetch(`/api/produtos/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/produtos/${id}`, { method: 'DELETE', credentials: 'include' })
       if (response.ok) {
         fetchProdutos()
       }
@@ -601,7 +602,7 @@ export default function ProdutosPage() {
                       required
                     />
                   </div>
-                  <div className="w-32">
+                  <div className="w-40 md:w-48">
                     <FloatingLabelInput
                       label="Quantidade (g)"
                       type="number"
