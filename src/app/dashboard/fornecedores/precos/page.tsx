@@ -59,7 +59,7 @@ export default function FornecedorPrecosPage() {
 
   const fetchPrecos = async () => {
     try {
-      const response = await fetch('/api/fornecedor-precos')
+      const response = await fetch('/api/fornecedor-precos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setPrecos(data)
@@ -71,7 +71,7 @@ export default function FornecedorPrecosPage() {
 
   const fetchFornecedores = async () => {
     try {
-      const response = await fetch('/api/fornecedores')
+      const response = await fetch('/api/fornecedores', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setFornecedores(data.filter((f: Fornecedor) => f.ativo))
@@ -83,7 +83,7 @@ export default function FornecedorPrecosPage() {
 
   const fetchInsumos = async () => {
     try {
-      const response = await fetch('/api/insumos')
+      const response = await fetch('/api/insumos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setInsumos(data)
@@ -122,7 +122,8 @@ export default function FornecedorPrecosPage() {
         body: JSON.stringify({
           ...formData,
           preco: parseFloat(formData.preco)
-        })
+        }),
+        credentials: 'include'
       })
 
       if (response.ok) {

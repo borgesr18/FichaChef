@@ -61,7 +61,7 @@ export default function FornecedoresPage() {
   // ✅ CORREÇÃO 2: Função fetchFornecedores com tratamento robusto
   const fetchFornecedores = async () => {
     try {
-      const response = await fetch('/api/fornecedores')
+      const response = await fetch('/api/fornecedores', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         
@@ -145,7 +145,8 @@ export default function FornecedoresPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -166,7 +167,7 @@ export default function FornecedoresPage() {
     if (!confirm('Tem certeza que deseja excluir este fornecedor?')) return
 
     try {
-      const response = await fetch(`/api/fornecedores/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/fornecedores/${id}`, { method: 'DELETE', credentials: 'include' })
       if (response.ok) {
         fetchFornecedores()
       }
