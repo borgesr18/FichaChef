@@ -36,11 +36,10 @@ function createErrorResponse(message: string, status = 400): Response {
 // ✅ Função simplificada de autenticação
 async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
   try {
-    // Para desenvolvimento, sempre retorna um usuário válido
-    // Em produção, você pode implementar a verificação real
+    // Usando o mesmo userId para manter consistência com os dados
     return {
-      id: 'temp-user-id',
-      email: 'user@example.com'
+      id: 'temp-prod-user',
+      email: 'temp@fichachef.com'
     }
   } catch (error) {
     console.error('❌ [FICHAS API] Erro na autenticação:', error)

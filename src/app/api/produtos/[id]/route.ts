@@ -12,9 +12,7 @@ import { produtoSchema } from '@/lib/validations'
 
 async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      return { id: 'dev-user', email: 'dev@fichachef.com' }
-    }
+    // Sempre usar temp-prod-user para manter consistência com os dados existentes
     return { id: 'temp-prod-user', email: 'temp@fichachef.com' }
   } catch {
     return null

@@ -72,36 +72,36 @@ model Insumo {
   gorduras             Float?                @map("gorduras_por_100g")
   fibras               Float?                @map("fibras_por_100g")
   sodio                Float?                @map("sodio_por_100g")
-  codigoTaco           Int?                  @map("codigo_taco")
-  fonteDados           String                @default("manual") @map("fonte_dados")
   userId               String                @map("user_id")
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
+  codigoTaco           Int?                  @map("codigo_taco")
+  fonteDados           String                @default("manual") @map("fonte_dados")
+  fornecedorPrecos     FornecedorPreco[]
   ingredientes         Ingrediente[]
   categoria            CategoriaInsumo       @relation(fields: [categoriaId], references: [id])
-  unidadeCompra        UnidadeMedida         @relation(fields: [unidadeCompraId], references: [id])
-  fornecedorRel        Fornecedor?           @relation(fields: [fornecedorId], references: [id])
-  movimentacoesEstoque MovimentacaoEstoque[]
-  fornecedorPrecos     FornecedorPreco[]
   tacoAlimento         TacoAlimento?         @relation(fields: [codigoTaco], references: [id])
+  fornecedorRel        Fornecedor?           @relation(fields: [fornecedorId], references: [id])
+  unidadeCompra        UnidadeMedida         @relation(fields: [unidadeCompraId], references: [id])
+  movimentacoesEstoque MovimentacaoEstoque[]
 
   @@map("insumos")
 }
 
 model FichaTecnica {
-  id               String           @id @default(cuid())
+  id               String                @id @default(cuid())
   nome             String
-  categoriaId      String           @map("categoria_id")
-  pesoFinalGramas  Float            @map("peso_final_gramas")
-  numeroPorcoes    Int              @map("numero_porcoes")
-  tempoPreparo     Int?             @map("tempo_preparo")
-  temperaturaForno Int?             @map("temperatura_forno")
-  modoPreparo      String           @map("modo_preparo")
-  nivelDificuldade String           @map("nivel_dificuldade")
-  userId           String           @map("user_id")
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
-  categoria        CategoriaReceita @relation(fields: [categoriaId], references: [id])
+  categoriaId      String                @map("categoria_id")
+  pesoFinalGramas  Float                 @map("peso_final_gramas")
+  numeroPorcoes    Int                   @map("numero_porcoes")
+  tempoPreparo     Int?                  @map("tempo_preparo")
+  temperaturaForno Int?                  @map("temperatura_forno")
+  modoPreparo      String                @map("modo_preparo")
+  nivelDificuldade String                @map("nivel_dificuldade")
+  userId           String                @map("user_id")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  categoria        CategoriaReceita      @relation(fields: [categoriaId], references: [id])
   ingredientes     Ingrediente[]
   producoes        Producao[]
   produtoFichas    ProdutoFichaTecnica[]
@@ -151,17 +151,17 @@ model MovimentacaoEstoque {
 }
 
 model Produto {
-  id          String                @id @default(cuid())
-  nome        String
-  precoVenda  Float                 @map("preco_venda")
-  margemLucro Float                 @map("margem_lucro")
-  userId      String                @map("user_id")
-  createdAt   DateTime              @default(now()) @map("created_at")
-  updatedAt   DateTime              @updatedAt @map("updated_at")
-  produtoFichas ProdutoFichaTecnica[]
+  id                   String                @id @default(cuid())
+  nome                 String
+  precoVenda           Float                 @map("preco_venda")
+  margemLucro          Float                 @map("margem_lucro")
+  userId               String                @map("user_id")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  menuItens            MenuItem[]
   movimentacoesProduto MovimentacaoProduto[]
-  producoesProduto ProducaoProduto[]
-  menuItens        MenuItem[]
+  producoesProduto     ProducaoProduto[]
+  produtoFichas        ProdutoFichaTecnica[]
 
   @@map("produtos")
 }
@@ -171,8 +171,8 @@ model ProdutoFichaTecnica {
   produtoId        String       @map("produto_id")
   fichaTecnicaId   String       @map("ficha_tecnica_id")
   quantidadeGramas Float        @map("quantidade_gramas")
-  produto          Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
   fichaTecnica     FichaTecnica @relation(fields: [fichaTecnicaId], references: [id])
+  produto          Produto      @relation(fields: [produtoId], references: [id], onDelete: Cascade)
 
   @@map("produto_ficha_tecnica")
 }
@@ -193,39 +193,39 @@ model MovimentacaoProduto {
 }
 
 model ProducaoProduto {
-  id                  String    @id @default(cuid())
-  produtoId           String    @map("produto_id")
-  dataProducao        DateTime  @map("data_producao")
-  dataValidade        DateTime  @map("data_validade")
-  quantidadeProduzida Float     @map("quantidade_produzida")
+  id                  String   @id @default(cuid())
+  produtoId           String   @map("produto_id")
+  dataProducao        DateTime @map("data_producao")
+  dataValidade        DateTime @map("data_validade")
+  quantidadeProduzida Float    @map("quantidade_produzida")
   lote                String
-  userId              String    @map("user_id")
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
-  produto             Produto   @relation(fields: [produtoId], references: [id])
+  userId              String   @map("user_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  produto             Produto  @relation(fields: [produtoId], references: [id])
 
   @@map("producoes_produto")
 }
 
 model Fornecedor {
-  id            String   @id @default(cuid())
-  nome          String
-  razaoSocial   String?  @map("razao_social")
-  cnpj          String?
-  telefone      String?
-  email         String?
-  endereco      String?
-  cidade        String?
-  estado        String?
-  cep           String?
-  contato       String?
-  observacoes   String?
-  ativo         Boolean  @default(true)
-  userId        String   @map("user_id")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  insumos       Insumo[]
-  precos        FornecedorPreco[]
+  id          String            @id @default(cuid())
+  nome        String
+  razaoSocial String?           @map("razao_social")
+  cnpj        String?
+  telefone    String?
+  email       String?
+  endereco    String?
+  cidade      String?
+  estado      String?
+  cep         String?
+  contato     String?
+  observacoes String?
+  ativo       Boolean           @default(true)
+  userId      String            @map("user_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  precos      FornecedorPreco[]
+  insumos     Insumo[]
 
   @@map("fornecedores")
 }
@@ -247,34 +247,34 @@ model FornecedorPreco {
 }
 
 model ConfiguracaoAlerta {
-  id                    String   @id @default(cuid())
-  tipo                  String   // 'estoque_baixo', 'validade_proxima', 'custo_alto'
-  itemTipo              String   @map("item_tipo") // 'insumo' ou 'produto'
-  itemId                String   @map("item_id")
-  ativo                 Boolean  @default(true)
-  limiteEstoqueBaixo    Float?   @map("limite_estoque_baixo")
-  diasAntesVencimento   Int?     @map("dias_antes_vencimento")
-  margemCustoMaxima     Float?   @map("margem_custo_maxima")
-  userId                String   @map("user_id")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(cuid())
+  tipo                String
+  itemTipo            String   @map("item_tipo")
+  itemId              String   @map("item_id")
+  ativo               Boolean  @default(true)
+  limiteEstoqueBaixo  Float?   @map("limite_estoque_baixo")
+  diasAntesVencimento Int?     @map("dias_antes_vencimento")
+  margemCustoMaxima   Float?   @map("margem_custo_maxima")
+  userId              String   @map("user_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@map("configuracoes_alerta")
 }
 
 model Notificacao {
   id          String    @id @default(cuid())
-  tipo        String    // 'estoque_baixo', 'validade_proxima', 'custo_alto'
+  tipo        String
   titulo      String
   mensagem    String
-  itemTipo    String    @map("item_tipo") // 'insumo' ou 'produto'
+  itemTipo    String    @map("item_tipo")
   itemId      String    @map("item_id")
   itemNome    String    @map("item_nome")
-  prioridade  String    @default("media") // 'baixa', 'media', 'alta', 'critica'
+  prioridade  String    @default("media")
   lida        Boolean   @default(false)
-  dataLimite  DateTime? @map("data_limite") // Para alertas de validade
-  valorAtual  Float?    @map("valor_atual") // Para alertas de estoque ou custo
-  valorLimite Float?    @map("valor_limite") // Para comparação
+  dataLimite  DateTime? @map("data_limite")
+  valorAtual  Float?    @map("valor_atual")
+  valorLimite Float?    @map("valor_limite")
   userId      String    @map("user_id")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
@@ -283,28 +283,28 @@ model Notificacao {
 }
 
 model Menu {
-  id          String     @id @default(cuid())
-  nome        String
-  descricao   String?
-  tipo        String     // 'cafe_manha', 'almoco', 'jantar', 'lanche'
-  ativo       Boolean    @default(true)
-  userId      String     @map("user_id")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  itens       MenuItem[]
-  periodos    MenuPeriodo[]
+  id        String        @id @default(cuid())
+  nome      String
+  descricao String?
+  tipo      String
+  ativo     Boolean       @default(true)
+  userId    String        @map("user_id")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  itens     MenuItem[]
+  periodos  MenuPeriodo[]
 
   @@map("menus")
 }
 
 model MenuItem {
-  id         String  @id @default(cuid())
-  menuId     String  @map("menu_id")
-  produtoId  String  @map("produto_id")
-  quantidade Int     @default(1)
+  id          String  @id @default(cuid())
+  menuId      String  @map("menu_id")
+  produtoId   String  @map("produto_id")
+  quantidade  Int     @default(1)
   observacoes String?
-  menu       Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  produto    Produto @relation(fields: [produtoId], references: [id])
+  menu        Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  produto     Produto @relation(fields: [produtoId], references: [id])
 
   @@map("menu_itens")
 }
@@ -314,7 +314,7 @@ model MenuPeriodo {
   menuId      String   @map("menu_id")
   dataInicio  DateTime @map("data_inicio")
   dataFim     DateTime @map("data_fim")
-  tipo        String   // 'semanal', 'mensal', 'personalizado'
+  tipo        String
   ativo       Boolean  @default(true)
   observacoes String?
   userId      String   @map("user_id")
@@ -326,86 +326,86 @@ model MenuPeriodo {
 }
 
 model RelatorioTemplate {
-  id           String   @id @default(cuid())
+  id           String                 @id @default(cuid())
   nome         String
-  tipo         String   // 'custos', 'producao', 'estoque', etc.
-  configuracao Json     // Layout, colors, fonts, etc.
-  padrao       Boolean  @default(false)
-  userId       String   @map("user_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  tipo         String
+  configuracao Json
+  padrao       Boolean                @default(false)
+  userId       String                 @map("user_id")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
   agendamentos RelatorioAgendamento[]
 
   @@map("relatorio_templates")
 }
 
 model RelatorioAgendamento {
-  id              String   @id @default(cuid())
+  id              String              @id @default(cuid())
   nome            String
-  tipo            String   // 'custos', 'producao', 'estoque', etc.
-  templateId      String?  @map("template_id")
-  formato         String   // 'pdf', 'excel'
-  frequencia      String   // 'diario', 'semanal', 'mensal'
-  diasSemana      String?  @map("dias_semana") // JSON array for weekly
-  diaMes          Int?     @map("dia_mes") // For monthly
-  horario         String   // HH:MM format
-  ativo           Boolean  @default(true)
-  proximaExecucao DateTime @map("proxima_execucao")
-  ultimaExecucao  DateTime? @map("ultima_execucao")
-  email           String?  // Optional email delivery
-  userId          String   @map("user_id")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  template        RelatorioTemplate? @relation(fields: [templateId], references: [id])
+  tipo            String
+  templateId      String?             @map("template_id")
+  formato         String
+  frequencia      String
+  diasSemana      String?             @map("dias_semana")
+  diaMes          Int?                @map("dia_mes")
+  horario         String
+  ativo           Boolean             @default(true)
+  proximaExecucao DateTime            @map("proxima_execucao")
+  ultimaExecucao  DateTime?           @map("ultima_execucao")
+  email           String?
+  userId          String              @map("user_id")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  template        RelatorioTemplate?  @relation(fields: [templateId], references: [id])
   execucoes       RelatorioExecucao[]
 
   @@map("relatorio_agendamentos")
 }
 
 model TacoAlimento {
-  id                    Int      @id
-  description           String
-  category              String
-  humidityPercents      Float?   @map("humidity_percents")
-  energyKcal            Float?   @map("energy_kcal")
-  energyKj              Float?   @map("energy_kj")
-  proteinG              Float?   @map("protein_g")
-  lipidG                Float?   @map("lipid_g")
-  cholesterolMg         Float?   @map("cholesterol_mg")
-  carbohydrateG         Float?   @map("carbohydrate_g")
-  fiberG                Float?   @map("fiber_g")
-  ashesG                Float?   @map("ashes_g")
-  calciumMg             Float?   @map("calcium_mg")
-  magnesiumMg           Float?   @map("magnesium_mg")
-  manganeseMg           Float?   @map("manganese_mg")
-  phosphorusMg          Float?   @map("phosphorus_mg")
-  ironMg                Float?   @map("iron_mg")
-  sodiumMg              Float?   @map("sodium_mg")
-  potassiumMg           Float?   @map("potassium_mg")
-  copperMg              Float?   @map("copper_mg")
-  zincMg                Float?   @map("zinc_mg")
-  retinolMcg            Float?   @map("retinol_mcg")
-  thiamineMg            Float?   @map("thiamine_mg")
-  riboflavinMg          Float?   @map("riboflavin_mg")
-  pyridoxineMg          Float?   @map("pyridoxine_mg")
-  niacinMg              Float?   @map("niacin_mg")
-  vitaminCMg            Float?   @map("vitaminC_mg")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  insumos               Insumo[]
+  id               Int      @id
+  description      String
+  category         String
+  humidityPercents Float?   @map("humidity_percents")
+  energyKcal       Float?   @map("energy_kcal")
+  energyKj         Float?   @map("energy_kj")
+  proteinG         Float?   @map("protein_g")
+  lipidG           Float?   @map("lipid_g")
+  cholesterolMg    Float?   @map("cholesterol_mg")
+  carbohydrateG    Float?   @map("carbohydrate_g")
+  fiberG           Float?   @map("fiber_g")
+  ashesG           Float?   @map("ashes_g")
+  calciumMg        Float?   @map("calcium_mg")
+  magnesiumMg      Float?   @map("magnesium_mg")
+  manganeseMg      Float?   @map("manganese_mg")
+  phosphorusMg     Float?   @map("phosphorus_mg")
+  ironMg           Float?   @map("iron_mg")
+  sodiumMg         Float?   @map("sodium_mg")
+  potassiumMg      Float?   @map("potassium_mg")
+  copperMg         Float?   @map("copper_mg")
+  zincMg           Float?   @map("zinc_mg")
+  retinolMcg       Float?   @map("retinol_mcg")
+  thiamineMg       Float?   @map("thiamine_mg")
+  riboflavinMg     Float?   @map("riboflavin_mg")
+  pyridoxineMg     Float?   @map("pyridoxine_mg")
+  niacinMg         Float?   @map("niacin_mg")
+  vitaminCMg       Float?   @map("vitaminC_mg")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  insumos          Insumo[]
 
   @@map("taco_alimentos")
 }
 
 model RelatorioExecucao {
-  id            String   @id @default(cuid())
-  agendamentoId String   @map("agendamento_id")
-  dataExecucao  DateTime @map("data_execucao")
-  status        String   // 'sucesso', 'erro', 'processando'
-  arquivo       String?  // File path or URL
+  id            String               @id @default(cuid())
+  agendamentoId String               @map("agendamento_id")
+  dataExecucao  DateTime             @map("data_execucao")
+  status        String
+  arquivo       String?
   erro          String?
-  userId        String   @map("user_id")
-  createdAt     DateTime @default(now()) @map("created_at")
+  userId        String               @map("user_id")
+  createdAt     DateTime             @default(now()) @map("created_at")
   agendamento   RelatorioAgendamento @relation(fields: [agendamentoId], references: [id])
 
   @@map("relatorio_execucoes")
@@ -414,11 +414,11 @@ model RelatorioExecucao {
 model AuditoriaAcao {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
-  acao      String   // 'create', 'update', 'delete', 'view'
-  modulo    String   // 'insumos', 'fichas-tecnicas', 'produtos', etc.
+  acao      String
+  modulo    String
   itemId    String?  @map("item_id")
   itemTipo  String?  @map("item_tipo")
-  detalhes  Json?    // Additional details about the action
+  detalhes  Json?
   ipAddress String?  @map("ip_address")
   userAgent String?  @map("user_agent")
   createdAt DateTime @default(now()) @map("created_at")
