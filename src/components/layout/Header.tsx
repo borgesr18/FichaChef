@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {
-  const { user, userRole, signOut } = useSupabase()
+  const { user, userRole, signOut, displayName } = useSupabase()
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
@@ -79,7 +79,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
 
   const notificacaoNaoLidas = notificacoes.filter(n => !n.lida)
 
-  const userDisplayName = user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'
+  const userDisplayName = displayName || user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'
   const userRoleLabel = (userRole === 'chef' && 'Chef') || (userRole === 'gerente' && 'Gerente') || (userRole === 'cozinheiro' && 'Cozinheiro') || 'Usuário'
   const initials = userDisplayName
     .split(/\s+/)

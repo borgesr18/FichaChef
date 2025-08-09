@@ -24,8 +24,8 @@ interface FichaTecnica {
 }
 
 export default function DashboardPage() {
-  const { user } = useSupabase()
-  const userDisplayName = user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Chef'
+  const { user, displayName } = useSupabase()
+  const userDisplayName = displayName || user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Chef'
   const [stats, setStats] = useState<DashboardStats>({
     insumos: 0,
     fichasTecnicas: 0,
@@ -78,10 +78,10 @@ export default function DashboardPage() {
         
         // Tentar carregar dados das APIs
         const [insumosRes, fichasRes, producoesRes, produtosRes] = await Promise.allSettled([
-          fetch('/api/insumos', { credentials: 'include' }),
-          fetch('/api/fichas-tecnicas', { credentials: 'include' }),
-          fetch('/api/producao', { credentials: 'include' }),
-          fetch('/api/produtos', { credentials: 'include' })
+          fetch('/api/insumos?limit=5', { credentials: 'include' }),
+          fetch('/api/fichas-tecnicas?limit=5', { credentials: 'include' }),
+          fetch('/api/producao?limit=5', { credentials: 'include' }),
+          fetch('/api/produtos?limit=5', { credentials: 'include' })
         ])
 
         if (!mounted) return

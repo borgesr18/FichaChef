@@ -42,6 +42,7 @@ interface SupabaseContextType {
   signOut: () => Promise<void>
   isConfigured: boolean
   isInitialized: boolean
+  displayName: string
 }
 
 interface AuthStateChangeEvent {
@@ -59,6 +60,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [displayName, setDisplayName] = useState<string>('Usuário')
   
   // ✅ CONFIGURAÇÃO MEMOIZADA
   const isConfigured = useMemo(() => {
@@ -84,6 +86,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       setUserRole(null)
       setLoading(false)
+      setDisplayName('Usuário')
       
       // Limpar localStorage
       localStorage.removeItem('fichachef-user-role')
@@ -113,8 +116,19 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Reset estado
     setUserRole(null)
     setLoading(true)
+    setDisplayName('Usuário')
     
     console.log('✅ [PROVIDER] Cache limpo')
+  }, [])
+
+  // ✅ FUNÇÃO AUXILIAR: calcular displayName de forma consistente
+  const computeFallbackDisplayName = useCallback((u: User | null) => {
+    return (
+      u?.user_metadata?.name ||
+      u?.user_metadata?.full_name ||
+      (typeof u?.email === 'string' ? u.email.split('@')[0] : undefined) ||
+      'Usuário'
+    )
   }, [])
 
   // ✅ FUNÇÃO: REFRESH USER ROLE SIMPLIFICADA
@@ -128,10 +142,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
 
     try {
+      const fallbackDisplay = computeFallbackDisplayName(user)
+
       // 🔧 MODO DESENVOLVIMENTO: Role padrão
       if (process.env.NODE_ENV === 'development' || !isConfigured) {
         console.log('🔧 [PROVIDER] Modo desenvolvimento - definindo role padrão')
         setUserRole('chef')
+        setDisplayName(fallbackDisplay)
         setLoading(false)
         return
       }
@@ -141,6 +158,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         console.log('👨‍🍳 [PROVIDER] Admin detectado - definindo como chef')
         setUserRole('chef')
         localStorage.setItem('fichachef-user-role', 'chef')
+        setDisplayName(fallbackDisplay)
         setLoading(false)
         return
       }
@@ -161,12 +179,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         if (role) {
           localStorage.setItem('fichachef-user-role', role)
         }
+
+        // ✅ Nome do perfil se existir, senão fallback
+        setDisplayName((data && (data as any).nome) || fallbackDisplay)
       } else {
         // 🔧 FALLBACK SIMPLES
         console.log('⚠️ [PROVIDER] Consulta falhou, usando fallback')
         const fallbackRole: UserRole = 'cozinheiro'
         setUserRole(fallbackRole)
         localStorage.setItem('fichachef-user-role', fallbackRole)
+        setDisplayName(fallbackDisplay)
       }
 
     } catch (error) {
@@ -176,10 +198,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       const fallbackRole: UserRole = 'cozinheiro'
       setUserRole(fallbackRole)
       localStorage.setItem('fichachef-user-role', fallbackRole)
+      setDisplayName(computeFallbackDisplayName(user))
     } finally {
       setLoading(false)
     }
-  }, [user, isInitialized, isConfigured])
+  }, [user, isInitialized, isConfigured, computeFallbackDisplayName])
 
   // ✅ EFEITO: INICIALIZAÇÃO SIMPLIFICADA
   useEffect(() => {
@@ -207,6 +230,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           if (session?.user) {
             console.log('✅ [PROVIDER] Sessão encontrada:', session.user.email)
             setUser(session.user)
+            setDisplayName(computeFallbackDisplayName(session.user))
             // Sincronizar cookie para APIs reconhecerem a sessão
             await syncSessionCookie()
           } else {
@@ -240,12 +264,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
               console.log('✅ [PROVIDER] Definindo usuário:', session.user.email)
               setUser(session.user)
+              setDisplayName(computeFallbackDisplayName(session.user))
               // Sincronizar cookie para APIs reconhecerem a sessão
               await syncSessionCookie()
             } else {
               console.log('🚫 [PROVIDER] Limpando usuário')
               setUser(null)
               setUserRole(null)
+              setDisplayName('Usuário')
               try { await fetch('/api/auth/sync', { method: 'DELETE', credentials: 'include' }) } catch {}
             }
             // ✅ Garantir que a inicialização seja marcada como concluída mesmo que o evento dispare antes do initializeAuth
@@ -263,7 +289,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         subscription.data.subscription.unsubscribe()
       }
     }
-  }, [isConfigured])
+  }, [isConfigured, computeFallbackDisplayName])
 
   // ✅ EFEITO: CARREGAR ROLE QUANDO USUÁRIO MUDA
   useEffect(() => {
@@ -303,8 +329,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     clearCache: handleClearCache,
     signOut: handleSignOut,
     isConfigured,
-    isInitialized
-  }), [user, userRole, loading, refreshUserRole, handleClearCache, handleSignOut, isConfigured, isInitialized])
+    isInitialized,
+    displayName,
+  }), [user, userRole, loading, refreshUserRole, handleClearCache, handleSignOut, isConfigured, isInitialized, displayName])
 
   return (
     <SupabaseContext.Provider value={value}>
