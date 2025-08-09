@@ -169,7 +169,7 @@ export default function ImpressaoPage() {
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 no-print">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] bg-clip-text text-transparent">
@@ -178,7 +178,7 @@ export default function ImpressaoPage() {
               <p className="text-gray-600 text-lg">Imprima fichas técnicas profissionais</p>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 no-print">
               <button className="bg-white/80 backdrop-blur-sm text-gray-700 px-6 py-3 rounded-xl hover:bg-white transition-all duration-200 shadow-lg border border-white/50 flex items-center">
                 <Download className="h-4 w-4 mr-2" />
                 Exportar PDF
@@ -195,8 +195,8 @@ export default function ImpressaoPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Cards - hidden on print */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 no-print">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:transform hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -306,9 +306,9 @@ export default function ImpressaoPage() {
           </div>
         </div>
 
-        {/* Fichas Cards */}
+        {/* Fichas Cards - hidden on print */}
         {!selectedFicha && (
-          <div className="mb-8">
+          <div className="mb-8 no-print">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Fichas Disponíveis</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredFichas.slice(0, 6).map((ficha) => (
@@ -457,7 +457,7 @@ export default function ImpressaoPage() {
               return (
                 <div className="mb-6 print-section">
                   <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Nutricionais</h4>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6 nutrition-grid">
                     <div>
                       <h5 className="font-medium text-gray-800 mb-2">Por Porção ({calculatePesoPorPorcao(selectedFicha).toFixed(1)}g)</h5>
                       <div className="space-y-1 text-sm">
@@ -573,7 +573,7 @@ export default function ImpressaoPage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-200 print-section">
+            <div className="mt-6 pt-4 border-t border-gray-200 print-section print-optional">
               <h4 className="font-bold text-gray-900 mb-2">Observações para Produção</h4>
               <div className="text-xs text-gray-600 space-y-1">
                 <p>• Verificar disponibilidade de todos os ingredientes antes do início da produção</p>
@@ -590,7 +590,21 @@ export default function ImpressaoPage() {
         @media print {
           @page {
             size: A4;
-            margin: 2cm;
+            margin: 1.5cm;
+          }
+
+          /* Mostrar somente a ficha selecionada durante a impressão */
+          :global(body *) {
+            visibility: hidden !important;
+          }
+          .print-content, .print-content * {
+            visibility: visible !important;
+          }
+          .print-content {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
           }
           
           .no-print {
@@ -604,19 +618,21 @@ export default function ImpressaoPage() {
             margin: 0 !important;
             background: white !important;
             color: black !important;
-            font-size: 12pt !important;
+            font-size: 10pt !important;
             line-height: 1.4 !important;
           }
           
           .print-header {
-            margin-bottom: 1.5cm !important;
-            padding-bottom: 0.5cm !important;
+            margin-bottom: 0.8cm !important;
+            padding-bottom: 0.3cm !important;
           }
+          .print-header p { display: none !important; }
           
           .print-section {
-            margin-bottom: 1cm !important;
+            margin-bottom: 0.6cm !important;
             break-inside: avoid !important;
           }
+          .print-optional { display: none !important; }
           
           table {
             border-collapse: collapse !important;
@@ -634,9 +650,11 @@ export default function ImpressaoPage() {
             font-weight: bold !important;
           }
           
-          h1, h2, h3, h4 {
-            color: black !important;
-          }
+          h1, h2, h3, h4 { color: black !important; }
+          h1 { font-size: 18pt !important; }
+          h2 { font-size: 14pt !important; }
+          h3 { font-size: 12pt !important; }
+          h4 { font-size: 11pt !important; }
           
           .text-gray-500, .text-gray-600 {
             color: #666 !important;
@@ -645,6 +663,25 @@ export default function ImpressaoPage() {
           .text-gray-900 {
             color: black !important;
           }
+
+          /* Simplificar tabela de ingredientes na impressão: mostrar apenas Ingrediente e Quantidade */
+          table thead th:nth-child(3),
+          table thead th:nth-child(4),
+          table thead th:nth-child(5),
+          table tbody td:nth-child(3),
+          table tbody td:nth-child(4),
+          table tbody td:nth-child(5) {
+            display: none !important;
+          }
+          
+          /* Linha TOTAL: manter apenas primeira e segunda celas visíveis */
+          table tfoot td:nth-child(3),
+          table tfoot td:nth-child(4),
+          table tfoot td:nth-child(5) { display: none !important; }
+
+          /* Nutrição: usar apenas uma coluna na impressão */
+          .nutrition-grid { grid-template-columns: 1fr !important; }
+          .nutrition-grid > div:nth-child(2) { display: none !important; }
         }
       `}</style>
     </DashboardLayout>
