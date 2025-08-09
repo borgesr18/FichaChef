@@ -1,15 +1,13 @@
 import { prisma } from '@/lib/prisma'
-import { createSuccessResponse } from '@/lib/auth'
-import { requireApiAuthentication } from '@/lib/supabase-api'
+import { createSuccessResponse, createForbiddenResponse, authenticateWithPermission } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
-import { NextRequest } from 'next/server'
 
-export const GET = withErrorHandler(async function GET(request: NextRequest) {
-  const auth = await requireApiAuthentication(request)
-  
-  if (!auth.authenticated) {
-    return auth.response!
+export const GET = withErrorHandler(async function GET() {
+  try {
+    await authenticateWithPermission('usuarios', 'read')
+  } catch {
+    return createForbiddenResponse('Acesso negado')
   }
 
   const usuarios = await withConnectionHealthCheck(async () => {

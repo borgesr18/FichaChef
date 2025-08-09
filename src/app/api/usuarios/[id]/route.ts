@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createSuccessResponse, createErrorResponse } from '@/lib/auth'
-import { requireApiAuthentication } from '@/lib/supabase-api'
+import { createSuccessResponse, createErrorResponse, createForbiddenResponse, authenticateWithPermission } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { withDatabaseRetry, withConnectionHealthCheck } from '@/lib/database-utils'
 import { z } from 'zod'
@@ -17,10 +16,11 @@ export const PUT = withErrorHandler(async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireApiAuthentication(request)
-  
-  if (!auth.authenticated) {
-    return auth.response!
+  let actingUser: { id: string } | null = null
+  try {
+    actingUser = await authenticateWithPermission('usuarios', 'admin')
+  } catch {
+    return createForbiddenResponse('Acesso negado')
   }
   
   const { id } = await params
@@ -34,6 +34,17 @@ export const PUT = withErrorHandler(async function PUT(
   })
   if (!exists) {
     return createErrorResponse('Usuário não encontrado', 404)
+  }
+
+  // Salvaguardas de role
+  if (validatedData.role && exists.role === 'chef' && validatedData.role !== 'chef') {
+    const chefs = await prisma.perfilUsuario.count({ where: { role: 'chef' } })
+    if (chefs <= 1) {
+      return createErrorResponse('Não é possível remover o último chef', 400)
+    }
+    if (actingUser && actingUser.id === id) {
+      return createErrorResponse('Não é possível rebaixar seu próprio usuário', 400)
+    }
   }
 
   const updatedUser = await withConnectionHealthCheck(async () => {
@@ -52,21 +63,14 @@ export const DELETE = withErrorHandler(async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireApiAuthentication(request)
-  
-  if (!auth.authenticated) {
-    return auth.response!
+  let actingUser: { id: string } | null = null
+  try {
+    actingUser = await authenticateWithPermission('usuarios', 'admin')
+  } catch {
+    return createForbiddenResponse('Acesso negado')
   }
   
   const { id } = await params
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  
-  const isDevMode = !supabaseUrl || !supabaseServiceKey || 
-                    supabaseUrl === '' || supabaseServiceKey === '' ||
-                    supabaseUrl.includes('placeholder') || 
-                    supabaseServiceKey.includes('placeholder')
 
   try {
     // Verificar existência
@@ -77,6 +81,19 @@ export const DELETE = withErrorHandler(async function DELETE(
       return createErrorResponse('Usuário não encontrado', 404)
     }
 
+    // Não permitir excluir a si próprio
+    if (actingUser && actingUser.id === id) {
+      return createErrorResponse('Não é possível excluir o próprio usuário', 400)
+    }
+
+    // Não permitir excluir o último chef
+    if (exists.role === 'chef') {
+      const chefs = await prisma.perfilUsuario.count({ where: { role: 'chef' } })
+      if (chefs <= 1) {
+        return createErrorResponse('Não é possível excluir o último chef', 400)
+      }
+    }
+
     await withConnectionHealthCheck(async () => {
       return await withDatabaseRetry(async () => {
         return await prisma.perfilUsuario.delete({
@@ -84,6 +101,14 @@ export const DELETE = withErrorHandler(async function DELETE(
         })
       })
     })
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    const isDevMode = !supabaseUrl || !supabaseServiceKey || 
+                      supabaseUrl === '' || supabaseServiceKey === '' ||
+                      supabaseUrl.includes('placeholder') || 
+                      supabaseServiceKey.includes('placeholder')
 
     if (!isDevMode) {
       await supabaseAdmin.auth.admin.deleteUser(id)
