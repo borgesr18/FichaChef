@@ -29,7 +29,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
 
   const fetchNotificacoes = useCallback(async () => {
     try {
-      const response = await fetch('/api/notificacoes?lida=false')
+      const response = await fetch('/api/notificacoes?lida=false', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setNotificacoes(data)
@@ -59,7 +59,8 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
       await fetch('/api/notificacoes', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids, lida: true })
+        body: JSON.stringify({ ids, lida: true }),
+        credentials: 'include'
       })
       fetchNotificacoes()
     } catch (error) {
