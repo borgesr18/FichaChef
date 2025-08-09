@@ -68,7 +68,25 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      return createErrorResponse(authError.message, 400)
+      // Log detalhado no servidor para diagnóstico
+      console.error('❌ Supabase admin createUser error:', {
+        message: authError.message,
+        name: (authError as any)?.name,
+        status: (authError as any)?.status
+      })
+      // Mapeia mensagens comuns para respostas mais claras ao usuário
+      const raw = (authError.message || '').toLowerCase()
+      let friendly = authError.message
+      if (raw.includes('password') && raw.includes('at least')) {
+        friendly = 'Senha fraca. Tente uma senha com pelo menos 8 caracteres, incluindo letras e números.'
+      } else if (raw.includes('already') && raw.includes('registered')) {
+        friendly = 'Este email já está cadastrado. Você pode enviar um convite ou redefinir a senha.'
+      } else if (raw.includes('invalid') && raw.includes('key')) {
+        friendly = 'Falha de autenticação do servidor. Verifique a SERVICE_ROLE_KEY no ambiente.'
+      } else if (raw.includes('not allowed') || raw.includes('signups') || raw.includes('signup')) {
+        friendly = 'Cadastro de usuários está desativado no projeto Supabase.'
+      }
+      return createErrorResponse(friendly, 400)
     }
 
     if (!authUser.user) {
