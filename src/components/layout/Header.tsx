@@ -32,10 +32,14 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
       const response = await fetch('/api/notificacoes?lida=false', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
-        setNotificacoes(data)
+        const parsed = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+        setNotificacoes(parsed)
+      } else {
+        setNotificacoes([])
       }
     } catch (error) {
       console.error('Error fetching notifications:', error)
+      setNotificacoes([])
     }
   }, [])
 
