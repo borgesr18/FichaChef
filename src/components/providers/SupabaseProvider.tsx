@@ -189,6 +189,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log('🔄 [PROVIDER] Inicializando autenticação...')
         
+        // ✅ Marcar inicialização iniciada imediatamente para destravar telas que aguardam esse flag
+        if (mounted) {
+          setIsInitialized(true)
+        }
+        
         if (!isConfigured) {
           console.log('🔧 [PROVIDER] Supabase não configurado - modo desenvolvimento')
           setIsInitialized(true)
