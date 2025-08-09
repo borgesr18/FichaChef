@@ -243,6 +243,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
               setUserRole(null)
               try { await fetch('/api/auth/sync', { method: 'DELETE', credentials: 'include' }) } catch {}
             }
+            // ✅ Garantir que a inicialização seja marcada como concluída mesmo que o evento dispare antes do initializeAuth
+            setIsInitialized(true)
             setLoading(false)
           }
         }
