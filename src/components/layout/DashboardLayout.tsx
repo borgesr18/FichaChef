@@ -13,7 +13,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
-  const { user, loading, isConfigured } = useSupabase()
+  const { user, loading, isConfigured, isInitialized } = useSupabase()
   const [isHydrated, setIsHydrated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -22,12 +22,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     setIsHydrated(true)
   }, [])
 
-  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação e carregamento
+  // ✅ CORRIGIDO: Redirecionamento apenas após hidratação e inicialização
   useEffect(() => {
-    console.log('🔍 DashboardLayout useEffect:', { isHydrated, loading, isConfigured, user: !!user, userEmail: user?.email })
+    console.log('🔍 DashboardLayout useEffect:', { isHydrated, isInitialized, loading, isConfigured, user: !!user, userEmail: user?.email })
     
-    if (!isHydrated || loading) {
-      console.log('🚫 DashboardLayout: Aguardando hidratação ou loading')
+    if (!isHydrated || !isInitialized) {
+      console.log('🚫 DashboardLayout: Aguardando hidratação ou inicialização')
       return
     }
 
@@ -44,10 +44,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     } else if (user) {
       console.log('✅ DashboardLayout: Usuário autenticado, permitindo acesso ao dashboard:', user.email)
     }
-  }, [isHydrated, loading, isConfigured, user, router])
+  }, [isHydrated, isInitialized, loading, isConfigured, user, router])
 
-  // ✅ LOADING: Mostrar spinner durante hidratação ou carregamento
-  if (!isHydrated || loading) {
+  // ✅ LOADING: Mostrar spinner durante hidratação ou inicialização
+  if (!isHydrated || !isInitialized) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
