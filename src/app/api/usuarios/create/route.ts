@@ -71,8 +71,7 @@ export const POST = withErrorHandler(async function POST(request: NextRequest) {
       // Log detalhado no servidor para diagnóstico
       console.error('❌ Supabase admin createUser error:', {
         message: authError.message,
-        name: (authError as any)?.name,
-        status: (authError as any)?.status
+        error: authError,
       })
       // Mapeia mensagens comuns para respostas mais claras ao usuário
       const raw = (authError.message || '').toLowerCase()
