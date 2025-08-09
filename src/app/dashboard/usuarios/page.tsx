@@ -116,7 +116,7 @@ export default function UsuariosPage() {
 
   const fetchUsuarios = async () => {
     try {
-      const response = await fetch('/api/usuarios')
+      const response = await fetch('/api/usuarios', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setUsuarios(data)
@@ -133,6 +133,7 @@ export default function UsuariosPage() {
       const response = await fetch(`/api/usuarios/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ role: newRole })
       })
 
@@ -149,10 +150,18 @@ export default function UsuariosPage() {
     setCreateLoading(true)
 
     try {
+      const payload = {
+        email: newUser.email.trim(),
+        password: newUser.password,
+        nome: newUser.nome.trim(),
+        role: newUser.role as 'chef' | 'cozinheiro' | 'gerente',
+      }
+
       const response = await fetch('/api/usuarios/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser)
+        credentials: 'include',
+        body: JSON.stringify(payload)
       })
 
       if (response.ok) {
@@ -160,8 +169,18 @@ export default function UsuariosPage() {
         setNewUser({ email: '', password: '', nome: '', role: 'cozinheiro' })
         await fetchUsuarios()
       } else {
-        const error = await response.json()
-        alert(error.message || 'Erro ao criar usuário')
+        let message = 'Erro ao criar usuário'
+        try {
+          const text = await response.text()
+          try {
+            const data = JSON.parse(text)
+            message = (data && (data.message || data.error)) || (Array.isArray(data) ? data.join(', ') : message)
+          } catch {
+            if (text) message = text
+          }
+        } catch {}
+        console.error('Create user failed', { status: response.status })
+        alert(message)
       }
     } catch (error) {
       console.error('Error creating user:', error)
@@ -179,6 +198,7 @@ export default function UsuariosPage() {
       const response = await fetch('/api/usuarios/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: inviteEmail })
       })
 
@@ -187,8 +207,12 @@ export default function UsuariosPage() {
         setInviteEmail('')
         alert('Convite enviado com sucesso!')
       } else {
-        const error = await response.json()
-        alert(error.message || 'Erro ao enviar convite')
+        let msg = 'Erro ao enviar convite'
+        try {
+          const data = await response.json()
+          msg = data?.message || data?.error || msg
+        } catch {}
+        alert(msg)
       }
     } catch (error) {
       console.error('Error sending invite:', error)
@@ -208,6 +232,7 @@ export default function UsuariosPage() {
         response = await fetch('/api/usuarios/send-password-reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             email: selectedUser?.email
           })
@@ -216,6 +241,7 @@ export default function UsuariosPage() {
         response = await fetch('/api/usuarios/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             userId: selectedUser?.userId,
             newPassword: newPassword
@@ -229,8 +255,12 @@ export default function UsuariosPage() {
         setNewPassword('')
         alert(resetMethod === 'direct' ? 'Senha alterada com sucesso!' : 'Email de redefinição enviado!')
       } else {
-        const error = await response.json()
-        alert(error.message || 'Erro ao redefinir senha')
+        let msg = 'Erro ao redefinir senha'
+        try {
+          const data = await response.json()
+          msg = data?.message || data?.error || msg
+        } catch {}
+        alert(msg)
       }
     } catch (error) {
       console.error('Error resetting password:', error)
@@ -245,15 +275,20 @@ export default function UsuariosPage() {
 
     try {
       const response = await fetch(`/api/usuarios/${userId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       })
 
       if (response.ok) {
         await fetchUsuarios()
         alert('Usuário excluído com sucesso!')
       } else {
-        const error = await response.json()
-        alert(error.message || 'Erro ao excluir usuário')
+        let msg = 'Erro ao excluir usuário'
+        try {
+          const data = await response.json()
+          msg = data?.message || data?.error || msg
+        } catch {}
+        alert(msg)
       }
     } catch (error) {
       console.error('Error deleting user:', error)
