@@ -382,170 +382,205 @@ export default function ImpressaoPage() {
         {/* Conteúdo da Ficha Selecionada */}
         {selectedFicha && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 print-content">
-            <div className="px-6 pt-6">
-              <h1 className="text-2xl font-bold text-gray-900">{selectedFicha.nome}</h1>
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-gray-700">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <span>{selectedFicha.tempoPreparo ? `${selectedFicha.tempoPreparo} min` : '—'}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Thermometer className="h-4 w-4 text-gray-500" />
-                  <span>{selectedFicha.temperaturaForno ? `${selectedFicha.temperaturaForno}°C` : '—'}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Scale className="h-4 w-4 text-gray-500" />
-                  <span>{formatWeight(selectedFicha.pesoFinalGramas)}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-gray-500" />
-                  <span>{formatCurrency(calculateCustoTotal(selectedFicha))}</span>
-                </div>
-              </div>
-            </div>
-
             {(() => {
+              const custoTotal = calculateCustoTotal(selectedFicha)
+              const custoPorPorcao = calculateCustoPorPorcao(selectedFicha)
+              const custoPor100g = selectedFicha.pesoFinalGramas > 0 ? (custoTotal / selectedFicha.pesoFinalGramas) * 100 : 0
+              const pesoPorPorcao = calculatePesoPorPorcao(selectedFicha)
+              const precoSugerido = custoTotal * 2.5
+              const margemLucro = precoSugerido > 0 ? ((precoSugerido - custoTotal) / precoSugerido) * 100 : 0
+
               const totalNutrition = calculateNutritionalTotal(selectedFicha)
               const hasNutritionalData = totalNutrition.calorias > 0 || totalNutrition.proteinas > 0
-              if (!hasNutritionalData) return null
-
-              const nutritionPerPortion = calculateNutritionalPerPortion(selectedFicha)
-              const nutritionPer100g = calculateNutritionalPer100g(selectedFicha)
+              const nutritionPerPortion = hasNutritionalData ? calculateNutritionalPerPortion(selectedFicha) : null
+              const nutritionPer100g = hasNutritionalData ? calculateNutritionalPer100g(selectedFicha) : null
 
               return (
-                <div className="mb-6 print-section print-optional">
-                  <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Nutricionais</h4>
-                  <div className="grid grid-cols-2 gap-6 nutrition-grid">
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-2">Por Porção ({calculatePesoPorPorcao(selectedFicha).toFixed(1)}g)</h5>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Calorias:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.calorias, 'kcal')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Proteínas:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.proteinas, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Carboidratos:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.carboidratos, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Gorduras:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.gorduras, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Fibras:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.fibras, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Sódio:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPerPortion.sodio, 'mg')}</span>
+                <div className="print-container">
+                  {/* Header moderno */}
+                  <div className="px-6 pt-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h1 className="text-2xl font-extrabold text-gray-900 leading-tight">
+                          {selectedFicha.nome}
+                        </h1>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-orange-100 text-orange-800 font-medium">
+                            {selectedFicha.categoria?.nome}
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                            {selectedFicha.nivelDificuldade}
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-medium">
+                            {selectedFicha.numeroPorcoes} porções
+                          </span>
                         </div>
                       </div>
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-2">Por 100g</h5>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Calorias:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.calorias, 'kcal')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Proteínas:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.proteinas, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Carboidratos:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.carboidratos, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Gorduras:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.gorduras, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Fibras:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.fibras, 'g')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Sódio:</span>
-                          <span className="font-medium">{formatNutritionalValue(nutritionPer100g.sodio, 'mg')}</span>
-                        </div>
+                      {/* QR para referência rápida (impresso) */}
+                      <div className="no-print:hidden">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(selectedFicha.nome)}`}
+                          alt="QR"
+                          className="rounded-md border border-gray-200"
+                          width={96}
+                          height={96}
+                        />
                       </div>
                     </div>
+
+                    {/* Métricas principais */}
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span>{selectedFicha.tempoPreparo ? `${selectedFicha.tempoPreparo} min` : '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Thermometer className="h-4 w-4 text-gray-500" />
+                        <span>{selectedFicha.temperaturaForno ? `${selectedFicha.temperaturaForno}°C` : '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Scale className="h-4 w-4 text-gray-500" />
+                        <span>{formatWeight(selectedFicha.pesoFinalGramas)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <DollarSign className="h-4 w-4 text-gray-500" />
+                        <span>{formatCurrency(custoTotal)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <DollarSign className="h-4 w-4 text-gray-500" />
+                        <span>{formatCurrency(custoPorPorcao)} / porção</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <DollarSign className="h-4 w-4 text-gray-500" />
+                        <span>{formatCurrency(custoPor100g)} / 100g</span>
+                      </div>
+                    </div>
+
+                    {/* Resumo financeiro */}
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="rounded-xl bg-orange-50 border border-orange-100 p-4">
+                        <p className="text-xs uppercase tracking-wide text-orange-700">Preço sugerido</p>
+                        <p className="text-lg font-semibold text-gray-900">{formatCurrency(precoSugerido)}</p>
+                      </div>
+                      <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+                        <p className="text-xs uppercase tracking-wide text-emerald-700">Margem estimada</p>
+                        <p className="text-lg font-semibold text-gray-900">{margemLucro.toFixed(0)}%</p>
+                      </div>
+                      <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
+                        <p className="text-xs uppercase tracking-wide text-blue-700">Peso por porção</p>
+                        <p className="text-lg font-semibold text-gray-900">{pesoPorPorcao.toFixed(0)} g</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conteúdo em duas colunas para impressão */}
+                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 px-6 pb-2">
+                    {/* Ingredientes */}
+                    <div className="print-section">
+                      <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes</h4>
+                      {selectedFicha.ingredientes.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="ingredients-table w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="text-left py-2 font-medium">Ingrediente</th>
+                                <th className="text-right py-2 font-medium">Qtd</th>
+                                <th className="text-right py-2 font-medium">%</th>
+                                <th className="text-right py-2 font-medium">R$/g</th>
+                                <th className="text-right py-2 font-medium">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedFicha.ingredientes.map((ing, index) => {
+                                const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
+                                const custoIngrediente = custoPorGrama * ing.quantidadeGramas
+                                const percentual = (ing.quantidadeGramas / selectedFicha.pesoFinalGramas) * 100
+                                return (
+                                  <tr key={index} className="border-b border-gray-100">
+                                    <td className="py-2">{ing.insumo.nome}</td>
+                                    <td className="text-right py-2">{ing.quantidadeGramas}g</td>
+                                    <td className="text-right py-2">{percentual.toFixed(1)}%</td>
+                                    <td className="text-right py-2">{formatCurrency(custoPorGrama)}</td>
+                                    <td className="text-right py-2">{formatCurrency(custoIngrediente)}</td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                            <tfoot>
+                              <tr className="border-t-2 border-gray-300 font-medium">
+                                <td className="py-2">TOTAL</td>
+                                <td className="text-right py-2">{selectedFicha.pesoFinalGramas}g</td>
+                                <td className="text-right py-2">100%</td>
+                                <td className="text-right py-2">—</td>
+                                <td className="text-right py-2">{formatCurrency(custoTotal)}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">Nenhum ingrediente cadastrado</p>
+                      )}
+                    </div>
+
+                    {/* Modo de Preparo + Nutrição */}
+                    <div className="print-section">
+                      <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Modo de Preparo</h4>
+                      {(() => {
+                        const steps = (selectedFicha.modoPreparo || '')
+                          .split('\n')
+                          .map(s => s.trim())
+                          .filter(Boolean)
+                        return (
+                          <ol className="list-decimal pl-5 space-y-1 text-sm leading-relaxed">
+                            {steps.length > 0 ? (
+                              steps.map((line, i) => (<li key={i}>{line}</li>))
+                            ) : (
+                              <li>Modo de preparo não informado</li>
+                            )}
+                          </ol>
+                        )
+                      })()}
+
+                      {hasNutritionalData && nutritionPerPortion && nutritionPer100g && (
+                        <div className="mt-6">
+                          <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Nutricionais</h4>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <h5 className="font-medium text-gray-800 mb-2">Por Porção ({pesoPorPorcao.toFixed(1)}g)</h5>
+                              <div className="space-y-1 text-sm">
+                                <div className="flex justify-between"><span>Calorias:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.calorias, 'kcal')}</span></div>
+                                <div className="flex justify-between"><span>Proteínas:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.proteinas, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Carboidratos:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.carboidratos, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Gorduras:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.gorduras, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Fibras:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.fibras, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Sódio:</span><span className="font-medium">{formatNutritionalValue(nutritionPerPortion.sodio, 'mg')}</span></div>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-gray-800 mb-2">Por 100g</h5>
+                              <div className="space-y-1 text-sm">
+                                <div className="flex justify-between"><span>Calorias:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.calorias, 'kcal')}</span></div>
+                                <div className="flex justify-between"><span>Proteínas:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.proteinas, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Carboidratos:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.carboidratos, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Gorduras:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.gorduras, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Fibras:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.fibras, 'g')}</span></div>
+                                <div className="flex justify-between"><span>Sódio:</span><span className="font-medium">{formatNutritionalValue(nutritionPer100g.sodio, 'mg')}</span></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Rodapé */}
+                  <div className="px-6 pb-4 mt-2 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex justify-between">
+                    <span>Impresso em: {new Date().toLocaleDateString('pt-BR')}</span>
+                    <span>FichaChef • Sistema de Fichas</span>
                   </div>
                 </div>
               )
             })()}
-
-            <div className="mb-6 print-section">
-              <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes</h4>
-              {selectedFicha.ingredientes.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="ingredients-table w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-2 font-medium">Ingrediente</th>
-                        <th className="text-right py-2 font-medium">Quantidade</th>
-                        <th className="text-right py-2 font-medium">%</th>
-                        <th className="text-right py-2 font-medium">Custo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedFicha.ingredientes.map((ing, index) => {
-                        const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
-                        const custoIngrediente = custoPorGrama * ing.quantidadeGramas
-                        const percentual = (ing.quantidadeGramas / selectedFicha.pesoFinalGramas) * 100
-
-                        return (
-                          <tr key={index} className="border-b border-gray-100">
-                            <td className="py-2">{ing.insumo.nome}</td>
-                            <td className="text-right py-2">{ing.quantidadeGramas}g</td>
-                            <td className="text-right py-2">{percentual.toFixed(1)}%</td>
-                            <td className="text-right py-2">{formatCurrency(custoIngrediente)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-gray-300 font-medium">
-                        <td className="py-2">TOTAL</td>
-                        <td className="text-right py-2">{selectedFicha.pesoFinalGramas}g</td>
-                        <td className="text-right py-2">100%</td>
-                        <td className="text-right py-2">{formatCurrency(calculateCustoTotal(selectedFicha))}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">Nenhum ingrediente cadastrado</p>
-              )}
-            </div>
-
-            <div className="print-section">
-              <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Modo de Preparo</h4>
-              {(() => {
-                const steps = (selectedFicha.modoPreparo || '')
-                  .split('\n')
-                  .map(s => s.trim())
-                  .filter(Boolean)
-                return (
-                  <ol className="list-decimal pl-5 space-y-1 text-sm leading-relaxed">
-                    {steps.length > 0 ? (
-                      steps.map((line, i) => (<li key={i}>{line}</li>))
-                    ) : (
-                      <li>Modo de preparo não informado</li>
-                    )}
-                  </ol>
-                )
-              })()}
-            </div>
-
-            <div className="px-6 pb-4 mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex justify-between">
-              <span>Impresso em: {new Date().toLocaleDateString('pt-BR')}</span>
-              <span>Receita Pro - Sistema de Fichas para Panificação</span>
-            </div>
           </div>
         )}
       </div>
@@ -562,7 +597,6 @@ export default function ImpressaoPage() {
             print-color-adjust: exact !important;
           }
 
-          /* Mostrar somente a ficha selecionada durante a impressão */
           :global(body *) {
             visibility: hidden !important;
           }
@@ -579,54 +613,33 @@ export default function ImpressaoPage() {
             padding: 0 !important;
             margin: 0 !important;
             background: white !important;
-            color: black !important;
-            font-size: 9.5pt !important;
-            line-height: 1.35 !important;
+            color: #111827 !important;
+            font-size: 9.8pt !important;
+            line-height: 1.4 !important;
           }
-          
-          .no-print {
-            display: none !important;
-          }
-          
+
+          .no-print { display: none !important; }
+
+          .print-container { padding: 0 !important; }
+
           .print-section {
-            margin: 0.4cm 0 !important;
+            margin: 0.5cm 0 !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
-          
-          table {
-            border-collapse: collapse !important;
-            width: 100% !important;
-            table-layout: fixed !important;
-          }
-          
-          th, td {
-            border: 1px solid #ddd !important;
-            padding: 6px !important;
-            text-align: left !important;
-            font-size: 9pt !important;
-          }
-          
-          th {
-            background-color: #f5f5f5 !important;
-            font-weight: 600 !important;
-          }
-          
-          h1, h2, h3, h4 { color: black !important; }
+
+          table { border-collapse: collapse !important; width: 100% !important; table-layout: fixed !important; }
+          th, td { border: 1px solid #E5E7EB !important; padding: 6px !important; text-align: left !important; font-size: 9pt !important; }
+          th { background-color: #F9FAFB !important; font-weight: 600 !important; }
+
+          h1, h2, h3, h4 { color: #111827 !important; }
           h1 { font-size: 16pt !important; }
           h2 { font-size: 13pt !important; }
           h3 { font-size: 11pt !important; }
           h4 { font-size: 10pt !important; }
-          
-          .text-gray-500, .text-gray-600 {
-            color: #666 !important;
-          }
-          
-          .text-gray-900 {
-            color: black !important;
-          }
 
-          .print-optional { display: none !important; }
+          .text-gray-500, .text-gray-600 { color: #6B7280 !important; }
+          .text-gray-900 { color: #111827 !important; }
         }
       `}</style>
     </DashboardLayout>
