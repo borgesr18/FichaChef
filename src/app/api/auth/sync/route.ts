@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    console.error('Failed to sync auth:', error)
     return NextResponse.json({ error: 'Failed to sync auth' }, { status: 500 })
   }
 }
