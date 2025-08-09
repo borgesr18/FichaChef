@@ -67,7 +67,8 @@ export default function ProdutosPage() {
       const response = await fetch('/api/produtos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
-        setProdutos(data)
+        const produtosData = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+        setProdutos(produtosData)
       }
     } catch (error) {
       console.error('Error fetching produtos:', error)
@@ -79,7 +80,8 @@ export default function ProdutosPage() {
       const response = await fetch('/api/fichas-tecnicas', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
-        setFichasTecnicas(data)
+        const fichasData = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+        setFichasTecnicas(fichasData)
       }
     } catch (error) {
       console.error('Error fetching fichas técnicas:', error)

@@ -218,7 +218,7 @@ export default function CardapiosPage() {
 
   const fetchProdutos = async () => {
     try {
-      const response = await fetch('/api/produtos')
+      const response = await fetch('/api/produtos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setProdutos(data)
