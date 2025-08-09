@@ -1,7 +1,9 @@
 CREATE TABLE IF NOT EXISTS perfis_usuarios (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT CHECK (role IN ('admin', 'cozinha', 'estoque', 'financeiro')) DEFAULT 'admin',
+  role TEXT CHECK (role IN ('chef', 'gerente', 'cozinheiro')) DEFAULT 'cozinheiro',
+  nome TEXT NULL,
+  email TEXT NULL,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -14,11 +16,11 @@ LANGUAGE sql STABLE AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION is_chef() RETURNS BOOLEAN
 LANGUAGE sql STABLE AS $$
   SELECT EXISTS (
     SELECT 1 FROM perfis_usuarios
-    WHERE user_id = auth.uid()::text AND role = 'admin'
+    WHERE user_id = auth.uid()::text AND role = 'chef'
   );
 $$;
 

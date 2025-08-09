@@ -203,15 +203,25 @@ export default function UsuariosPage() {
     setPasswordResetLoading(true)
 
     try {
-      const response = await fetch('/api/usuarios/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: selectedUser?.userId,
-          method: resetMethod,
-          newPassword: resetMethod === 'direct' ? newPassword : undefined
+      let response: Response
+      if (resetMethod === 'email') {
+        response = await fetch('/api/usuarios/send-password-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: selectedUser?.email
+          })
         })
-      })
+      } else {
+        response = await fetch('/api/usuarios/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: selectedUser?.userId,
+            newPassword: newPassword
+          })
+        })
+      }
 
       if (response.ok) {
         setShowPasswordResetModal(false)

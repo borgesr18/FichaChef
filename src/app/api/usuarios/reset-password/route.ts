@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createSuccessResponse, createErrorResponse } from '@/lib/auth'
-import { requireApiAuthentication } from '@/lib/supabase-api'
+import { createSuccessResponse, createErrorResponse, createForbiddenResponse, authenticateWithPermission } from '@/lib/auth'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -11,10 +10,10 @@ const resetPasswordSchema = z.object({
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  const auth = await requireApiAuthentication(request)
-  
-  if (!auth.authenticated) {
-    return auth.response!
+  try {
+    await authenticateWithPermission('usuarios', 'admin')
+  } catch {
+    return createForbiddenResponse('Acesso negado')
   }
 
   const body = await request.json()
