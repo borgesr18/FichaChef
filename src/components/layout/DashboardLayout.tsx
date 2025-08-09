@@ -86,13 +86,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
 
-      {/* ✅ Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Overlay duplicado removido: o componente `Sidebar` já renderiza seu próprio overlay no mobile */}
     </div>
   )
 }
