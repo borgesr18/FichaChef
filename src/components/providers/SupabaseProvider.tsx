@@ -53,6 +53,13 @@ interface AuthStateChangeEvent {
   }
 }
 
+// Define a typed shape for the perfil row returned by Supabase
+interface PerfilUsuarioRow {
+  role?: UserRole
+  nome?: string | null
+  email?: string | null
+}
+
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
@@ -181,7 +188,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         }
 
         // ✅ Nome do perfil se existir, senão fallback
-        setDisplayName((data && (data as any).nome) || fallbackDisplay)
+        setDisplayName(((data as PerfilUsuarioRow | null)?.nome) || fallbackDisplay)
       } else {
         // 🔧 FALLBACK SIMPLES
         console.log('⚠️ [PROVIDER] Consulta falhou, usando fallback')
