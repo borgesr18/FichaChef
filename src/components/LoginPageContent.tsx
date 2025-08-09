@@ -239,13 +239,6 @@ export default function LoginPageContent() {
             </div>
           )}
 
-          {/* ✅ DEBUG INFO */}
-          <div className="mt-4 p-3 bg-white/60 rounded-xl text-xs text-gray-600">
-            <p><strong>Current Path:</strong> {typeof window !== 'undefined' ? window.location.pathname : 'N/A'}</p>
-            <p><strong>User:</strong> {user ? user.email : 'None'}</p>
-            <p><strong>Redirect Executed:</strong> {redirectExecuted ? 'Yes' : 'No'}</p>
-            <p><strong>Auth Loading:</strong> {authLoading ? 'Yes' : 'No'}</p>
-          </div>
         </div>
 
         {/* ✅ Form */}
@@ -333,17 +326,6 @@ export default function LoginPageContent() {
               )}
             </button>
 
-            {/* ✅ BOTÃO DE TESTE DIRETO */}
-            <button
-              type="button"
-              onClick={() => {
-                console.log('🧪 [LOGIN] Teste direto de redirecionamento')
-                performRedirect('/dashboard')
-              }}
-              className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
-            >
-              🧪 Testar Redirecionamento Direto
-            </button>
           </form>
 
           {/* ✅ Dados de teste */}
