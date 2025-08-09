@@ -318,3 +318,9 @@ Se o Service Worker não funcionar:
 
 **Desenvolvido com ❤️ para a comunidade gastronômica**
 
+## Ícones e Manifest
+
+- Os ícones ficam em `public/icons/`.
+- Use `/icons/icon.png` para favicons, Apple touch icon e atalhos do PWA.
+- O manifesto (`public/manifest.json`) não referencia mais SVG inexistente; se desejar usar SVG, mantenha também um `public/icons/icon.svg` válido.
+

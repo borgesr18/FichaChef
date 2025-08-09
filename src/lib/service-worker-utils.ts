@@ -282,8 +282,8 @@ export function createUpdateNotification(onUpdate: () => void) {
       if ('Notification' in window && Notification.permission === 'granted') {
         const notification = new Notification('FichaChef - Atualização Disponível', {
           body: 'Uma nova versão está disponível. Clique para atualizar.',
-          icon: '/icons/icon.svg',
-          badge: '/icons/icon.svg',
+          icon: '/icons/icon.png',
+          badge: '/icons/icon.png',
           tag: 'app-update',
           requireInteraction: true
         })

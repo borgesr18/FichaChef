@@ -64,12 +64,6 @@
       "src": "/icons/favicon.ico",
       "sizes": "32x32 16x16",
       "type": "image/x-icon"
-    },
-    {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "monochrome"
     }
   ],
   "shortcuts": [

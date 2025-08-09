@@ -74,11 +74,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/(icon\\.png|favicon\\.ico)',
+        source: '/icons/(icon\\.png|favicon\\.ico)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable', // 1 ano
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

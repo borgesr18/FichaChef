@@ -11,7 +11,7 @@ const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/manifest.json',
-  '/icons/icon.svg'
+  '/icons/icon.png'
 ]
 
 // ✅ URLs que NUNCA devem ser interceptadas pelo Service Worker
