@@ -384,6 +384,36 @@ export default function ImpressaoPage() {
                 Data de Impressão: {new Date().toLocaleDateString('pt-BR')}
               </div>
             </div>
+ 
+            {/* Resumo compacto para impressão */}
+            <div className="only-print print-section">
+              <div className="print-metrics">
+                <div className="metric">
+                  <div className="label">Porções</div>
+                  <div className="value">{selectedFicha.numeroPorcoes}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Peso Total</div>
+                  <div className="value">{selectedFicha.pesoFinalGramas}g</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Peso/Porção</div>
+                  <div className="value">{calculatePesoPorPorcao(selectedFicha).toFixed(1)}g</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Custo Total</div>
+                  <div className="value">{formatCurrency(calculateCustoTotal(selectedFicha))}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Custo/Porção</div>
+                  <div className="value">{formatCurrency(calculateCustoPorPorcao(selectedFicha))}</div>
+                </div>
+                <div className="metric">
+                  <div className="label">Custo/100g</div>
+                  <div className="value">{formatCurrency((calculateCustoTotal(selectedFicha) / selectedFicha.pesoFinalGramas) * 100)}</div>
+                </div>
+              </div>
+            </div>
 
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Ficha Técnica</h2>
@@ -391,7 +421,7 @@ export default function ImpressaoPage() {
               <p className="text-sm text-gray-500 mt-1">Categoria: {selectedFicha.categoria.nome}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-2 gap-6 mb-6 no-print">
               <div className="print-section">
                 <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Gerais</h4>
                 <div className="space-y-2 text-sm">
@@ -582,11 +612,28 @@ export default function ImpressaoPage() {
                 <p>• Rendimento esperado: {selectedFicha.numeroPorcoes} porções de {calculatePesoPorPorcao(selectedFicha).toFixed(1)}g cada</p>
               </div>
             </div>
+
+            {/* Assinaturas (somente impressão) */}
+            <div className="print-section only-print">
+              <div className="signature-grid">
+                <div className="signature-box">
+                  <div className="signature-line"></div>
+                  <div className="text-xs mt-1">Responsável</div>
+                </div>
+                <div className="signature-box">
+                  <div className="signature-line"></div>
+                  <div className="text-xs mt-1">Data</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       <style jsx>{`
+        /* Elementos exclusivos da impressão ficam ocultos na tela */
+        .only-print { display: none; }
+
         @media print {
           @page {
             size: A4;
@@ -610,6 +657,7 @@ export default function ImpressaoPage() {
           .no-print {
             display: none !important;
           }
+          .only-print { display: block !important; }
           
           .print-content {
             box-shadow: none !important;
@@ -633,6 +681,20 @@ export default function ImpressaoPage() {
             break-inside: avoid !important;
           }
           .print-optional { display: none !important; }
+
+          /* Resumo de métricas no topo da ficha */
+          .print-metrics {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+          }
+          .metric {
+            border: 1px solid #ddd !important;
+            border-radius: 6px !important;
+            padding: 8px !important;
+          }
+          .metric .label { font-size: 8pt !important; color: #666 !important; }
+          .metric .value { font-size: 11pt !important; font-weight: 700 !important; }
           
           table {
             border-collapse: collapse !important;
@@ -644,6 +706,7 @@ export default function ImpressaoPage() {
             padding: 8px !important;
             text-align: left !important;
           }
+          tbody tr:nth-child(even) { background-color: #fafafa !important; }
           
           th {
             background-color: #f5f5f5 !important;
@@ -663,7 +726,7 @@ export default function ImpressaoPage() {
           .text-gray-900 {
             color: black !important;
           }
-
+ 
           /* Simplificar tabela de ingredientes na impressão: mostrar apenas Ingrediente e Quantidade */
           table thead th:nth-child(3),
           table thead th:nth-child(4),
@@ -678,10 +741,19 @@ export default function ImpressaoPage() {
           table tfoot td:nth-child(3),
           table tfoot td:nth-child(4),
           table tfoot td:nth-child(5) { display: none !important; }
-
+ 
           /* Nutrição: usar apenas uma coluna na impressão */
           .nutrition-grid { grid-template-columns: 1fr !important; }
           .nutrition-grid > div:nth-child(2) { display: none !important; }
+
+          /* Assinaturas */
+          .signature-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 16px !important;
+          }
+          .signature-box { height: 50px !important; }
+          .signature-line { border-top: 1px solid #999 !important; height: 0 !important; }
         }
       `}</style>
     </DashboardLayout>
