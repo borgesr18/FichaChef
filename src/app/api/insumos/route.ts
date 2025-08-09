@@ -85,17 +85,8 @@ interface AuthenticatedUser {
 // ✅ FUNÇÃO DE AUTENTICAÇÃO SIMPLIFICADA
 const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
   try {
-    // 🔧 MODO DESENVOLVIMENTO - SEMPRE PERMITIR
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 [INSUMOS API] Modo desenvolvimento - usuário fake')
-      return {
-        id: 'dev-user',
-        email: 'dev@fichachef.com'
-      }
-    }
-
-    // 🔧 PRODUÇÃO - USUÁRIO TEMPORÁRIO PARA MANTER FUNCIONALIDADE
-    console.log('🔧 [INSUMOS API] Produção - usuário temporário')
+    // 🔧 USUÁRIO TEMPORÁRIO - MANTENDO CONSISTÊNCIA COM OS DADOS
+    console.log('🔧 [INSUMOS API] Usando usuário temporário')
     return {
       id: 'temp-prod-user',
       email: 'temp@fichachef.com'
