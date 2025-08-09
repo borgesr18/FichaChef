@@ -85,7 +85,7 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(word => word[0]?.toUpperCase())
+    .map((word: string) => (word[0] ?? '').toUpperCase())
     .join('') || 'US'
 
   return (
