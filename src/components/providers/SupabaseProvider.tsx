@@ -33,6 +33,12 @@ async function syncSessionCookie() {
 
 type UserRole = 'chef' | 'gerente' | 'cozinheiro' | null
 
+interface PerfilUsuarioRow {
+  role: string | null
+  nome: string | null
+  email: string | null
+}
+
 interface SupabaseContextType {
   user: User | null
   userRole: UserRole
@@ -168,6 +174,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         .from('perfis_usuarios')
         .select('role, nome, email')
         .eq('user_id', user.id)
+        .returns<PerfilUsuarioRow>()
         .single()
 
       if (!error && data?.role) {
@@ -181,7 +188,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         }
 
         // ✅ Nome do perfil se existir, senão fallback
-        setDisplayName((data && (data as any).nome) || fallbackDisplay)
+        setDisplayName(data?.nome || fallbackDisplay)
       } else {
         // 🔧 FALLBACK SIMPLES
         console.log('⚠️ [PROVIDER] Consulta falhou, usando fallback')
