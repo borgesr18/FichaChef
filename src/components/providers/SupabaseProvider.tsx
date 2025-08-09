@@ -170,16 +170,18 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 🔍 TENTAR CONSULTA SIMPLES (SEM CIRCUIT BREAKER)
-      const { data, error } = await supabase
+      const result = await supabase
         .from('perfis_usuarios')
         .select('role, nome, email')
         .eq('user_id', user.id)
-        .returns<PerfilUsuarioRow>()
         .single()
 
-      if (!error && data?.role) {
-        console.log('✅ [PROVIDER] Role encontrado via consulta:', data.role)
-        const role = data.role as UserRole
+      const profile = (result.data ?? null) as PerfilUsuarioRow | null
+      const error = result.error
+
+      if (!error && profile?.role) {
+        console.log('✅ [PROVIDER] Role encontrado via consulta:', profile.role)
+        const role = profile.role as UserRole
         setUserRole(role)
         
         // ✅ CORREÇÃO: Verificar se role não é null antes de salvar no localStorage
@@ -188,7 +190,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         }
 
         // ✅ Nome do perfil se existir, senão fallback
-        setDisplayName(data?.nome || fallbackDisplay)
+        setDisplayName(profile?.nome || fallbackDisplay)
       } else {
         // 🔧 FALLBACK SIMPLES
         console.log('⚠️ [PROVIDER] Consulta falhou, usando fallback')
