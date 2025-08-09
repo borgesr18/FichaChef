@@ -7,6 +7,30 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo } 
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
 
+async function syncSessionCookie() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    await fetch('/api/auth/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        token_type: session.token_type,
+        user: session.user,
+      }),
+      credentials: 'include',
+    })
+  } catch (e) {
+    console.warn('Falha ao sincronizar sessão', e)
+  }
+}
+
 type UserRole = 'chef' | 'gerente' | 'cozinheiro' | null
 
 interface SupabaseContextType {
@@ -68,6 +92,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Fazer logout no Supabase se configurado
       if (isConfigured) {
         await supabase.auth.signOut()
+        try { await fetch('/api/auth/sync', { method: 'DELETE', credentials: 'include' }) } catch {}
       }
       
       console.log('✅ [PROVIDER] Logout realizado com sucesso')
@@ -177,6 +202,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
           if (session?.user) {
             console.log('✅ [PROVIDER] Sessão encontrada:', session.user.email)
             setUser(session.user)
+            // Sincronizar cookie para APIs reconhecerem a sessão
+            await syncSessionCookie()
           } else {
             console.log('🚫 [PROVIDER] Nenhuma sessão encontrada')
           }
@@ -208,10 +235,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
               console.log('✅ [PROVIDER] Definindo usuário:', session.user.email)
               setUser(session.user)
+              // Sincronizar cookie para APIs reconhecerem a sessão
+              await syncSessionCookie()
             } else {
               console.log('🚫 [PROVIDER] Limpando usuário')
               setUser(null)
               setUserRole(null)
+              try { await fetch('/api/auth/sync', { method: 'DELETE', credentials: 'include' }) } catch {}
             }
             setLoading(false)
           }
