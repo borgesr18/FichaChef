@@ -161,7 +161,7 @@ export default function UsuariosPage() {
         await fetchUsuarios()
       } else {
         const error = await response.json()
-        alert(error.message || 'Erro ao criar usuário')
+        alert(error.error || error.message || 'Erro ao criar usuário')
       }
     } catch (error) {
       console.error('Error creating user:', error)
@@ -188,7 +188,7 @@ export default function UsuariosPage() {
         alert('Convite enviado com sucesso!')
       } else {
         const error = await response.json()
-        alert(error.message || 'Erro ao enviar convite')
+        alert(error.error || error.message || 'Erro ao enviar convite')
       }
     } catch (error) {
       console.error('Error sending invite:', error)
@@ -230,7 +230,7 @@ export default function UsuariosPage() {
         alert(resetMethod === 'direct' ? 'Senha alterada com sucesso!' : 'Email de redefinição enviado!')
       } else {
         const error = await response.json()
-        alert(error.message || 'Erro ao redefinir senha')
+        alert(error.error || error.message || 'Erro ao redefinir senha')
       }
     } catch (error) {
       console.error('Error resetting password:', error)
@@ -253,7 +253,7 @@ export default function UsuariosPage() {
         alert('Usuário excluído com sucesso!')
       } else {
         const error = await response.json()
-        alert(error.message || 'Erro ao excluir usuário')
+        alert(error.error || error.message || 'Erro ao excluir usuário')
       }
     } catch (error) {
       console.error('Error deleting user:', error)
