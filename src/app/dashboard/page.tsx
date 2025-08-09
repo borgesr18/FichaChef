@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { useSupabase } from '@/components/providers/SupabaseProvider'
 import { BarChart3, Package, FileText, AlertTriangle, DollarSign, TrendingUp, Edit, Printer, Trash2, Plus } from 'lucide-react'
 
 interface DashboardStats {
@@ -23,6 +24,8 @@ interface FichaTecnica {
 }
 
 export default function DashboardPage() {
+  const { user } = useSupabase()
+  const userDisplayName = user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Chef'
   const [stats, setStats] = useState<DashboardStats>({
     insumos: 0,
     fichasTecnicas: 0,
@@ -172,7 +175,7 @@ export default function DashboardPage() {
       <div className="p-6 space-y-8">
         {/* Welcome Section - Design Figma */}
         <div className="bg-gradient-to-r from-[#1B2E4B] to-[#5AC8FA] text-white rounded-xl p-6">
-          <h1 className="text-2xl font-bold mb-2">Bem-vindo de volta, Chef Carlos!</h1>
+          <h1 className="text-2xl font-bold mb-2">Bem-vindo de volta, {userDisplayName}!</h1>
           <p className="text-blue-100">Gerencie suas fichas técnicas e otimize seus custos culinários</p>
         </div>
 
