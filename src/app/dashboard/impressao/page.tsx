@@ -6,6 +6,7 @@ import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
 import { Printer, FileText, TrendingUp, Download, Search, Eye, Clock, Thermometer, Scale, DollarSign } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
+import Image from 'next/image'
 
 interface FichaTecnica {
   id: string
@@ -418,7 +419,7 @@ export default function ImpressaoPage() {
                       </div>
                       {/* QR para referência rápida (impresso) */}
                       <div className="no-print:hidden">
-                        <img
+                        <Image
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(selectedFicha.nome)}`}
                           alt="QR"
                           className="rounded-md border border-gray-200"

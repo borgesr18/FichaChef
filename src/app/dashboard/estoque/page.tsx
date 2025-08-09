@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Modal from '@/components/ui/Modal'
 import FloatingLabelInput from '@/components/ui/FloatingLabelInput'
@@ -43,6 +43,18 @@ interface Produto {
   nome: string
 }
 
+// Helper moved to module scope to keep stable reference for hooks
+const coerceArray = <T,>(data: unknown, keys: string[] = []): T[] => {
+  if (Array.isArray(data)) return data as T[]
+  if (data && typeof data === 'object') {
+    for (const key of keys) {
+      const candidate = (data as Record<string, unknown>)[key]
+      if (Array.isArray(candidate)) return candidate as T[]
+    }
+  }
+  return []
+}
+
 export default function EstoquePage() {
   const [activeTab, setActiveTab] = useState<'insumos' | 'produtos'>('insumos')
   const [searchTerm, setSearchTerm] = useState('')
@@ -71,25 +83,7 @@ export default function EstoquePage() {
     dataValidade: ''
   })
 
-  useEffect(() => {
-    fetchMovimentacoesInsumos()
-    fetchMovimentacoesProdutos()
-    fetchInsumos()
-    fetchProdutos()
-  }, [])
-
-  const coerceArray = <T,>(data: unknown, keys: string[] = []): T[] => {
-    if (Array.isArray(data)) return data as T[]
-    if (data && typeof data === 'object') {
-      for (const key of keys) {
-        const candidate = (data as Record<string, unknown>)[key]
-        if (Array.isArray(candidate)) return candidate as T[]
-      }
-    }
-    return []
-  }
-
-  const fetchMovimentacoesInsumos = async () => {
+  const fetchMovimentacoesInsumos = useCallback(async () => {
     try {
       const response = await fetch('/api/movimentacoes-estoque')
       if (response.ok) {
@@ -103,9 +97,9 @@ export default function EstoquePage() {
       console.error('Error fetching movimentacoes insumos:', error)
       setMovimentacoesInsumos([])
     }
-  }
+  }, [])
 
-  const fetchMovimentacoesProdutos = async () => {
+  const fetchMovimentacoesProdutos = useCallback(async () => {
     try {
       const response = await fetch('/api/movimentacoes-produto')
       if (response.ok) {
@@ -119,9 +113,9 @@ export default function EstoquePage() {
       console.error('Error fetching movimentacoes produtos:', error)
       setMovimentacoesProdutos([])
     }
-  }
+  }, [])
 
-  const fetchInsumos = async () => {
+  const fetchInsumos = useCallback(async () => {
     try {
       const response = await fetch('/api/insumos')
       if (response.ok) {
@@ -134,9 +128,9 @@ export default function EstoquePage() {
       console.error('Error fetching insumos:', error)
       setInsumos([])
     }
-  }
+  }, [])
 
-  const fetchProdutos = async () => {
+  const fetchProdutos = useCallback(async () => {
     try {
       const response = await fetch('/api/produtos')
       if (response.ok) {
@@ -149,7 +143,14 @@ export default function EstoquePage() {
       console.error('Error fetching produtos:', error)
       setProdutos([])
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchMovimentacoesInsumos()
+    fetchMovimentacoesProdutos()
+    fetchInsumos()
+    fetchProdutos()
+  }, [fetchMovimentacoesInsumos, fetchMovimentacoesProdutos, fetchInsumos, fetchProdutos])
 
   const handleOpenModal = (movimentacao?: MovimentacaoInsumo | MovimentacaoProduto) => {
     setEditingMovimentacao(movimentacao || null)

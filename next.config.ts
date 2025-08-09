@@ -86,7 +86,7 @@ const nextConfig: NextConfig = {
   },
   
   images: {
-    domains: ['localhost', 'supabase.co'],
+    domains: ['localhost', 'supabase.co', 'api.qrserver.com'],
     formats: ['image/webp', 'image/avif'],
     remotePatterns: [
       {
