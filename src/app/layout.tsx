@@ -68,14 +68,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="icon" href="/favicon.ico" />
         
         {/* Favicons PNG para diferentes tamanhos */}
-        <link rel="icon" type="image/png" sizes="16x16" href="/icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icon.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon.png" />
         
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icons/icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon.png" />
         
         {/* PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -83,7 +83,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="apple-mobile-web-app-title" content="FichaChef" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#1B2E4B" />
-        <meta name="msapplication-TileImage" content="/icon.png" />
+        <meta name="msapplication-TileImage" content="/icons/icon.png" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#5AC8FA" />
         
