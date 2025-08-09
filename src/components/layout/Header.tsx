@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {
-  const { user, userRole, signOut } = useSupabase() as any
+  const { user, userRole, signOut } = useSupabase()
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
