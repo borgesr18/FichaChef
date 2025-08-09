@@ -28,7 +28,6 @@ export const GET = withErrorHandler(async function GET() {
     return createValidationErrorResponse('Não autorizado')
   }
 
-  // Removido withTempUserHandling para garantir que produtos salvos sejam retornados
   const produtos = await withConnectionHealthCheck(async () => {
     return await withDatabaseRetry(async () => {
       return await prisma.produto.findMany({
