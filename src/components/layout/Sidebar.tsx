@@ -63,6 +63,7 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
 
   // Usar onClose se disponível, senão usar onToggle
   const handleClose = onClose || onToggle || (() => {})
+  const handleToggle = onToggle || onClose || (() => {})
 
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !userRole) return true
@@ -73,7 +74,7 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
     <>
       {/* Mobile menu button */}
       <button
-        onClick={handleClose}
+        onClick={handleToggle}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#1B2E4B] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
         aria-label="Toggle menu"
       >

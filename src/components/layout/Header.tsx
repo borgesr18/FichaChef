@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps = {}) {
-  const { user, signOut } = useSupabase()
+  const { user, userRole, signOut } = useSupabase() as any
   const router = useRouter()
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
@@ -78,6 +78,15 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
   }
 
   const notificacaoNaoLidas = notificacoes.filter(n => !n.lida)
+
+  const userDisplayName = user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'
+  const userRoleLabel = (userRole === 'chef' && 'Chef') || (userRole === 'gerente' && 'Gerente') || (userRole === 'cozinheiro' && 'Cozinheiro') || 'Usuário'
+  const initials = userDisplayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(word => word[0]?.toUpperCase())
+    .join('') || 'US'
 
   return (
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/40 z-30 shadow-lg shadow-slate-200/20 transition-all duration-300">
@@ -210,11 +219,11 @@ export default function Header({ onGlobalSearch, onToggleWorkflow }: HeaderProps
 
               <div className="flex items-center space-x-3 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200/60 hover:bg-white/90 transition-all duration-300 hover:shadow-md hover:shadow-slate-200/30">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">CC</span>
+                  <span className="text-white font-bold text-sm">{initials}</span>
                 </div>
                 <div className="hidden md:block">
-                  <div className="text-sm font-semibold text-slate-800">Chef Carlos</div>
-                  <div className="text-xs text-slate-600">Administrador</div>
+                  <div className="text-sm font-semibold text-slate-800">{userDisplayName}</div>
+                  <div className="text-xs text-slate-600">{userRoleLabel}</div>
                 </div>
               </div>
             </>

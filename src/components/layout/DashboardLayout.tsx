@@ -70,6 +70,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
+        onToggle={() => setSidebarOpen(prev => !prev)}
       />
 
       {/* ✅ Main Content */}
