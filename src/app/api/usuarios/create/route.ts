@@ -5,6 +5,7 @@ import { createSuccessResponse, createErrorResponse, createForbiddenResponse, au
 import { withErrorHandler } from '@/lib/api-helpers'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { authenticateUser } from '@/lib/auth'
 
 const createUserSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -14,10 +15,16 @@ const createUserSchema = z.object({
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
-  try {
-    await authenticateWithPermission('usuarios', 'admin')
-  } catch {
-    return createForbiddenResponse('Acesso negado')
+  // Override rápido: admin conhecido pode criar usuários
+  const baseUser = await authenticateUser()
+  if (baseUser?.email === 'rba1807@gmail.com') {
+    // ok
+  } else {
+    try {
+      await authenticateWithPermission('usuarios', 'admin')
+    } catch {
+      return createForbiddenResponse('Acesso negado')
+    }
   }
 
   const body = await request.json()

@@ -127,7 +127,7 @@ export default function InsumosPage() {
 
   const fetchInsumos = async () => {
     try {
-      const response = await fetch('/api/insumos')
+      const response = await fetch('/api/insumos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         
@@ -153,7 +153,7 @@ export default function InsumosPage() {
 
   const fetchCategorias = async () => {
     try {
-      const response = await fetch('/api/categorias-insumos')
+      const response = await fetch('/api/categorias-insumos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         
@@ -174,7 +174,7 @@ export default function InsumosPage() {
 
   const fetchUnidades = async () => {
     try {
-      const response = await fetch('/api/unidades-medida')
+      const response = await fetch('/api/unidades-medida', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         
@@ -195,7 +195,7 @@ export default function InsumosPage() {
 
   const fetchFornecedores = async () => {
     try {
-      const response = await fetch('/api/fornecedores')
+      const response = await fetch('/api/fornecedores', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         

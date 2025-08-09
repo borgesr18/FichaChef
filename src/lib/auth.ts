@@ -159,6 +159,15 @@ export async function authenticateUserWithProfile(): Promise<AuthenticatedUser |
       })
     })
 
+    // Override de admin conhecido
+    if (user.email === 'rba1807@gmail.com') {
+      return {
+        ...user,
+        role: 'chef',
+        nome: perfil?.nome || 'Administrador'
+      }
+    }
+
     if (!perfil) {
       // ✅ CORRIGIDO: Não criar perfil automaticamente
       // Se não existe perfil, retorna usuário sem role
