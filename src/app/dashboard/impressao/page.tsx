@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import FloatingLabelSelect from '@/components/ui/FloatingLabelSelect'
-import { Printer, FileText, TrendingUp, Download, Search, Eye } from 'lucide-react'
+import { Printer, FileText, TrendingUp, Download, Search, Eye, Clock, Thermometer, Scale, DollarSign } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { calculateTotalNutrition, calculateNutritionPerPortion, calculateNutritionPer100g, formatNutritionalValue } from '@/lib/nutritional-utils'
 
@@ -119,6 +119,11 @@ export default function ImpressaoPage() {
   const calculateNutritionalPer100g = (ficha: FichaTecnica) => {
     const totalNutrition = calculateNutritionalTotal(ficha)
     return calculateNutritionPer100g(totalNutrition, ficha.pesoFinalGramas)
+  }
+
+  const formatWeight = (grams: number): string => {
+    if (grams >= 1000) return `${(grams / 1000).toFixed(2)} kg`
+    return `${grams} g`
   }
 
   const handlePrint = () => {
@@ -377,70 +382,24 @@ export default function ImpressaoPage() {
         {/* Conteúdo da Ficha Selecionada */}
         {selectedFicha && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 print-content">
-            <div className="print-header text-center border-b-2 border-gray-300 pb-4 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">FichaChef</h1>
-              <p className="text-lg text-gray-600">Sistema de Fichas Técnicas</p>
-              <div className="mt-2 text-sm text-gray-500">
-                Data de Impressão: {new Date().toLocaleDateString('pt-BR')}
-              </div>
-            </div>
-
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Ficha Técnica</h2>
-              <h3 className="text-xl text-gray-700">{selectedFicha.nome}</h3>
-              <p className="text-sm text-gray-500 mt-1">Categoria: {selectedFicha.categoria.nome}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 mb-6">
-              <div className="print-section">
-                <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Gerais</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Porções:</span>
-                    <span className="font-medium">{selectedFicha.numeroPorcoes}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Peso Final Total:</span>
-                    <span className="font-medium">{selectedFicha.pesoFinalGramas}g</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Peso por Porção:</span>
-                    <span className="font-medium">{calculatePesoPorPorcao(selectedFicha).toFixed(1)}g</span>
-                  </div>
-                  {selectedFicha.tempoPreparo && (
-                    <div className="flex justify-between">
-                      <span>Tempo de Preparo:</span>
-                      <span className="font-medium">{selectedFicha.tempoPreparo} min</span>
-                    </div>
-                  )}
-                  {selectedFicha.temperaturaForno && (
-                    <div className="flex justify-between">
-                      <span>Temperatura do Forno:</span>
-                      <span className="font-medium">{selectedFicha.temperaturaForno}°C</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>Nível de Dificuldade:</span>
-                    <span className="font-medium">{selectedFicha.nivelDificuldade}</span>
-                  </div>
+            <div className="px-6 pt-6">
+              <h1 className="text-2xl font-bold text-gray-900">{selectedFicha.nome}</h1>
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-gray-700">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span>{selectedFicha.tempoPreparo ? `${selectedFicha.tempoPreparo} min` : '—'}</span>
                 </div>
-              </div>
-              
-              <div className="print-section">
-                <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Custos</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Custo Total:</span>
-                    <span className="font-medium">{formatCurrency(calculateCustoTotal(selectedFicha))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Custo por Porção:</span>
-                    <span className="font-medium">{formatCurrency(calculateCustoPorPorcao(selectedFicha))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Custo por 100g:</span>
-                    <span className="font-medium">{formatCurrency((calculateCustoTotal(selectedFicha) / selectedFicha.pesoFinalGramas) * 100)}</span>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Thermometer className="h-4 w-4 text-gray-500" />
+                  <span>{selectedFicha.temperaturaForno ? `${selectedFicha.temperaturaForno}°C` : '—'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Scale className="h-4 w-4 text-gray-500" />
+                  <span>{formatWeight(selectedFicha.pesoFinalGramas)}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4 text-gray-500" />
+                  <span>{formatCurrency(calculateCustoTotal(selectedFicha))}</span>
                 </div>
               </div>
             </div>
@@ -448,14 +407,13 @@ export default function ImpressaoPage() {
             {(() => {
               const totalNutrition = calculateNutritionalTotal(selectedFicha)
               const hasNutritionalData = totalNutrition.calorias > 0 || totalNutrition.proteinas > 0
-              
               if (!hasNutritionalData) return null
-              
+
               const nutritionPerPortion = calculateNutritionalPerPortion(selectedFicha)
               const nutritionPer100g = calculateNutritionalPer100g(selectedFicha)
-              
+
               return (
-                <div className="mb-6 print-section">
+                <div className="mb-6 print-section print-optional">
                   <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Informações Nutricionais</h4>
                   <div className="grid grid-cols-2 gap-6 nutrition-grid">
                     <div>
@@ -522,7 +480,7 @@ export default function ImpressaoPage() {
             })()}
 
             <div className="mb-6 print-section">
-              <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes para Produção</h4>
+              <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes</h4>
               {selectedFicha.ingredientes.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="ingredients-table w-full text-sm">
@@ -530,9 +488,8 @@ export default function ImpressaoPage() {
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-2 font-medium">Ingrediente</th>
                         <th className="text-right py-2 font-medium">Quantidade</th>
-                        <th className="text-right py-2 font-medium">Custo Unit.</th>
-                        <th className="text-right py-2 font-medium">Custo Total</th>
                         <th className="text-right py-2 font-medium">%</th>
+                        <th className="text-right py-2 font-medium">Custo</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -540,14 +497,13 @@ export default function ImpressaoPage() {
                         const custoPorGrama = ing.insumo.precoUnidade / ing.insumo.pesoLiquidoGramas
                         const custoIngrediente = custoPorGrama * ing.quantidadeGramas
                         const percentual = (ing.quantidadeGramas / selectedFicha.pesoFinalGramas) * 100
-                        
+
                         return (
                           <tr key={index} className="border-b border-gray-100">
                             <td className="py-2">{ing.insumo.nome}</td>
                             <td className="text-right py-2">{ing.quantidadeGramas}g</td>
-                            <td className="text-right py-2">{formatCurrency(custoPorGrama)}/g</td>
-                            <td className="text-right py-2">{formatCurrency(custoIngrediente)}</td>
                             <td className="text-right py-2">{percentual.toFixed(1)}%</td>
+                            <td className="text-right py-2">{formatCurrency(custoIngrediente)}</td>
                           </tr>
                         )
                       })}
@@ -556,9 +512,8 @@ export default function ImpressaoPage() {
                       <tr className="border-t-2 border-gray-300 font-medium">
                         <td className="py-2">TOTAL</td>
                         <td className="text-right py-2">{selectedFicha.pesoFinalGramas}g</td>
-                        <td className="text-right py-2">-</td>
-                        <td className="text-right py-2">{formatCurrency(calculateCustoTotal(selectedFicha))}</td>
                         <td className="text-right py-2">100%</td>
+                        <td className="text-right py-2">{formatCurrency(calculateCustoTotal(selectedFicha))}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -570,19 +525,26 @@ export default function ImpressaoPage() {
 
             <div className="print-section">
               <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Modo de Preparo</h4>
-              <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                {selectedFicha.modoPreparo || 'Modo de preparo não informado'}
-              </div>
+              {(() => {
+                const steps = (selectedFicha.modoPreparo || '')
+                  .split('\n')
+                  .map(s => s.trim())
+                  .filter(Boolean)
+                return (
+                  <ol className="list-decimal pl-5 space-y-1 text-sm leading-relaxed">
+                    {steps.length > 0 ? (
+                      steps.map((line, i) => (<li key={i}>{line}</li>))
+                    ) : (
+                      <li>Modo de preparo não informado</li>
+                    )}
+                  </ol>
+                )
+              })()}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-200 print-section print-optional">
-              <h4 className="font-bold text-gray-900 mb-2">Observações para Produção</h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>• Verificar disponibilidade de todos os ingredientes antes do início da produção</p>
-                <p>• Pesar todos os ingredientes conforme especificado na tabela acima</p>
-                <p>• Seguir rigorosamente o modo de preparo para garantir qualidade</p>
-                <p>• Rendimento esperado: {selectedFicha.numeroPorcoes} porções de {calculatePesoPorPorcao(selectedFicha).toFixed(1)}g cada</p>
-              </div>
+            <div className="px-6 pb-4 mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex justify-between">
+              <span>Impresso em: {new Date().toLocaleDateString('pt-BR')}</span>
+              <span>Receita Pro - Sistema de Fichas para Panificação</span>
             </div>
           </div>
         )}
@@ -592,7 +554,7 @@ export default function ImpressaoPage() {
         @media print {
           @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 1.2cm;
           }
 
           * {
@@ -612,57 +574,49 @@ export default function ImpressaoPage() {
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
-          }
-          
-          .no-print {
-            display: none !important;
-          }
-          
-          .print-content {
             box-shadow: none !important;
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
             background: white !important;
             color: black !important;
-            font-size: 10pt !important;
-            line-height: 1.4 !important;
+            font-size: 9.5pt !important;
+            line-height: 1.35 !important;
           }
           
-          .print-header {
-            margin-bottom: 0.8cm !important;
-            padding-bottom: 0.3cm !important;
+          .no-print {
+            display: none !important;
           }
-          .print-header p { display: none !important; }
           
           .print-section {
-            margin-bottom: 0.6cm !important;
+            margin: 0.4cm 0 !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
-          .print-optional { display: none !important; }
           
           table {
             border-collapse: collapse !important;
             width: 100% !important;
+            table-layout: fixed !important;
           }
           
           th, td {
             border: 1px solid #ddd !important;
-            padding: 8px !important;
+            padding: 6px !important;
             text-align: left !important;
+            font-size: 9pt !important;
           }
           
           th {
             background-color: #f5f5f5 !important;
-            font-weight: bold !important;
+            font-weight: 600 !important;
           }
           
           h1, h2, h3, h4 { color: black !important; }
-          h1 { font-size: 18pt !important; }
-          h2 { font-size: 14pt !important; }
-          h3 { font-size: 12pt !important; }
-          h4 { font-size: 11pt !important; }
+          h1 { font-size: 16pt !important; }
+          h2 { font-size: 13pt !important; }
+          h3 { font-size: 11pt !important; }
+          h4 { font-size: 10pt !important; }
           
           .text-gray-500, .text-gray-600 {
             color: #666 !important;
@@ -672,29 +626,7 @@ export default function ImpressaoPage() {
             color: black !important;
           }
 
-          /* Simplificar tabela de ingredientes na impressão: mostrar apenas Ingrediente e Quantidade */
-          .ingredients-table thead th:nth-child(3),
-          .ingredients-table thead th:nth-child(4),
-          .ingredients-table thead th:nth-child(5),
-          .ingredients-table tbody td:nth-child(3),
-          .ingredients-table tbody td:nth-child(4),
-          .ingredients-table tbody td:nth-child(5) {
-            display: none !important;
-          }
-          
-          /* Linha TOTAL: manter apenas primeira e segunda celas visíveis */
-          .ingredients-table tfoot td:nth-child(3),
-          .ingredients-table tfoot td:nth-child(4),
-          .ingredients-table tfoot td:nth-child(5) { display: none !important; }
-
-          /* Repetir cabeçalho e rodapé da tabela em cada página e evitar quebras em linhas */
-          .ingredients-table thead { display: table-header-group !important; }
-          .ingredients-table tfoot { display: table-footer-group !important; }
-          .ingredients-table tr { break-inside: avoid !important; page-break-inside: avoid !important; }
-
-          /* Nutrição: usar apenas uma coluna na impressão */
-          .nutrition-grid { grid-template-columns: 1fr !important; }
-          .nutrition-grid > div:nth-child(2) { display: none !important; }
+          .print-optional { display: none !important; }
         }
       `}</style>
     </DashboardLayout>
