@@ -73,10 +73,12 @@ export default function ProducaoPage() {
 
   const fetchProducoesFichas = async () => {
     try {
-      const response = await fetch('/api/producao')
+      const response = await fetch('/api/producao', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setProducoesFichas(data)
+      } else {
+        console.error('Erro ao buscar produções (fichas):', response.status)
       }
     } catch (error) {
       console.error('Error fetching producoes fichas:', error)
@@ -85,10 +87,12 @@ export default function ProducaoPage() {
 
   const fetchProducoesProdutos = async () => {
     try {
-      const response = await fetch('/api/producoes-produto')
+      const response = await fetch('/api/producoes-produto', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setProducoesProdutos(data)
+      } else {
+        console.error('Erro ao buscar produções (produtos):', response.status)
       }
     } catch (error) {
       console.error('Error fetching producoes produtos:', error)
@@ -97,10 +101,12 @@ export default function ProducaoPage() {
 
   const fetchFichasTecnicas = async () => {
     try {
-      const response = await fetch('/api/fichas-tecnicas')
+      const response = await fetch('/api/fichas-tecnicas', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setFichasTecnicas(data)
+      } else {
+        console.error('Erro ao buscar fichas técnicas:', response.status)
       }
     } catch (error) {
       console.error('Error fetching fichas tecnicas:', error)
@@ -109,10 +115,12 @@ export default function ProducaoPage() {
 
   const fetchProdutos = async () => {
     try {
-      const response = await fetch('/api/produtos')
+      const response = await fetch('/api/produtos', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setProdutos(data)
+      } else {
+        console.error('Erro ao buscar produtos:', response.status)
       }
     } catch (error) {
       console.error('Error fetching produtos:', error)
@@ -174,7 +182,8 @@ export default function ProducaoPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -200,7 +209,7 @@ export default function ProducaoPage() {
 
     try {
       const apiPath = activeSection === 'fichas' ? 'producao' : 'producoes-produto'
-      const response = await fetch(`/api/${apiPath}/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/${apiPath}/${id}`, { method: 'DELETE', credentials: 'include' })
       if (response.ok) {
         if (activeSection === 'fichas') {
           fetchProducoesFichas()

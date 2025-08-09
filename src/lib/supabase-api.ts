@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from './logger'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 /**
  * Cria um cliente Supabase específico para uso em rotas da API
@@ -23,18 +24,58 @@ export function createSupabaseApiClient(req: NextRequest) {
     supabaseKey,
     {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
+        // Fornece getAll para compatibilidade total com @supabase/ssr
+        getAll() {
+          return req.cookies.getAll()
         },
-        set() {
-          // Não definir cookies em rotas da API
-        },
-        remove() {
-          // Não remover cookies em rotas da API
+        setAll() {
+          // Em rotas da API não definimos cookies aqui; o refresh é tratado pelo cliente
         },
       },
     }
   )
+}
+
+function getAuthCookieName(): string | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!url) return null
+  const projectRef = url.split('//')[1]?.split('.')[0]
+  return projectRef ? `sb-${projectRef}-auth-token` : null
+}
+
+async function getUserFromAuthCookie(req: NextRequest) {
+  try {
+    const cookieName = getAuthCookieName()
+    if (!cookieName) return null
+
+    const raw = req.cookies.get(cookieName)?.value
+    if (!raw) return null
+
+    // Cookie armazenado como JSON pelo /api/auth/sync
+    const parsed = JSON.parse(raw) as {
+      access_token?: string
+    }
+
+    const token = parsed?.access_token
+    if (!token) return null
+
+    const { data: { user: tokenUser }, error } = await supabaseAdmin.auth.getUser(token)
+    if (error || !tokenUser) {
+      logger.security('api_auth_cookie_token_invalid', { error: error?.message })
+      return null
+    }
+
+    logger.info('api_auth_success_cookie_token', { userId: tokenUser.id, email: tokenUser.email })
+    return {
+      id: tokenUser.id,
+      email: tokenUser.email || '',
+      user_metadata: tokenUser.user_metadata || {},
+      app_metadata: tokenUser.app_metadata || {}
+    }
+  } catch (err) {
+    logger.error('api_auth_cookie_parse_error', err as Error)
+    return null
+  }
 }
 
 /**
@@ -73,6 +114,12 @@ export async function authenticateUserFromApi(req: NextRequest) {
         user_metadata: { role: 'chef' },
         app_metadata: {}
       }
+    }
+
+    // 1) Tentar via cookie de auth (mais confiável em produção)
+    const cookieUser = await getUserFromAuthCookie(req)
+    if (cookieUser) {
+      return cookieUser
     }
 
     // Log detalhado dos cookies para debug
@@ -117,18 +164,6 @@ export async function authenticateUserFromApi(req: NextRequest) {
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
       try {
-        const supabaseAdmin = createServerClient(
-          supabaseUrl,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          {
-            cookies: {
-              get() { return undefined },
-              set() {},
-              remove() {},
-            },
-          }
-        )
-        
         const { data: { user: tokenUser }, error: tokenError } = await supabaseAdmin.auth.getUser(token)
         if (tokenUser && !tokenError) {
           logger.info('api_auth_success_token', { userId: tokenUser.id, email: tokenUser.email })

@@ -36,7 +36,7 @@ export default function ProfileDashboard() {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const response = await fetch('/api/dashboard-stats')
+        const response = await fetch('/api/dashboard-stats', { credentials: 'include' })
         if (response.ok) {
           const stats = await response.json()
           setDashboardStats(stats)
@@ -50,7 +50,7 @@ export default function ProfileDashboard() {
 
   const handleRefresh = async () => {
     try {
-      const response = await fetch('/api/dashboard-stats')
+      const response = await fetch('/api/dashboard-stats', { credentials: 'include' })
       if (response.ok) {
         const stats = await response.json()
         setDashboardStats(stats)
