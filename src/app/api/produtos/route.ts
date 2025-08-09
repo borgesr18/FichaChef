@@ -9,7 +9,6 @@ import {
 import { logUserAction, extractRequestMetadata } from '@/lib/permissions'
 import { withErrorHandler } from '@/lib/api-helpers'
 import { produtoSchema } from '@/lib/validations'
-import { withTempUserHandling } from '@/lib/temp-user-utils'
 
 // Autenticação simples (compatível com Insumos)
 async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
@@ -29,29 +28,28 @@ export const GET = withErrorHandler(async function GET() {
     return createValidationErrorResponse('Não autorizado')
   }
 
-  return withTempUserHandling(user.id, 'produtos', async () => {
-    const produtos = await withConnectionHealthCheck(async () => {
-      return await withDatabaseRetry(async () => {
-        return await prisma.produto.findMany({
-          where: { userId: user.id },
-          include: {
-            produtoFichas: {
-              include: {
-                fichaTecnica: {
-                  include: {
-                    ingredientes: { include: { insumo: true } }
-                  }
+  // Removido withTempUserHandling para garantir que produtos salvos sejam retornados
+  const produtos = await withConnectionHealthCheck(async () => {
+    return await withDatabaseRetry(async () => {
+      return await prisma.produto.findMany({
+        where: { userId: user.id },
+        include: {
+          produtoFichas: {
+            include: {
+              fichaTecnica: {
+                include: {
+                  ingredientes: { include: { insumo: true } }
                 }
               }
             }
-          },
-          orderBy: { nome: 'asc' },
-        })
+          }
+        },
+        orderBy: { nome: 'asc' },
       })
     })
-
-    return createSuccessResponse(produtos)
   })
+
+  return createSuccessResponse(produtos)
 })
 
 export const POST = withErrorHandler(async function POST(request: NextRequest) {
