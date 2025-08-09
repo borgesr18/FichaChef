@@ -525,7 +525,7 @@ export default function ImpressaoPage() {
               <h4 className="font-bold text-gray-900 mb-3 text-lg border-b border-gray-200 pb-1">Ingredientes para Produção</h4>
               {selectedFicha.ingredientes.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="ingredients-table w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-2 font-medium">Ingrediente</th>
@@ -551,6 +551,8 @@ export default function ImpressaoPage() {
                           </tr>
                         )
                       })}
+                    </tbody>
+                    <tfoot>
                       <tr className="border-t-2 border-gray-300 font-medium">
                         <td className="py-2">TOTAL</td>
                         <td className="text-right py-2">{selectedFicha.pesoFinalGramas}g</td>
@@ -558,7 +560,7 @@ export default function ImpressaoPage() {
                         <td className="text-right py-2">{formatCurrency(calculateCustoTotal(selectedFicha))}</td>
                         <td className="text-right py-2">100%</td>
                       </tr>
-                    </tbody>
+                    </tfoot>
                   </table>
                 </div>
               ) : (
@@ -591,6 +593,11 @@ export default function ImpressaoPage() {
           @page {
             size: A4;
             margin: 1.5cm;
+          }
+
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           /* Mostrar somente a ficha selecionada durante a impressão */
@@ -631,6 +638,7 @@ export default function ImpressaoPage() {
           .print-section {
             margin-bottom: 0.6cm !important;
             break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
           .print-optional { display: none !important; }
           
@@ -665,19 +673,24 @@ export default function ImpressaoPage() {
           }
 
           /* Simplificar tabela de ingredientes na impressão: mostrar apenas Ingrediente e Quantidade */
-          table thead th:nth-child(3),
-          table thead th:nth-child(4),
-          table thead th:nth-child(5),
-          table tbody td:nth-child(3),
-          table tbody td:nth-child(4),
-          table tbody td:nth-child(5) {
+          .ingredients-table thead th:nth-child(3),
+          .ingredients-table thead th:nth-child(4),
+          .ingredients-table thead th:nth-child(5),
+          .ingredients-table tbody td:nth-child(3),
+          .ingredients-table tbody td:nth-child(4),
+          .ingredients-table tbody td:nth-child(5) {
             display: none !important;
           }
           
           /* Linha TOTAL: manter apenas primeira e segunda celas visíveis */
-          table tfoot td:nth-child(3),
-          table tfoot td:nth-child(4),
-          table tfoot td:nth-child(5) { display: none !important; }
+          .ingredients-table tfoot td:nth-child(3),
+          .ingredients-table tfoot td:nth-child(4),
+          .ingredients-table tfoot td:nth-child(5) { display: none !important; }
+
+          /* Repetir cabeçalho e rodapé da tabela em cada página e evitar quebras em linhas */
+          .ingredients-table thead { display: table-header-group !important; }
+          .ingredients-table tfoot { display: table-footer-group !important; }
+          .ingredients-table tr { break-inside: avoid !important; page-break-inside: avoid !important; }
 
           /* Nutrição: usar apenas uma coluna na impressão */
           .nutrition-grid { grid-template-columns: 1fr !important; }
