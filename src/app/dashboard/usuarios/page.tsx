@@ -150,10 +150,28 @@ export default function UsuariosPage() {
     setCreateLoading(true)
 
     try {
+      // Validações rápidas no cliente para evitar 400 do servidor
+      const emailTrim = newUser.email.trim()
+      const nomeTrim = newUser.nome.trim()
+      const pwd = newUser.password
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+        alert('Email inválido')
+        return
+      }
+      if (pwd.length < 6) {
+        alert('Senha deve ter pelo menos 6 caracteres')
+        return
+      }
+      if (!nomeTrim) {
+        alert('Nome é obrigatório')
+        return
+      }
+
       const payload = {
-        email: newUser.email.trim(),
-        password: newUser.password,
-        nome: newUser.nome.trim(),
+        email: emailTrim,
+        password: pwd,
+        nome: nomeTrim,
         role: newUser.role as 'chef' | 'cozinheiro' | 'gerente',
       }
 
@@ -170,16 +188,17 @@ export default function UsuariosPage() {
         await fetchUsuarios()
       } else {
         let message = 'Erro ao criar usuário'
+        let rawText = ''
         try {
-          const text = await response.text()
+          rawText = await response.text()
           try {
-            const data = JSON.parse(text)
+            const data = JSON.parse(rawText)
             message = (data && (data.message || data.error)) || (Array.isArray(data) ? data.join(', ') : message)
           } catch {
-            if (text) message = text
+            if (rawText) message = rawText
           }
         } catch {}
-        console.error('Create user failed', { status: response.status })
+        console.error('Create user failed', { status: response.status, body: rawText })
         alert(message)
       }
     } catch (error) {
