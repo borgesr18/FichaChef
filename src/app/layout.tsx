@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { SupabaseProvider } from "@/components/providers/SupabaseProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import DebugPanel from "@/components/DebugPanel";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -155,7 +155,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <ErrorBoundary>
           <SupabaseProvider>
             {children}
-            <DebugPanel />
           </SupabaseProvider>
         </ErrorBoundary>
       </body>

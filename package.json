@@ -73,7 +73,7 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
-    "typescript": "^5",
+    "typescript": "^5.9.2",
     "webpack-bundle-analyzer": "^4.10.1"
   },
   "lint-staged": {

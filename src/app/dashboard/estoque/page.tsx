@@ -78,15 +78,30 @@ export default function EstoquePage() {
     fetchProdutos()
   }, [])
 
+  const coerceArray = <T,>(data: unknown, keys: string[] = []): T[] => {
+    if (Array.isArray(data)) return data as T[]
+    if (data && typeof data === 'object') {
+      for (const key of keys) {
+        const candidate = (data as Record<string, unknown>)[key]
+        if (Array.isArray(candidate)) return candidate as T[]
+      }
+    }
+    return []
+  }
+
   const fetchMovimentacoesInsumos = async () => {
     try {
       const response = await fetch('/api/movimentacoes-estoque')
       if (response.ok) {
         const data = await response.json()
-        setMovimentacoesInsumos(data)
+        const arr = coerceArray<MovimentacaoInsumo>(data, ['data', 'movimentacoes', 'items'])
+        setMovimentacoesInsumos(arr)
+      } else {
+        setMovimentacoesInsumos([])
       }
     } catch (error) {
       console.error('Error fetching movimentacoes insumos:', error)
+      setMovimentacoesInsumos([])
     }
   }
 
@@ -95,10 +110,14 @@ export default function EstoquePage() {
       const response = await fetch('/api/movimentacoes-produto')
       if (response.ok) {
         const data = await response.json()
-        setMovimentacoesProdutos(data)
+        const arr = coerceArray<MovimentacaoProduto>(data, ['data', 'movimentacoes', 'items'])
+        setMovimentacoesProdutos(arr)
+      } else {
+        setMovimentacoesProdutos([])
       }
     } catch (error) {
       console.error('Error fetching movimentacoes produtos:', error)
+      setMovimentacoesProdutos([])
     }
   }
 
@@ -107,10 +126,13 @@ export default function EstoquePage() {
       const response = await fetch('/api/insumos')
       if (response.ok) {
         const data = await response.json()
-        setInsumos(data)
+        setInsumos(coerceArray<Insumo>(data, ['data', 'insumos', 'items']))
+      } else {
+        setInsumos([])
       }
     } catch (error) {
       console.error('Error fetching insumos:', error)
+      setInsumos([])
     }
   }
 
@@ -119,10 +141,13 @@ export default function EstoquePage() {
       const response = await fetch('/api/produtos')
       if (response.ok) {
         const data = await response.json()
-        setProdutos(data)
+        setProdutos(coerceArray<Produto>(data, ['data', 'produtos', 'items']))
+      } else {
+        setProdutos([])
       }
     } catch (error) {
       console.error('Error fetching produtos:', error)
+      setProdutos([])
     }
   }
 
@@ -220,8 +245,10 @@ export default function EstoquePage() {
     }
   }
 
-  const currentMovimentacoes = activeTab === 'insumos' ? movimentacoesInsumos : movimentacoesProdutos
-  const currentItems = activeTab === 'insumos' ? insumos : produtos
+  const currentMovimentacoesUnsafe = activeTab === 'insumos' ? movimentacoesInsumos : movimentacoesProdutos
+  const currentMovimentacoes = Array.isArray(currentMovimentacoesUnsafe) ? currentMovimentacoesUnsafe : []
+  const currentItemsUnsafe = activeTab === 'insumos' ? insumos : produtos
+  const currentItems = Array.isArray(currentItemsUnsafe) ? currentItemsUnsafe : []
 
   const filteredMovimentacoes = currentMovimentacoes.filter(mov => {
     const itemName = activeTab === 'insumos' 
@@ -548,7 +575,7 @@ export default function EstoquePage() {
                   </div>
                 )}
             ]}
-            data={filteredMovimentacoes as unknown as Record<string, unknown>[]}
+            data={(Array.isArray(filteredMovimentacoes) ? filteredMovimentacoes : []) as unknown as Record<string, unknown>[]}
             searchable={false}
             pagination={true}
             pageSize={10}
