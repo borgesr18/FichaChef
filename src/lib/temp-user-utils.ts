@@ -64,6 +64,10 @@ export function withTempUserHandling<T>(
   callback: () => Promise<T>
 ): Promise<NextResponse> {
   if (isTempUser(userId)) {
+    // Mostrar dados reais do banco para Produtos, mesmo para usuário temporário
+    if (dataType === 'produtos') {
+      return callback() as Promise<NextResponse>
+    }
     const sampleData = getTempUserSampleData(dataType)
     return Promise.resolve(createSuccessResponse(sampleData))
   }
