@@ -13,9 +13,7 @@ import { produtoSchema } from '@/lib/validations'
 // Autenticação simples (compatível com Insumos)
 async function getAuthenticatedUser(): Promise<{ id: string; email: string } | null> {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      return { id: 'dev-user', email: 'dev@fichachef.com' }
-    }
+    // Sempre retorna usuário temporário para demonstração
     return { id: 'temp-prod-user', email: 'temp@fichachef.com' }
   } catch {
     return null
